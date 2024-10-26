@@ -1,7 +1,9 @@
-import { signIn } from '@/lib/auth'
+import { auth, signIn } from '@/lib/auth'
 import SignInButton from '@/app/features/auth/components/signin-button'
 
 export default async function SignInForm() {
+	const session = await auth()
+
 	return (
 		<div className="w-[350px] border border-border rounded-lg">
 			<form
@@ -13,6 +15,7 @@ export default async function SignInForm() {
 			>
 				<SignInButton />
 			</form>
+			{session?.user?.name}
 		</div>
 	)
 }
