@@ -1,6 +1,6 @@
 import { signInAction } from '@/app/actions'
 import { FormMessage, type Message } from '@/components/form-message'
-import SignInForm from '@/app/features/auth/components/sign-in-form'
+import SignInForm from '@/app/features/auth/components/signin-form'
 import { SubmitButton } from '@/components/submit-button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'

@@ -1,7 +1,7 @@
 import { signIn } from '@/lib/auth'
-import SignInButton from '@/app/features/auth/components/sign-in-button'
+import SignInButton from '@/app/features/auth/components/signin-button'
 
-export default function SignInForm() {
+export default async function SignInForm() {
 	return (
 		<div className="w-[350px] border border-border rounded-lg">
 			<form

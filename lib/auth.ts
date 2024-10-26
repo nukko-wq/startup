@@ -9,5 +9,8 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
 		async signIn({ user }) {
 			return allowedEmails.includes(user.email ?? '')
 		},
+		authorized: async ({ auth }) => {
+			return !!auth
+		},
 	},
 })
