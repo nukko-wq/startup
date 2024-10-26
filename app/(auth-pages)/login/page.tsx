@@ -9,7 +9,7 @@ import Link from 'next/link'
 export default async function Login(props: { searchParams: Promise<Message> }) {
 	const searchParams = await props.searchParams
 	return (
-		<div>
+		<div className="flex flex-col items-center justify-center h-screen">
 			<SignInForm />
 			{/*
 			<form className="flex-1 flex flex-col min-w-64">

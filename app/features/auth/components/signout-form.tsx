@@ -1,15 +1,9 @@
-import { signOut } from '@/lib/auth'
-import SignOutButton from '@/app/features/auth/components/signout-button'
+import { handleSignOut } from '@/app/features/auth/actions/auth'
 
 export function SignOut() {
 	return (
-		<form
-			action={async () => {
-				'use server'
-				await signOut()
-			}}
-		>
-			<SignOutButton />
+		<form action={handleSignOut}>
+			<button type="submit">Sign Out</button>
 		</form>
 	)
 }
