@@ -1,7 +1,7 @@
 import { signOut } from '@/lib/auth'
 import SignOutButton from '@/app/features/auth/components/signout-button'
 
-export function SignOut() {
+const SignOut = () => {
 	return (
 		<form
 			action={async () => {
@@ -13,3 +13,5 @@ export function SignOut() {
 		</form>
 	)
 }
+
+export default SignOut

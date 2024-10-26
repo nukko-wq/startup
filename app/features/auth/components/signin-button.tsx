@@ -1,7 +1,7 @@
 'use client'
 
 import { Button } from 'react-aria-components'
-import { Icon } from '@/app/components/elements/icon'
+import IconGoogle from '@/app/components/elements/IconGoogle'
 import { useFormStatus } from 'react-dom'
 
 const SignInButton = () => {
@@ -13,11 +13,7 @@ const SignInButton = () => {
 			type="submit"
 			isDisabled={pending}
 		>
-			{pending ? (
-				<Icon.spinner className="animate-spin" />
-			) : (
-				<Icon.google className="mr-2" />
-			)}
+			<IconGoogle className="mr-2" />
 			Google
 		</Button>
 	)
