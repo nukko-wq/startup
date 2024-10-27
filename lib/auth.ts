@@ -1,12 +1,12 @@
 import NextAuth from 'next-auth'
 import Google from 'next-auth/providers/google'
 import { PrismaAdapter } from '@auth/prisma-adapter'
-import { prisma } from '@/lib/prisma'
+import { db } from '@/lib/db'
 
 const allowedEmails = process.env.ALLOWED_EMAILS?.split(',') || []
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
-	adapter: PrismaAdapter(prisma),
+	adapter: PrismaAdapter(db),
 	providers: [Google],
 	session: {
 		strategy: 'jwt',
