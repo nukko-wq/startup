@@ -1,5 +1,4 @@
-import ResourcesCard from '@/app/features/resources/components/resources-card'
-import CreateResourceButton from '@/app/features/resources/components/CreateResourceButton'
+import ResourceCreateButton from '@/app/features/resources/components/ResourceCreateButton'
 import { db } from '@/lib/db'
 import { getCurrentUser } from '@/lib/session'
 import { redirect } from 'next/navigation'
@@ -20,6 +19,7 @@ const Resources = async () => {
 			id: true,
 			title: true,
 			description: true,
+			url: true,
 			position: true,
 			createdAt: true,
 		},
@@ -31,13 +31,12 @@ const Resources = async () => {
 	console.log(resources)
 
 	return (
-		<div>
+		<div className="min-w-[260px] max-w-[920px] w-full">
 			<div>
-				<div className="text-xl font-medium">Resources</div>
-				<CreateResourceButton />
+				<div className="text-xl font-semibold">Resources</div>
+				<ResourceCreateButton />
 			</div>
-			<ResourcesCard />
-			<div>
+			<div className="flex flex-col border rounded-md">
 				{resources.map((resource) => (
 					<ResourceItem key={resource.id} resource={resource} />
 				))}
