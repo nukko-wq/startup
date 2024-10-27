@@ -3,6 +3,7 @@ import { db } from '@/lib/db'
 import { getCurrentUser } from '@/lib/session'
 import { redirect } from 'next/navigation'
 import ResourceItem from '@/app/features/resources/components/ResourceItem'
+import { File } from 'lucide-react'
 
 const Resources = async () => {
 	const user = await getCurrentUser()
@@ -32,9 +33,14 @@ const Resources = async () => {
 
 	return (
 		<div className="min-w-[260px] max-w-[920px] w-full">
-			<div>
-				<div className="text-xl font-semibold">Resources</div>
-				<ResourceCreateButton />
+			<div className="flex justify-between items-center mb-2">
+				<div className="flex items-center gap-2">
+					<File className="w-6 h-6" />
+					<div className="text-xl font-semibold">Resources</div>
+				</div>
+				<div className="">
+					<ResourceCreateButton />
+				</div>
 			</div>
 			<div className="flex flex-col border rounded-md">
 				{resources.map((resource) => (
