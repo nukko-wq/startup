@@ -1,0 +1,56 @@
+'use client'
+
+import type { Resource } from '@prisma/client'
+import {
+	Button,
+	OverlayArrow,
+	Tooltip,
+	TooltipTrigger,
+} from 'react-aria-components'
+import { useRouter } from 'next/navigation'
+import { Trash2 } from 'lucide-react'
+
+const ResourceDeleteButton = ({
+	resource,
+}: { resource: Pick<Resource, 'id'> }) => {
+	const router = useRouter()
+
+	const handleDelete = async () => {
+		try {
+			const response = await fetch(`/api/resources/${resource.id}`, {
+				method: 'DELETE',
+			})
+
+			if (!response.ok) {
+				throw new Error('Failed to delete resource')
+			}
+
+			router.refresh()
+		} catch (error) {
+			console.error('Resource delete error:', error)
+			alert('リソースの削除に失敗しました。')
+		}
+	}
+	return (
+		<TooltipTrigger delay={0} closeDelay={0}>
+			<Button onPress={handleDelete} className="pr-4 pl-2 py-4">
+				<Trash2 className="w-5 h-5" />
+			</Button>
+			<Tooltip
+				className="bg-white text-sm shadow-md rounded-lg px-2 py-1"
+				offset={1}
+			>
+				{/*
+				<OverlayArrow>
+					<svg width={8} height={8} viewBox="0 0 8 8" className="fill-white">
+						<path d="M0 0 L4 4 L8 0" />
+					</svg>
+				</OverlayArrow>
+				*/}
+				Remove Item
+			</Tooltip>
+		</TooltipTrigger>
+	)
+}
+
+export default ResourceDeleteButton

@@ -56,3 +56,37 @@ export async function PATCH(request: NextRequest) {
 		return Response.json({ error: 'Internal server error' }, { status: 500 })
 	}
 }
+
+export async function DELETE(request: NextRequest) {
+	try {
+		const session = await auth()
+
+		if (!session) {
+			return Response.json({ error: 'Unauthorized' }, { status: 403 })
+		}
+
+		const url = new URL(request.url)
+		const id = url.pathname.split('/').pop()
+
+		if (!id) {
+			return Response.json(
+				{ error: 'Resource ID is required' },
+				{ status: 400 },
+			)
+		}
+
+		const { user } = session
+
+		await db.resource.delete({
+			where: {
+				id,
+				userId: user.id,
+			},
+		})
+
+		return Response.json({ success: true })
+	} catch (error) {
+		console.error('Resource delete error:', error)
+		return Response.json({ error: 'Internal server error' }, { status: 500 })
+	}
+}
