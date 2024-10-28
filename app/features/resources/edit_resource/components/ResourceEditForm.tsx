@@ -69,7 +69,7 @@ export default function ResourceEditForm({
 	}
 
 	return (
-		<Form onSubmit={handleSubmit(onSubmit)} className="">
+		<Form onSubmit={handleSubmit(onSubmit)} className="flex flex-col flex-grow">
 			<div className="">
 				<Input
 					{...register('title')}
@@ -80,7 +80,7 @@ export default function ResourceEditForm({
 					<p className="text-red-500 text-sm">{errors.title.message}</p>
 				)}
 			</div>
-			<div className="flex flex-col p-9 space-y-4">
+			<div className="flex flex-col px-[40px] py-[32px] gap-2">
 				<div className="">
 					<TextField>
 						<Label className="text-sm">URL</Label>
@@ -121,24 +121,24 @@ export default function ResourceEditForm({
 							)}
 						/>
 						{errors.description && (
-							<Text className="text-red-500 text-sm">
+							<Text slot="errorMessage" className="text-red-500 text-sm">
 								{errors.description.message}
 							</Text>
 						)}
 					</TextField>
 				</div>
-				<div>
+				<div className="mt-[40px] flex gap-2 justify-end">
 					<Button
 						type="button"
 						onPress={onClose}
-						className="px-4 py-2 text-sm border rounded hover:bg-gray-50"
+						className="px-4 py-2 text-sm border rounded hover:bg-gray-50 outline-none"
 						isDisabled={isSubmitting}
 					>
 						Cancel
 					</Button>
 					<Button
 						type="submit"
-						className="px-4 py-2 text-sm border rounded bg-blue-500 text-white hover:bg-blue-600 disabled:opacity-50"
+						className="px-4 py-2 text-sm border rounded bg-blue-500 text-white hover:bg-blue-600 disabled:opacity-50 outline-none"
 						isDisabled={isSubmitting}
 					>
 						{isSubmitting ? 'Saving...' : 'Save'}

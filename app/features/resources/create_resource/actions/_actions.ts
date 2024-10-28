@@ -23,6 +23,7 @@ export async function createResource(data: ResourceSchema) {
 		data: {
 			...data,
 			title: data.title || '',
+			description: data.description || '',
 			position: newPosition,
 			userId: user.id,
 		},
