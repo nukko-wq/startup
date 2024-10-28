@@ -21,6 +21,7 @@ const Resources = async () => {
 			title: true,
 			description: true,
 			url: true,
+			faviconUrl: true,
 			position: true,
 			createdAt: true,
 		},

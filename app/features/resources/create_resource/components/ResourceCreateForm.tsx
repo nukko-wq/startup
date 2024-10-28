@@ -21,9 +21,15 @@ const ResourceCreateForm = ({ onClose }: ResourceCreateFormProps) => {
 
 	const onSubmit = async (data: ResourceSchema) => {
 		try {
+			const faviconResponse = await fetch(
+				`/api/favicon?url=${encodeURIComponent(data.url)}`,
+			)
+			const faviconData = await faviconResponse.json()
+
 			const submissionData = {
 				...data,
 				title: data.title || data.url,
+				faviconUrl: faviconData.faviconUrl,
 			}
 			await createResource(submissionData)
 			onClose()

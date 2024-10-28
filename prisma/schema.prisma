@@ -91,6 +91,7 @@ model Resource {
   description String
   url String
   position Int
+  faviconUrl String?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   userId String
