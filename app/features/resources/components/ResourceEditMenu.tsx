@@ -18,8 +18,11 @@ const ResourceEditMenu = ({
 			<Button aria-label="Edit" className="outline-none pl-4 pr-2 py-4">
 				<Pencil className="w-5 h-5" />
 			</Button>
-			<ModalOverlay className="fixed inset-0 z-50 bg-black/20 items-center justify-center">
-				<Modal className="fixed inset-0 flex items-center justify-center outline-none">
+			<ModalOverlay
+				isDismissable
+				className="fixed flex top-0 left-0 w-screen h-screen z-100 bg-black/20 items-center justify-center"
+			>
+				<Modal className="flex items-center justify-center outline-none">
 					<Dialog className="outline-none">
 						{({ close }) => (
 							<div className="bg-white flex items-center justify-center rounded-lg shadow-md">
