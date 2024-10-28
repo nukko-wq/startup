@@ -2,6 +2,7 @@
 
 import type { Resource } from '@prisma/client'
 import ResourceEditMenu from '@/app/features/resources/components/ResourceEditMenu'
+import ResourceDeleteButton from '@/app/features/resources/components/ResourceDeleteButton'
 import { Link } from 'react-aria-components'
 
 interface ResourceItemProps {
@@ -19,8 +20,9 @@ export default function ResourceItem({ resource }: ResourceItemProps) {
 					</div>
 				</Link>
 			</div>
-			<div>
+			<div className="flex items-center">
 				<ResourceEditMenu resource={resource} />
+				<ResourceDeleteButton resource={resource} />
 			</div>
 		</div>
 	)
