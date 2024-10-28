@@ -34,9 +34,9 @@ const Resources = async () => {
 	return (
 		<div className="min-w-[260px] max-w-[920px] w-full">
 			<div className="flex justify-between items-center mb-2">
-				<div className="flex items-center gap-2">
-					<File className="w-6 h-6" />
-					<div className="text-xl font-semibold">Resources</div>
+				<div className="flex items-center gap-2 ml-4">
+					<File className="w-6 h-6 text-zinc-700" />
+					<div className="text-xl font-semibold text-zinc-700">Resources</div>
 				</div>
 				<div className="">
 					<ResourceCreateButton />

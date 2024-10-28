@@ -1,6 +1,8 @@
 'use client'
 
 import { useState } from 'react'
+import { Button } from 'react-aria-components'
+import { FilePlus } from 'lucide-react'
 
 const ResourceCreateButton = () => {
 	const [isLoading, setIsLoading] = useState(false)
@@ -40,10 +42,10 @@ const ResourceCreateButton = () => {
 	}
 
 	return (
-		<div>
-			<button type="button" onClick={onClick}>
-				Add resource
-			</button>
+		<div className="mr-4">
+			<Button type="button" onPress={onClick}>
+				<FilePlus className="w-6 h-6 text-zinc-700" />
+			</Button>
 		</div>
 	)
 }

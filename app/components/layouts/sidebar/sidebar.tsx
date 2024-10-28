@@ -2,8 +2,8 @@ import SidebarMenu from '@/app/components/layouts/sidebar/sidebar-menu'
 
 export default function Sidebar() {
 	return (
-		<div className="flex w-[320px] bg-slate-900">
-			<div className="flex-grow text-white">
+		<div className="flex w-[320px] bg-gray-800">
+			<div className="flex-grow text-zinc-50">
 				<div className="flex items-center justify-between p-4">
 					<div className="text-2xl font-bold">StartUp</div>
 					<SidebarMenu />
