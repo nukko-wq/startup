@@ -13,6 +13,7 @@ import {
 	Text,
 	Button,
 } from 'react-aria-components'
+import { Earth } from 'lucide-react'
 
 interface ResourceEditFormProps {
 	resource: Pick<Resource, 'id' | 'title' | 'url' | 'description'>
@@ -70,11 +71,14 @@ export default function ResourceEditForm({
 
 	return (
 		<Form onSubmit={handleSubmit(onSubmit)} className="flex flex-col flex-grow">
-			<div className="">
+			<div className="flex items-center gap-2 border-b border-gray-200">
+				<div className="border border-gray-200 rounded-sm p-2 ml-4">
+					<Earth className="w-4 h-4" />
+				</div>
 				<Input
 					{...register('title')}
 					type="text"
-					className="w-full p-2 border-b border-gray-200 rounded-t-lg outline-none"
+					className="w-full py-4 px-2 rounded-t-lg outline-none text-lg"
 				/>
 				{errors.title && (
 					<p className="text-red-500 text-sm">{errors.title.message}</p>

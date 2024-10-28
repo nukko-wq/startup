@@ -24,6 +24,7 @@ export async function createResource(data: ResourceSchema) {
 			...data,
 			title: data.title || '',
 			description: data.description || '',
+			faviconUrl: data.faviconUrl || null,
 			position: newPosition,
 			userId: user.id,
 		},
