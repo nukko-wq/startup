@@ -1,8 +1,8 @@
 'use client'
 
 import type { Resource } from '@prisma/client'
-import ResourceEditMenu from '@/app/features/resources/components/ResourceEditMenu'
-import ResourceDeleteButton from '@/app/features/resources/components/ResourceDeleteButton'
+import ResourceEditMenu from '@/app/features/resources/edit_resource/components/ResourceEditMenu'
+import ResourceDeleteButton from '@/app/features/resources/delete_resource/components/ResourceDeleteButton'
 import { Link } from 'react-aria-components'
 
 interface ResourceItemProps {

@@ -1,5 +1,6 @@
 'use client'
 
+import { useState } from 'react'
 import type { Resource } from '@prisma/client'
 import {
 	Button,
@@ -13,6 +14,7 @@ import { Trash2 } from 'lucide-react'
 const ResourceDeleteButton = ({
 	resource,
 }: { resource: Pick<Resource, 'id'> }) => {
+	const [isTooltipVisible, setIsTooltipVisible] = useState(false)
 	const router = useRouter()
 
 	const handleDelete = async () => {
@@ -32,23 +34,26 @@ const ResourceDeleteButton = ({
 		}
 	}
 	return (
-		<TooltipTrigger delay={0} closeDelay={0}>
+		<TooltipTrigger
+			isOpen={isTooltipVisible}
+			onOpenChange={setIsTooltipVisible}
+			delay={0}
+			closeDelay={0}
+		>
 			<Button onPress={handleDelete} className="pr-4 pl-2 py-4">
 				<Trash2 className="w-5 h-5" />
 			</Button>
-			<Tooltip
-				className="bg-white text-sm shadow-md rounded-lg px-2 py-1"
-				offset={1}
-			>
-				{/*
-				<OverlayArrow>
-					<svg width={8} height={8} viewBox="0 0 8 8" className="fill-white">
-						<path d="M0 0 L4 4 L8 0" />
-					</svg>
-				</OverlayArrow>
-				*/}
-				Remove Item
-			</Tooltip>
+			{isTooltipVisible && (
+				<Tooltip className="bg-white text-sm shadow-md rounded-lg px-2 py-1">
+					<OverlayArrow>
+						{/* biome-ignore lint/a11y/noSvgWithoutTitle: <explanation> */}
+						<svg width={8} height={8} viewBox="0 0 8 8" className="fill-white">
+							<path d="M0 0 L4 4 L8 0" />
+						</svg>
+					</OverlayArrow>
+					Remove Item
+				</Tooltip>
+			)}
 		</TooltipTrigger>
 	)
 }

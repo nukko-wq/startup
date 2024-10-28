@@ -2,7 +2,7 @@
 
 import { db } from '@/lib/db'
 import { getCurrentUser } from '@/lib/session'
-import { resourceSchema, type ResourceSchema } from '@/lib/validations/resource'
+import type { ResourceSchema } from '@/lib/validations/resource'
 import { revalidatePath } from 'next/cache'
 
 export async function createResource(data: ResourceSchema) {
@@ -22,6 +22,7 @@ export async function createResource(data: ResourceSchema) {
 	const resource = await db.resource.create({
 		data: {
 			...data,
+			title: data.title || '',
 			position: newPosition,
 			userId: user.id,
 		},

@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { Button, Dialog, DialogTrigger, Popover } from 'react-aria-components'
 import { FilePlus } from 'lucide-react'
-import ResourceCreateForm from '@/app/features/resources/components/ResourceCreateForm'
+import ResourceCreateForm from '@/app/features/resources/create_resource/components/ResourceCreateForm'
 
 const ResourceCreateButton = () => {
 	const [isOpen, setIsOpen] = useState<boolean>(false)
@@ -14,12 +14,10 @@ const ResourceCreateButton = () => {
 				<Button aria-label="Menu" className="outline-none p-2">
 					<FilePlus className="w-6 h-6 text-zinc-700" />
 				</Button>
-				<Popover>
+				<Popover placement="start">
 					<Dialog className="outline-none">
-						<div>
-							<div className="bg-white flex items-center justify-center rounded-lg shadow-md">
-								<ResourceCreateForm onClose={() => setIsOpen(false)} />
-							</div>
+						<div className="bg-white flex items-center justify-center rounded-lg shadow-md">
+							<ResourceCreateForm onClose={() => setIsOpen(false)} />
 						</div>
 					</Dialog>
 				</Popover>
