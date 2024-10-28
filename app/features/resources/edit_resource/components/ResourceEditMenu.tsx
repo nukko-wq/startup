@@ -7,7 +7,7 @@ import {
 	Modal,
 	ModalOverlay,
 } from 'react-aria-components'
-import ResourceEditForm from '@/app/features/resources/components/ResourceEditForm'
+import ResourceEditForm from '@/app/features/resources/edit_resource/components/ResourceEditForm'
 import type { Resource } from '@prisma/client'
 import { Pencil } from 'lucide-react'
 const ResourceEditMenu = ({

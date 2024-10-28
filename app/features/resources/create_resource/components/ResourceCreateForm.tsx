@@ -3,7 +3,7 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { Button, Form, Input, Label, TextField } from 'react-aria-components'
 import { Controller } from 'react-hook-form'
 import { useForm } from 'react-hook-form'
-import { createResource } from '@/app/features/resources/components/_actions'
+import { createResource } from '@/app/features/resources/create_resource/actions/_actions'
 
 interface ResourceCreateFormProps {
 	onClose: () => void
@@ -20,7 +20,11 @@ const ResourceCreateForm = ({ onClose }: ResourceCreateFormProps) => {
 
 	const onSubmit = async (data: ResourceSchema) => {
 		try {
-			await createResource(data)
+			const submissionData = {
+				...data,
+				title: data.title || data.url,
+			}
+			await createResource(submissionData)
 			onClose()
 		} catch (error) {
 			console.error('Resource creation error:', error)
@@ -53,7 +57,7 @@ const ResourceCreateForm = ({ onClose }: ResourceCreateFormProps) => {
 							/>
 						</TextField>
 					</div>
-					<div>
+					<div className="flex justify-between">
 						<Button
 							type="button"
 							onPress={onClose}

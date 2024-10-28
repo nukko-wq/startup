@@ -1,4 +1,4 @@
-import ResourceCreateButton from '@/app/features/resources/components/ResourceCreateButton'
+import ResourceCreateButton from '@/app/features/resources/create_resource/components/ResourceCreateButton'
 import { db } from '@/lib/db'
 import { getCurrentUser } from '@/lib/session'
 import { redirect } from 'next/navigation'
