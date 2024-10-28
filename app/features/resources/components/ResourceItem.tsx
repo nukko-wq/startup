@@ -16,7 +16,7 @@ export default function ResourceItem({ resource }: ResourceItemProps) {
 				<Link href={resource.url} target="_blank" className="outline-none">
 					<div>{resource.title}</div>
 					<div className="text-sm text-muted-foreground">
-						{resource.description}
+						{resource.description || 'Webpage'}
 					</div>
 				</Link>
 			</div>

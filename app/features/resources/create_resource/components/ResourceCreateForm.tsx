@@ -13,9 +13,10 @@ const ResourceCreateForm = ({ onClose }: ResourceCreateFormProps) => {
 	const {
 		register,
 		handleSubmit,
-		formState: { errors, isSubmitting },
+		formState: { errors, isSubmitting, isValid },
 	} = useForm<ResourceSchema>({
 		resolver: zodResolver(resourceSchema),
+		mode: 'onChange',
 	})
 
 	const onSubmit = async (data: ResourceSchema) => {
@@ -61,14 +62,14 @@ const ResourceCreateForm = ({ onClose }: ResourceCreateFormProps) => {
 						<Button
 							type="button"
 							onPress={onClose}
-							className="px-4 py-2 text-sm border rounded hover:bg-gray-50"
+							className="px-4 py-2 text-sm border rounded hover:bg-gray-200"
 						>
 							Cancel
 						</Button>
 						<Button
 							type="submit"
-							isDisabled={isSubmitting}
-							className="px-4 py-2 text-sm border rounded bg-blue-500 text-white hover:bg-blue-600 disabled:opacity-50"
+							isDisabled={isSubmitting || !isValid}
+							className="px-4 py-2 text-sm border rounded bg-blue-500 disabled:bg-gray-200 text-white disabled:text-gray-700 hover:bg-blue-600 disabled:opacity-60"
 						>
 							ADD RESOURCE
 						</Button>

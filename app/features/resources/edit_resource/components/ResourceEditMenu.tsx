@@ -25,7 +25,7 @@ const ResourceEditMenu = ({
 				<Modal className="flex items-center justify-center outline-none">
 					<Dialog className="outline-none">
 						{({ close }) => (
-							<div className="bg-white flex items-center justify-center rounded-lg shadow-md">
+							<div className="bg-white flex items-center justify-center rounded-lg shadow-md w-[700px]">
 								<ResourceEditForm resource={resource} onClose={close} />
 							</div>
 						)}
