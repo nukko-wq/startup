@@ -30,10 +30,8 @@ const Resources = async () => {
 		},
 	})
 
-	console.log(resources)
-
 	return (
-		<div className="min-w-[260px] max-w-[920px] w-full">
+		<div className="min-w-[260px] max-w-[920px] w-full p-5">
 			<div className="flex justify-between items-center mb-2">
 				<div className="flex items-center gap-2 ml-4">
 					<File className="w-6 h-6 text-zinc-700" />
@@ -44,9 +42,12 @@ const Resources = async () => {
 				</div>
 			</div>
 			<div className="flex flex-col border rounded-md">
+				{/*
 				{resources.map((resource) => (
 					<ResourceItem key={resource.id} resource={resource} />
 				))}
+					*/}
+				<ResourceItem resource={resources} />
 			</div>
 		</div>
 	)
