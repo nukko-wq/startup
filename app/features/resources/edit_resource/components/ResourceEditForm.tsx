@@ -13,7 +13,6 @@ import {
 	Text,
 	Button,
 } from 'react-aria-components'
-import { Earth } from 'lucide-react'
 import { useEffect, useRef } from 'react'
 
 interface ResourceEditFormProps {
@@ -83,8 +82,8 @@ export default function ResourceEditForm({
 	return (
 		<Form onSubmit={handleSubmit(onSubmit)} className="flex flex-col flex-grow">
 			<div className="flex items-center gap-2 border-b border-gray-200">
-				<div className="border border-gray-200 rounded-sm ml-4 w-10 h-10 flex items-center justify-center">
-					<span className="material-symbols-outlined">public</span>
+				<div className="border border-gray-200 rounded-sm ml-4 w-8 h-8 flex items-center justify-center">
+					<span className="material-symbols-outlined text-lg">public</span>
 				</div>
 				<Controller
 					name="title"
@@ -119,7 +118,8 @@ export default function ResourceEditForm({
 									onBlur={onBlur}
 									ref={ref}
 									type="url"
-									className="w-full p-2 border rounded mt-1 outline-none"
+									className="w-full p-2 border rounded mt-1 focus:outline-blue-500"
+									aria-label="URL"
 								/>
 							)}
 						/>
@@ -141,7 +141,8 @@ export default function ResourceEditForm({
 									onBlur={onBlur}
 									ref={ref}
 									type="text"
-									className="w-full p-2 border rounded mt-1 outline-none"
+									className="w-full p-2 border rounded mt-1 focus:outline-blue-500"
+									aria-label="Description"
 								/>
 							)}
 						/>

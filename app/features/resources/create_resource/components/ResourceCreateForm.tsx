@@ -1,15 +1,41 @@
 import { resourceSchema, type ResourceSchema } from '@/lib/validations/resource'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { Button, Form, Input, Label, TextField } from 'react-aria-components'
-import { Controller } from 'react-hook-form'
 import { useForm } from 'react-hook-form'
 import { createResource } from '@/app/features/resources/create_resource/actions/_actions'
+import { useEffect, useRef, useState } from 'react'
+import { Link } from 'lucide-react'
 
 interface ResourceCreateFormProps {
 	onClose: () => void
 }
 
 const ResourceCreateForm = ({ onClose }: ResourceCreateFormProps) => {
+	const urlInputRef = useRef<HTMLInputElement | null>(null)
+	const [urlPlaceholder, setUrlPlaceholder] = useState('URL')
+
+	useEffect(() => {
+		urlInputRef.current?.focus()
+	}, [])
+
+	useEffect(() => {
+		const handleFocus = () => setUrlPlaceholder('https://google.com')
+		const handleBlur = () => setUrlPlaceholder('URL')
+
+		const inputElement = urlInputRef.current
+		if (inputElement) {
+			inputElement.focus()
+			setUrlPlaceholder('https://google.com')
+			inputElement.addEventListener('focus', handleFocus)
+			inputElement.addEventListener('blur', handleBlur)
+		}
+
+		return () => {
+			inputElement?.removeEventListener('focus', handleFocus)
+			inputElement?.removeEventListener('blur', handleBlur)
+		}
+	}, [])
+
 	const {
 		register,
 		handleSubmit,
@@ -39,7 +65,14 @@ const ResourceCreateForm = ({ onClose }: ResourceCreateFormProps) => {
 	}
 
 	return (
-		<div>
+		<div className="flex">
+			<div className="bg-zinc-100" aria-label="Side Menu">
+				<div className="text-xl font-bold p-4">Add Resource</div>
+				<div className="text-muted-foreground bg-foreground/10 p-2 flex items-center gap-1">
+					<Link className="w-3 h-3" />
+					<div>URL</div>
+				</div>
+			</div>
 			<Form onSubmit={handleSubmit(onSubmit)} className="">
 				<div className="flex flex-col p-9 space-y-4">
 					<div className="">
@@ -47,9 +80,16 @@ const ResourceCreateForm = ({ onClose }: ResourceCreateFormProps) => {
 							<Label className="text-sm">URL</Label>
 							<Input
 								{...register('url')}
+								ref={(e) => {
+									register('url').ref(e)
+									if (e) {
+										urlInputRef.current = e
+									}
+								}}
 								type="url"
-								className="w-full p-2 border rounded mt-1 outline-none"
-								placeholder="https://example.com"
+								className="w-full p-2 border rounded mt-1 focus:outline-blue-500"
+								placeholder={urlPlaceholder}
+								aria-label="URL"
 							/>
 						</TextField>
 					</div>
@@ -59,8 +99,9 @@ const ResourceCreateForm = ({ onClose }: ResourceCreateFormProps) => {
 							<Input
 								{...register('title')}
 								type="text"
-								className="w-full p-2 border-gray-200 rounded border outline-none"
+								className="w-full p-2 border-gray-200 rounded border focus:outline-blue-500"
 								placeholder="Name"
+								aria-label="Name"
 							/>
 						</TextField>
 					</div>
