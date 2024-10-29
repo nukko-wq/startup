@@ -13,7 +13,7 @@ import {
 	Text,
 	Button,
 } from 'react-aria-components'
-import { Earth } from 'lucide-react'
+import { useEffect, useRef } from 'react'
 
 interface ResourceEditFormProps {
 	resource: Pick<Resource, 'id' | 'title' | 'url' | 'description'>
@@ -25,6 +25,16 @@ export default function ResourceEditForm({
 	onClose,
 }: ResourceEditFormProps) {
 	const router = useRouter()
+	const titleInputRef = useRef<HTMLInputElement>(null)
+
+	useEffect(() => {
+		if (titleInputRef.current) {
+			titleInputRef.current.focus()
+
+			const length = titleInputRef.current.value.length
+			titleInputRef.current.setSelectionRange(length, length)
+		}
+	}, [])
 
 	const {
 		register,
@@ -72,13 +82,23 @@ export default function ResourceEditForm({
 	return (
 		<Form onSubmit={handleSubmit(onSubmit)} className="flex flex-col flex-grow">
 			<div className="flex items-center gap-2 border-b border-gray-200">
-				<div className="border border-gray-200 rounded-sm p-2 ml-4">
-					<Earth className="w-4 h-4" />
+				<div className="border border-gray-200 rounded-sm ml-4 w-8 h-8 flex items-center justify-center">
+					<span className="material-symbols-outlined text-lg">public</span>
 				</div>
-				<Input
-					{...register('title')}
-					type="text"
-					className="w-full py-4 px-2 rounded-t-lg outline-none text-lg"
+				<Controller
+					name="title"
+					control={control}
+					render={({ field: { value, onChange, onBlur } }) => (
+						<Input
+							value={value}
+							onChange={onChange}
+							onBlur={onBlur}
+							type="text"
+							className="w-full py-4 px-2 rounded-t-lg outline-none text-lg"
+							aria-label="Name"
+							ref={titleInputRef}
+						/>
+					)}
 				/>
 				{errors.title && (
 					<p className="text-red-500 text-sm">{errors.title.message}</p>
@@ -98,7 +118,8 @@ export default function ResourceEditForm({
 									onBlur={onBlur}
 									ref={ref}
 									type="url"
-									className="w-full p-2 border rounded mt-1 outline-none"
+									className="w-full p-2 border rounded mt-1 focus:outline-blue-500"
+									aria-label="URL"
 								/>
 							)}
 						/>
@@ -120,7 +141,8 @@ export default function ResourceEditForm({
 									onBlur={onBlur}
 									ref={ref}
 									type="text"
-									className="w-full p-2 border rounded mt-1 outline-none"
+									className="w-full p-2 border rounded mt-1 focus:outline-blue-500"
+									aria-label="Description"
 								/>
 							)}
 						/>
