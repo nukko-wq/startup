@@ -13,7 +13,6 @@ const resourceCreateSchema = z.object({
 export async function POST(req: NextRequest) {
 	try {
 		const session = await auth()
-		console.log('Session:', session)
 
 		if (!session) {
 			return NextResponse.json('Unauthorized', { status: 403 })
