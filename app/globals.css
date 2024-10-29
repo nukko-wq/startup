@@ -67,3 +67,13 @@
 		@apply bg-background text-foreground;
 	}
 }
+
+/* ドラッグ中のアイテムを半透明にする */
+.react-aria-GridListItem[data-dragging] {
+	opacity: 0.6;
+}
+
+.react-aria-DropIndicator[data-drop-target] {
+	outline: 2px solid var(--highlight-background);
+	outline-offset: -1px;
+}
