@@ -116,7 +116,7 @@ export default function ResourceItem({ resource }: ResourceItemProps) {
 			items={list.items}
 			dragAndDropHooks={dragAndDropHooks}
 			selectionMode="single"
-			className="w-full"
+			className="w-full hover:cursor-pointer"
 		>
 			{(item) => (
 				<GridListItem
@@ -129,45 +129,51 @@ export default function ResourceItem({ resource }: ResourceItemProps) {
 							<Button className="hover:cursor-grab" slot="drag">
 								<GripVertical className="w-4 h-4" />
 							</Button>
-							<Link href={item.url} target="_blank" className="outline-none">
-								<div className="flex items-end gap-2">
-									{item.faviconUrl ? (
-										<div className="relative w-8 h-8 p-1 top-[2px]">
-											<Image
-												src={pageOutline}
-												width={32}
-												height={32}
-												alt="page_outline"
-												className="absolute -left-1 -top-1 h-[32px] w-[32px]"
-											/>
-											<img
-												src={item.faviconUrl}
-												alt="Favicon"
-												className="relative h-[16px] w-[16px]"
-											/>
-										</div>
-									) : (
-										<div className="relative w-8 h-8 p-1 top-[2px]">
-											<Image
-												src={pageOutline}
-												width={32}
-												height={32}
-												alt="page_outline"
-												className="absolute -left-1 -top-1 h-[32px] w-[32px]"
-											/>
-											<span className="relative material-symbols-outlined text-[18px] -left-[1px] text-muted-foreground">
-												public
-											</span>
-										</div>
-									)}
-									<div className="flex flex-col">
-										<div>{item.title}</div>
-										<div className="text-xs text-muted-foreground">
-											{item.description || 'Webpage'}
+							<div className="flex flex-grow">
+								<Link
+									href={item.url}
+									target="_blank"
+									className="outline-none flex flex-grow"
+								>
+									<div className="flex items-end gap-2">
+										{item.faviconUrl ? (
+											<div className="relative w-8 h-8 p-1 top-[2px]">
+												<Image
+													src={pageOutline}
+													width={32}
+													height={32}
+													alt="page_outline"
+													className="absolute -left-1 -top-1 h-[32px] w-[32px]"
+												/>
+												<img
+													src={item.faviconUrl}
+													alt="Favicon"
+													className="relative h-[16px] w-[16px]"
+												/>
+											</div>
+										) : (
+											<div className="relative w-8 h-8 p-1 top-[2px]">
+												<Image
+													src={pageOutline}
+													width={32}
+													height={32}
+													alt="page_outline"
+													className="absolute -left-1 -top-1 h-[32px] w-[32px]"
+												/>
+												<span className="relative material-symbols-outlined text-[18px] -left-[1px] text-muted-foreground">
+													public
+												</span>
+											</div>
+										)}
+										<div className="flex flex-col">
+											<div>{item.title}</div>
+											<div className="text-xs text-muted-foreground">
+												{item.description || 'Webpage'}
+											</div>
 										</div>
 									</div>
-								</div>
-							</Link>
+								</Link>
+							</div>
 						</div>
 						<div className="flex items-center">
 							<ResourceEditMenu resource={item} />
