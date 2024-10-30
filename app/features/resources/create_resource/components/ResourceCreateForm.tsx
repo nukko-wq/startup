@@ -109,14 +109,14 @@ const ResourceCreateForm = ({ onClose }: ResourceCreateFormProps) => {
 						<Button
 							type="button"
 							onPress={onClose}
-							className="px-4 py-2 text-sm border rounded hover:bg-gray-200"
+							className="px-4 py-2 text-sm border rounded hover:bg-gray-200 focus:outline-blue-500"
 						>
 							Cancel
 						</Button>
 						<Button
 							type="submit"
 							isDisabled={isSubmitting || !isValid}
-							className="px-4 py-2 text-sm border rounded bg-blue-500 disabled:bg-gray-200 text-white disabled:text-gray-700 hover:bg-blue-600 disabled:opacity-60"
+							className="px-4 py-2 text-sm border rounded bg-blue-500 disabled:bg-gray-200 text-white disabled:text-gray-700 hover:bg-blue-600 disabled:opacity-60 focus:outline-blue-500"
 						>
 							ADD RESOURCE
 						</Button>

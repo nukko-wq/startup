@@ -40,7 +40,10 @@ const ResourceDeleteButton = ({
 			delay={0}
 			closeDelay={0}
 		>
-			<Button onPress={handleDelete} className="pr-4 pl-2 py-4">
+			<Button
+				onPress={handleDelete}
+				className="p-3 hover:bg-zinc-200 rounded-full"
+			>
 				<Trash2 className="w-5 h-5" />
 			</Button>
 			{isTooltipVisible && (
