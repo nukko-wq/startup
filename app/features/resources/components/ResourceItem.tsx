@@ -13,7 +13,7 @@ import {
 import Image from 'next/image'
 import pageOutline from '@/app/public/images/page_outline_white.png'
 import { useListData } from 'react-stately'
-import { GripVertical } from 'lucide-react'
+import { Earth, GripVertical } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { useResources } from '@/app/features/resources/contexts/ResourceContext'
 
@@ -173,9 +173,7 @@ export default function ResourceItem() {
 													alt="page_outline"
 													className="absolute -left-1 -top-1 h-[32px] w-[32px]"
 												/>
-												<span className="relative material-symbols-outlined text-[18px] -left-[1px] text-muted-foreground">
-													public
-												</span>
+												<Earth className="w-4 h-4 text-zinc-500" />
 											</div>
 										)}
 										<div className="flex flex-col">
