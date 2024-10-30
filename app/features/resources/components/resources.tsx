@@ -44,11 +44,6 @@ const Resources = async () => {
 					</div>
 				</div>
 				<div className="flex flex-col border rounded-md">
-					{/*
-				{resources.map((resource) => (
-					<ResourceItem key={resource.id} resource={resource} />
-				))}
-					*/}
 					<ResourceItem />
 				</div>
 			</div>

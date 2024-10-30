@@ -8,7 +8,6 @@ import {
 	Tooltip,
 	TooltipTrigger,
 } from 'react-aria-components'
-import { useRouter } from 'next/navigation'
 import { Trash2 } from 'lucide-react'
 import { useResources } from '@/app/features/resources/contexts/ResourceContext'
 
