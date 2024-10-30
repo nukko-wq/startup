@@ -15,6 +15,7 @@ import pageOutline from '@/app/public/images/page_outline_white.png'
 import { useListData } from 'react-stately'
 import { GripVertical } from 'lucide-react'
 import { useEffect, useState } from 'react'
+import { useResources } from '@/app/features/resources/contexts/ResourceContext'
 
 interface ResourceItemProps {
 	resource: Pick<
@@ -30,25 +31,64 @@ interface UpdatePositonPayload {
 	}[]
 }
 
-export default function ResourceItem({ resource }: ResourceItemProps) {
-	// useListDataで並び替え可能なリストを管理
-	const list = useListData({
-		initialItems: resource,
-		getKey: (item) => item.id,
-	})
-
+export default function ResourceItem() {
+	const { resources, setResources } = useResources()
 	const [isDragging, setIsDragging] = useState(false)
+
+	// ドラッグ&ドロップの設定
+	const { dragAndDropHooks } = useDragAndDrop({
+		getItems: (keys) =>
+			[...keys].map((key) => {
+				const item = resources.find((r) => r.id === key)
+				if (!item) {
+					throw new Error(`Resource with key ${key} not found`)
+				}
+				return {
+					'text/plain': item.title,
+					'resource-item': JSON.stringify(item),
+					faviconUrl: item.faviconUrl || '',
+				}
+			}),
+
+		acceptedDragTypes: ['resource-item'],
+		getDropOperation: () => 'move',
+		renderDragPreview(items) {
+			return (
+				<div className="flex bg-zinc-300 p-2 min-w-[120px] rounded-sm">
+					<div className="text-zinc-950">{items[0]['text/plain']}</div>
+				</div>
+			)
+		},
+		onReorder(e) {
+			const newItems = [...resources]
+			const movedItem = newItems.find((item) => item.id === [...e.keys][0])
+			if (!movedItem) return
+			const targetIndex = newItems.findIndex((item) => item.id === e.target.key)
+
+			newItems.splice(
+				newItems.findIndex((item) => item.id === movedItem.id),
+				1,
+			)
+			if (e.target.dropPosition === 'before') {
+				newItems.splice(targetIndex, 0, movedItem)
+			} else {
+				newItems.splice(targetIndex + 1, 0, movedItem)
+			}
+
+			setResources(newItems)
+			setIsDragging(true)
+		},
+	})
 
 	useEffect(() => {
 		if (isDragging) {
-			console.log('List updated after drag', list.items)
-			updatePositions([...list.items])
+			updatePositions(resources)
 			setIsDragging(false)
 		}
-	}, [list.items, isDragging])
+	}, [resources, isDragging])
 
 	// 並び順更新用の関数
-	const updatePositions = async (items: typeof resource) => {
+	const updatePositions = async (items: typeof resources) => {
 		console.log('Updating positions:', items)
 		const payload: UpdatePositonPayload = {
 			items: items.map((item, index) => ({
@@ -75,45 +115,10 @@ export default function ResourceItem({ resource }: ResourceItemProps) {
 		}
 	}
 
-	// ドラッグ&ドロップの設定
-	const { dragAndDropHooks } = useDragAndDrop({
-		// ドラッグ項目のデータを提供
-		getItems: (keys) =>
-			[...keys].map((key) => {
-				const item = list.getItem(key)
-				return {
-					'text/plain': item.title,
-					'resource-item': JSON.stringify(item),
-					faviconUrl: item.faviconUrl || '',
-				}
-			}),
-
-		acceptedDragTypes: ['resource-item'],
-		getDropOperation: () => 'move',
-		renderDragPreview(items) {
-			return (
-				<div className="flex bg-zinc-300 p-2 min-w-[120px] rounded-sm">
-					<div className="text-zinc-950">{items[0]['text/plain']}</div>
-				</div>
-			)
-		},
-		onReorder(e) {
-			console.log('Before move:', list.items)
-
-			if (e.target.dropPosition === 'before') {
-				list.moveBefore(e.target.key, e.keys)
-			} else if (e.target.dropPosition === 'after') {
-				list.moveAfter(e.target.key, e.keys)
-			}
-			console.log('After move:', list.items)
-			setIsDragging(true)
-		},
-	})
-
 	return (
 		<GridList
 			aria-label="Resources"
-			items={list.items}
+			items={resources}
 			dragAndDropHooks={dragAndDropHooks}
 			selectionMode="single"
 			className="w-full hover:cursor-pointer"

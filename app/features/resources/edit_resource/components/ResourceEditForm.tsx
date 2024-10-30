@@ -15,6 +15,7 @@ import {
 } from 'react-aria-components'
 import { useEffect, useRef } from 'react'
 import { Earth } from 'lucide-react'
+import { useResources } from '@/app/features/resources/contexts/ResourceContext'
 
 interface ResourceEditFormProps {
 	resource: Pick<Resource, 'id' | 'title' | 'url' | 'description'>
@@ -27,6 +28,7 @@ export default function ResourceEditForm({
 }: ResourceEditFormProps) {
 	const router = useRouter()
 	const titleInputRef = useRef<HTMLInputElement>(null)
+	const { updateResource } = useResources()
 
 	useEffect(() => {
 		if (titleInputRef.current) {
@@ -70,7 +72,7 @@ export default function ResourceEditForm({
 				throw new Error(errorData.error || 'Failed to update resource')
 			}
 
-			router.refresh()
+			updateResource(resource.id, data)
 			onClose()
 		} catch (err) {
 			setError('root', {

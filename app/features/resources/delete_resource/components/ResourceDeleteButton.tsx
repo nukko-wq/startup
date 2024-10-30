@@ -8,14 +8,14 @@ import {
 	Tooltip,
 	TooltipTrigger,
 } from 'react-aria-components'
-import { useRouter } from 'next/navigation'
 import { Trash2 } from 'lucide-react'
+import { useResources } from '@/app/features/resources/contexts/ResourceContext'
 
 const ResourceDeleteButton = ({
 	resource,
 }: { resource: Pick<Resource, 'id'> }) => {
 	const [isTooltipVisible, setIsTooltipVisible] = useState(false)
-	const router = useRouter()
+	const { removeResource } = useResources()
 
 	const handleDelete = async () => {
 		try {
@@ -27,7 +27,7 @@ const ResourceDeleteButton = ({
 				throw new Error('Failed to delete resource')
 			}
 
-			router.refresh()
+			removeResource(resource.id)
 		} catch (error) {
 			console.error('Resource delete error:', error)
 			alert('リソースの削除に失敗しました。')
