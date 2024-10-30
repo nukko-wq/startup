@@ -37,7 +37,7 @@ const ResourceDeleteButton = ({
 		<TooltipTrigger
 			isOpen={isTooltipVisible}
 			onOpenChange={setIsTooltipVisible}
-			delay={0}
+			delay={700}
 			closeDelay={0}
 		>
 			<Button
@@ -47,10 +47,15 @@ const ResourceDeleteButton = ({
 				<Trash2 className="w-5 h-5" />
 			</Button>
 			{isTooltipVisible && (
-				<Tooltip className="bg-white text-sm shadow-md rounded-lg px-2 py-1">
+				<Tooltip className="bg-zinc-800 text-zinc-300 text-sm shadow-md rounded-lg px-2 py-1">
 					<OverlayArrow>
 						{/* biome-ignore lint/a11y/noSvgWithoutTitle: <explanation> */}
-						<svg width={8} height={8} viewBox="0 0 8 8" className="fill-white">
+						<svg
+							width={8}
+							height={8}
+							viewBox="0 0 8 8"
+							className="fill-zinc-800"
+						>
 							<path d="M0 0 L4 4 L8 0" />
 						</svg>
 					</OverlayArrow>
