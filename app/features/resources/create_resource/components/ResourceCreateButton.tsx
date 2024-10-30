@@ -11,7 +11,10 @@ const ResourceCreateButton = () => {
 	return (
 		<div className="mr-4">
 			<DialogTrigger isOpen={isOpen} onOpenChange={setIsOpen}>
-				<Button aria-label="Menu" className="outline-none p-2">
+				<Button
+					aria-label="Menu"
+					className="outline-none p-3 hover:bg-zinc-200 rounded-full"
+				>
 					<FilePlus className="w-6 h-6 text-zinc-700" />
 				</Button>
 				<Popover placement="start">
