@@ -14,7 +14,7 @@ import Image from 'next/image'
 import pageOutline from '@/app/public/images/page_outline_white.png'
 import { useListData } from 'react-stately'
 import { GripVertical } from 'lucide-react'
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 
 interface ResourceItemProps {
 	resource: Pick<
@@ -37,19 +37,20 @@ export default function ResourceItem({ resource }: ResourceItemProps) {
 		getKey: (item) => item.id,
 	})
 
+	const [isDragging, setIsDragging] = useState(false)
+
 	// biome-ignore lint/correctness/useExhaustiveDependencies: <explanation>
 	useEffect(() => {
 		console.log('Initial list:', list.items)
 	}, [])
 
 	useEffect(() => {
-		console.log('List updated:', list.items)
-	}, [list.items])
-
-	useEffect(() => {
-		console.log('List updated in useEffect', list.items)
-		updatePositions([...list.items])
-	}, [list.items])
+		if (isDragging) {
+			console.log('List updated after drag', list.items)
+			updatePositions([...list.items])
+			setIsDragging(false)
+		}
+	}, [list.items, isDragging])
 
 	// 並び順更新用の関数
 	const updatePositions = async (items: typeof resource) => {
@@ -60,8 +61,6 @@ export default function ResourceItem({ resource }: ResourceItemProps) {
 				position: index + 1,
 			})),
 		}
-
-		console.log('Updated positions:', payload.items)
 
 		try {
 			const response = await fetch('/api/resources/reorder', {
@@ -93,7 +92,7 @@ export default function ResourceItem({ resource }: ResourceItemProps) {
 		acceptedDragTypes: ['resource-item'],
 		getDropOperation: () => 'move',
 
-		onReorder: async (e) => {
+		onReorder(e) {
 			console.log('Before move:', list.items)
 
 			if (e.target.dropPosition === 'before') {
@@ -101,13 +100,8 @@ export default function ResourceItem({ resource }: ResourceItemProps) {
 			} else if (e.target.dropPosition === 'after') {
 				list.moveAfter(e.target.key, e.keys)
 			}
-
-			//const updatedItems = [...list.items]
-
 			console.log('After move:', list.items)
-
-			// 状態更新後に位置を更新
-			// await updatePositions(updatedItems)
+			setIsDragging(true)
 		},
 	})
 
@@ -116,7 +110,7 @@ export default function ResourceItem({ resource }: ResourceItemProps) {
 			aria-label="Resources"
 			items={list.items}
 			dragAndDropHooks={dragAndDropHooks}
-			selectionMode="multiple"
+			selectionMode="single"
 			className="w-full"
 		>
 			{(item) => (
