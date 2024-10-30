@@ -14,7 +14,7 @@ import Image from 'next/image'
 import pageOutline from '@/app/public/images/page_outline_white.png'
 import { useListData } from 'react-stately'
 import { GripVertical } from 'lucide-react'
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 
 interface ResourceItemProps {
 	resource: Pick<
@@ -37,11 +37,25 @@ export default function ResourceItem({ resource }: ResourceItemProps) {
 		getKey: (item) => item.id,
 	})
 
-	const [isDragging, setIsDragging] = useState(false)
+	const [showDebugPreview, setShowDebugPreview] = useState(true)
 
-	// biome-ignore lint/correctness/useExhaustiveDependencies: <explanation>
+	const [isDragging, setIsDragging] = useState(false)
+	const [containerWidth, setContainerWidth] = useState<number>(0)
+
+	// コンテナの幅を取得するための参照を作成
+	const containerRef = useRef<HTMLDivElement>(null)
+
+	// マウント時とリサイズ時にコンテナの幅を更新
 	useEffect(() => {
-		console.log('Initial list:', list.items)
+		const updateWidth = () => {
+			if (containerRef.current) {
+				setContainerWidth(containerRef.current.offsetWidth)
+			}
+		}
+
+		updateWidth()
+		window.addEventListener('resize', updateWidth)
+		return () => window.removeEventListener('resize', updateWidth)
 	}, [])
 
 	useEffect(() => {
@@ -92,6 +106,17 @@ export default function ResourceItem({ resource }: ResourceItemProps) {
 		acceptedDragTypes: ['resource-item'],
 		getDropOperation: () => 'move',
 
+		renderDragPreview(items) {
+			return (
+				<div className="w-full" aria-label="drag-preview">
+					<div className="p-5 rounded-sm bg-zinc-300">
+						{items[0]['text/plain']}
+						<span className="badge">{items.length}</span>
+					</div>
+				</div>
+			)
+		},
+
 		onReorder(e) {
 			console.log('Before move:', list.items)
 
@@ -107,6 +132,7 @@ export default function ResourceItem({ resource }: ResourceItemProps) {
 
 	return (
 		<GridList
+			ref={containerRef}
 			aria-label="Resources"
 			items={list.items}
 			dragAndDropHooks={dragAndDropHooks}
