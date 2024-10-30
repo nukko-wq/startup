@@ -14,7 +14,7 @@ import Image from 'next/image'
 import pageOutline from '@/app/public/images/page_outline_white.png'
 import { useListData } from 'react-stately'
 import { GripVertical } from 'lucide-react'
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useState } from 'react'
 
 interface ResourceItemProps {
 	resource: Pick<
@@ -37,26 +37,7 @@ export default function ResourceItem({ resource }: ResourceItemProps) {
 		getKey: (item) => item.id,
 	})
 
-	const [showDebugPreview, setShowDebugPreview] = useState(true)
-
 	const [isDragging, setIsDragging] = useState(false)
-	const [containerWidth, setContainerWidth] = useState<number>(0)
-
-	// コンテナの幅を取得するための参照を作成
-	const containerRef = useRef<HTMLDivElement>(null)
-
-	// マウント時とリサイズ時にコンテナの幅を更新
-	useEffect(() => {
-		const updateWidth = () => {
-			if (containerRef.current) {
-				setContainerWidth(containerRef.current.offsetWidth)
-			}
-		}
-
-		updateWidth()
-		window.addEventListener('resize', updateWidth)
-		return () => window.removeEventListener('resize', updateWidth)
-	}, [])
 
 	useEffect(() => {
 		if (isDragging) {
@@ -98,25 +79,24 @@ export default function ResourceItem({ resource }: ResourceItemProps) {
 	const { dragAndDropHooks } = useDragAndDrop({
 		// ドラッグ項目のデータを提供
 		getItems: (keys) =>
-			[...keys].map((key) => ({
-				'text/plain': list.getItem(key).title,
-				'resource-item': JSON.stringify(list.getItem(key)),
-			})),
+			[...keys].map((key) => {
+				const item = list.getItem(key)
+				return {
+					'text/plain': item.title,
+					'resource-item': JSON.stringify(item),
+					faviconUrl: item.faviconUrl || '',
+				}
+			}),
 
 		acceptedDragTypes: ['resource-item'],
 		getDropOperation: () => 'move',
-
 		renderDragPreview(items) {
 			return (
-				<div className="w-full" aria-label="drag-preview">
-					<div className="p-5 rounded-sm bg-zinc-300">
-						{items[0]['text/plain']}
-						<span className="badge">{items.length}</span>
-					</div>
+				<div className="flex bg-zinc-300 p-2 min-w-[120px] rounded-sm">
+					<div className="text-zinc-950">{items[0]['text/plain']}</div>
 				</div>
 			)
 		},
-
 		onReorder(e) {
 			console.log('Before move:', list.items)
 
@@ -132,7 +112,6 @@ export default function ResourceItem({ resource }: ResourceItemProps) {
 
 	return (
 		<GridList
-			ref={containerRef}
 			aria-label="Resources"
 			items={list.items}
 			dragAndDropHooks={dragAndDropHooks}
@@ -147,10 +126,7 @@ export default function ResourceItem({ resource }: ResourceItemProps) {
 				>
 					<div className="flex justify-between items-center p-1 border-b border-gray-200 last:border-b-0 hover:bg-zinc-100">
 						<div className="flex flex-grow p-1 ml-1 gap-2">
-							<Button
-								slot="drag"
-								className="cursor-grab active:cursor-grabbing"
-							>
+							<Button className="hover:cursor-grab" slot="drag">
 								<GripVertical className="w-4 h-4" />
 							</Button>
 							<Link href={item.url} target="_blank" className="outline-none">
