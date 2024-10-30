@@ -4,7 +4,6 @@ import { Controller, useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { resourceSchema, type ResourceSchema } from '@/lib/validations/resource'
 import type { Resource } from '@prisma/client'
-import { useRouter } from 'next/navigation'
 import {
 	Form,
 	TextField,
@@ -26,7 +25,6 @@ export default function ResourceEditForm({
 	resource,
 	onClose,
 }: ResourceEditFormProps) {
-	const router = useRouter()
 	const titleInputRef = useRef<HTMLInputElement>(null)
 	const { updateResource } = useResources()
 
