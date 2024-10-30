@@ -7,6 +7,7 @@ const resourceCreateSchema = z.object({
 	title: z.string(),
 	description: z.string().optional().default('Webpage'),
 	url: z.string(),
+	faviconUrl: z.string().optional().default(''),
 	position: z.number(),
 })
 
@@ -22,13 +23,14 @@ export async function POST(req: NextRequest) {
 
 		const json = await req.json()
 		const body = resourceCreateSchema.parse(json)
-		const { title, description = '', url, position } = body
+		const { title, description = '', url, position, faviconUrl = '' } = body
 
 		const resource = await db.resource.create({
 			data: {
 				title,
 				description,
 				url,
+				faviconUrl,
 				position,
 				userId: user.id,
 			},
