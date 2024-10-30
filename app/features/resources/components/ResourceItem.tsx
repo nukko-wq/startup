@@ -125,10 +125,18 @@ export default function ResourceItem({ resource }: ResourceItemProps) {
 					textValue={item.title}
 				>
 					<div className="flex justify-between items-center p-1 border-b border-gray-200 last:border-b-0 hover:bg-zinc-100">
-						<div className="flex flex-grow p-1 ml-1 gap-2">
-							<Button className="hover:cursor-grab" slot="drag">
-								<GripVertical className="w-4 h-4" />
-							</Button>
+						<div
+							className="flex flex-grow p-1 ml-1 gap-2 group"
+							aria-label="Resource Item Wrapper"
+						>
+							<div
+								className="cursor-grab flex items-center opacity-0 group-hover:opacity-100"
+								aria-label="Drag Wrapper"
+							>
+								<Button className="cursor-grab" slot="drag" aria-label="Drag">
+									<GripVertical className="w-4 h-4 text-zinc-500" />
+								</Button>
+							</div>
 							<div className="flex flex-grow">
 								<Link
 									href={item.url}

@@ -14,6 +14,7 @@ import {
 	Button,
 } from 'react-aria-components'
 import { useEffect, useRef } from 'react'
+import { Earth } from 'lucide-react'
 
 interface ResourceEditFormProps {
 	resource: Pick<Resource, 'id' | 'title' | 'url' | 'description'>
@@ -83,7 +84,7 @@ export default function ResourceEditForm({
 		<Form onSubmit={handleSubmit(onSubmit)} className="flex flex-col flex-grow">
 			<div className="flex items-center gap-2 border-b border-gray-200">
 				<div className="border border-gray-200 rounded-sm ml-4 w-8 h-8 flex items-center justify-center">
-					<span className="material-symbols-outlined text-lg">public</span>
+					<Earth className="w-4 h-4 text-zinc-700" />
 				</div>
 				<Controller
 					name="title"
