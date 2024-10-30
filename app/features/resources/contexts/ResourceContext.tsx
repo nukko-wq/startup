@@ -12,6 +12,11 @@ type ResourceContextType = {
 		React.SetStateAction<ResourceContextType['resources']>
 	>
 	removeResource: (id: string) => void
+	updateResource: (
+		id: string,
+		data: Partial<ResourceContextType['resources'][0]>,
+	) => void
+	addResource: (resource: ResourceContextType['resources'][0]) => void
 }
 
 const ResourceContext = createContext<ResourceContextType | undefined>(
@@ -31,9 +36,30 @@ export function ResourceProvider({
 		setResources((prev) => prev.filter((resource) => resource.id !== id))
 	}
 
+	const updateResource = (
+		id: string,
+		data: Partial<ResourceContextType['resources'][0]>,
+	) => {
+		setResources((prev) =>
+			prev.map((resource) =>
+				resource.id === id ? { ...resource, ...data } : resource,
+			),
+		)
+	}
+
+	const addResource = (resource: ResourceContextType['resources'][0]) => {
+		setResources((prev) => [...prev, resource])
+	}
+
 	return (
 		<ResourceContext.Provider
-			value={{ resources, setResources, removeResource }}
+			value={{
+				resources,
+				setResources,
+				removeResource,
+				updateResource,
+				addResource,
+			}}
 		>
 			{children}
 		</ResourceContext.Provider>

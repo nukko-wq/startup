@@ -2,9 +2,9 @@ import { resourceSchema, type ResourceSchema } from '@/lib/validations/resource'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { Button, Form, Input, Label, TextField } from 'react-aria-components'
 import { useForm } from 'react-hook-form'
-import { createResource } from '@/app/features/resources/create_resource/actions/_actions'
 import { useEffect, useRef, useState } from 'react'
 import { Link } from 'lucide-react'
+import { useResources } from '@/app/features/resources/contexts/ResourceContext'
 
 interface ResourceCreateFormProps {
 	onClose: () => void
@@ -13,6 +13,7 @@ interface ResourceCreateFormProps {
 const ResourceCreateForm = ({ onClose }: ResourceCreateFormProps) => {
 	const urlInputRef = useRef<HTMLInputElement | null>(null)
 	const [urlPlaceholder, setUrlPlaceholder] = useState('URL')
+	const { resources, addResource } = useResources()
 
 	useEffect(() => {
 		urlInputRef.current?.focus()
@@ -56,8 +57,28 @@ const ResourceCreateForm = ({ onClose }: ResourceCreateFormProps) => {
 				...data,
 				title: data.title || data.url,
 				faviconUrl: faviconData.faviconUrl,
+				position: resources.length + 1,
+				description: data.description || '',
 			}
-			await createResource(submissionData)
+
+			const response = await fetch('/api/resources', {
+				method: 'POST',
+				headers: {
+					'Content-Type': 'application/json',
+				},
+				body: JSON.stringify(submissionData),
+			})
+
+			if (!response.ok) {
+				throw new Error('Failed to create resource')
+			}
+
+			const newResource = await response.json()
+			addResource({
+				...submissionData,
+				id: newResource.id,
+			})
+
 			onClose()
 		} catch (error) {
 			console.error('Resource creation error:', error)
