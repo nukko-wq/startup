@@ -4,6 +4,7 @@ import { getCurrentUser } from '@/lib/session'
 import { redirect } from 'next/navigation'
 import ResourceItem from '@/app/features/resources/components/ResourceItem'
 import { File } from 'lucide-react'
+import { ResourceProvider } from '@/app/features/resources/contexts/ResourceContext'
 
 const Resources = async () => {
 	const user = await getCurrentUser()
@@ -31,25 +32,27 @@ const Resources = async () => {
 	})
 
 	return (
-		<div className="min-w-[260px] max-w-[920px] w-full p-5">
-			<div className="flex justify-between items-center mb-2">
-				<div className="flex items-center gap-2 ml-4">
-					<File className="w-6 h-6 text-zinc-700" />
-					<div className="text-xl font-semibold text-zinc-700">Resources</div>
+		<ResourceProvider initialResources={resources}>
+			<div className="min-w-[260px] max-w-[920px] w-full p-5">
+				<div className="flex justify-between items-center mb-2">
+					<div className="flex items-center gap-2 ml-4">
+						<File className="w-6 h-6 text-zinc-700" />
+						<div className="text-xl font-semibold text-zinc-700">Resources</div>
+					</div>
+					<div className="">
+						<ResourceCreateButton />
+					</div>
 				</div>
-				<div className="">
-					<ResourceCreateButton />
-				</div>
-			</div>
-			<div className="flex flex-col border rounded-md">
-				{/*
+				<div className="flex flex-col border rounded-md">
+					{/*
 				{resources.map((resource) => (
 					<ResourceItem key={resource.id} resource={resource} />
 				))}
 					*/}
-				<ResourceItem resource={resources} />
+					<ResourceItem />
+				</div>
 			</div>
-		</div>
+		</ResourceProvider>
 	)
 }
 

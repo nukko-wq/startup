@@ -15,6 +15,7 @@ import pageOutline from '@/app/public/images/page_outline_white.png'
 import { useListData } from 'react-stately'
 import { GripVertical } from 'lucide-react'
 import { useEffect, useState } from 'react'
+import { useResources } from '@/app/features/resources/contexts/ResourceContext'
 
 interface ResourceItemProps {
 	resource: Pick<
@@ -30,10 +31,11 @@ interface UpdatePositonPayload {
 	}[]
 }
 
-export default function ResourceItem({ resource }: ResourceItemProps) {
+export default function ResourceItem() {
+	const { resources, setResources } = useResources()
 	// useListDataで並び替え可能なリストを管理
 	const list = useListData({
-		initialItems: resource,
+		initialItems: resources,
 		getKey: (item) => item.id,
 	})
 
@@ -48,7 +50,7 @@ export default function ResourceItem({ resource }: ResourceItemProps) {
 	}, [list.items, isDragging])
 
 	// 並び順更新用の関数
-	const updatePositions = async (items: typeof resource) => {
+	const updatePositions = async (items: typeof resources) => {
 		console.log('Updating positions:', items)
 		const payload: UpdatePositonPayload = {
 			items: items.map((item, index) => ({
@@ -106,6 +108,7 @@ export default function ResourceItem({ resource }: ResourceItemProps) {
 				list.moveAfter(e.target.key, e.keys)
 			}
 			console.log('After move:', list.items)
+
 			setIsDragging(true)
 		},
 	})
