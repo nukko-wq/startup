@@ -14,12 +14,12 @@ const resourceCreateSchema = z.object({
 export async function POST(req: NextRequest) {
 	try {
 		const session = await auth()
+		const userId = session?.user?.id
 
-		if (!session) {
-			return NextResponse.json('Unauthorized', { status: 403 })
+		if (!userId) {
+			console.log('Unauthorized - No user ID in session:', session)
+			return NextResponse.json({ error: 'Unauthorized' }, { status: 403 })
 		}
-
-		const { user } = session
 
 		const json = await req.json()
 		const body = resourceCreateSchema.parse(json)
@@ -32,7 +32,11 @@ export async function POST(req: NextRequest) {
 				url,
 				faviconUrl,
 				position,
-				userId: user.id,
+				user: {
+					connect: {
+						id: userId,
+					},
+				},
 			},
 			select: {
 				id: true,
