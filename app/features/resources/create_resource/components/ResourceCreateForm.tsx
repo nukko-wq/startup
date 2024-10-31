@@ -9,6 +9,7 @@ import { Link } from 'lucide-react'
 import { useResources } from '@/app/features/resources/contexts/ResourceContext'
 import { useSession } from 'next-auth/react'
 import IconGoogle from '@/app/components/elements/IconGoogle'
+import { useCallback } from 'react'
 
 interface ResourceCreateFormProps {
 	onClose: () => void
@@ -24,43 +25,52 @@ interface DriveFile {
 const ResourceCreateForm = ({ onClose }: ResourceCreateFormProps) => {
 	const urlInputRef = useRef<HTMLInputElement | null>(null)
 	const [urlPlaceholder, setUrlPlaceholder] = useState('URL')
-	const { resources, addResource, setResources } = useResources()
-	const [driveFiles, setDriveFiles] = useState<DriveFile[]>([])
+	const { resources, addResource, setResources, driveFiles, setDriveFiles } =
+		useResources()
 	const [isLoadingFiles, setIsLoadingFiles] = useState(false)
 	const [error, setError] = useState<string | null>(null)
 	const { data: session } = useSession()
 	const [activeTab, setActiveTab] = useState<'url' | 'drive'>('url')
 
 	// Google Drive のファイル一覧を取得
-	useEffect(() => {
-		const fetchDriveFiles = async () => {
-			if (!session) {
-				setError('セッションが見つかりません')
-				return
-			}
-
-			setIsLoadingFiles(true)
-			setError(null)
-
-			try {
-				const response = await fetch('/api/googleapis')
-				if (!response.ok) {
-					throw new Error('ファイルの取得に失敗しました')
-				}
-				const data = await response.json()
-				setDriveFiles(data.files || [])
-			} catch (error) {
-				console.error('Error fetching Google Drive files:', error)
-				setError(
-					error instanceof Error ? error.message : 'エラーが発生しました',
-				)
-			} finally {
-				setIsLoadingFiles(false)
-			}
+	const fetchDriveFiles = useCallback(async () => {
+		if (!session) {
+			setError('セッションが見つかりません')
+			return
 		}
 
-		fetchDriveFiles()
-	}, [session])
+		if (driveFiles.length > 0) return
+		setIsLoadingFiles(true)
+		setError(null)
+
+		try {
+			const response = await fetch('/api/googleapis')
+			if (!response.ok) {
+				throw new Error('ファイルの取得に失敗しました')
+			}
+			const data = await response.json()
+			setDriveFiles(data.files || [])
+		} catch (error) {
+			console.error('Error fetching Google Drive files:', error)
+			setError(error instanceof Error ? error.message : 'エラーが発生しました')
+		} finally {
+			setIsLoadingFiles(false)
+		}
+	}, [session, driveFiles.length, setDriveFiles])
+
+	// タブ切り替え時にプリフェッチ
+	const handleDriveTabHover = useCallback(() => {
+		if (driveFiles.length === 0 && !isLoadingFiles) {
+			fetchDriveFiles()
+		}
+	}, [driveFiles.length, isLoadingFiles, fetchDriveFiles])
+
+	useEffect(() => {
+		// URLタブがアクティブなときにバックグラウンドでファイルを取得
+		if (activeTab === 'url') {
+			fetchDriveFiles()
+		}
+	}, [activeTab, fetchDriveFiles])
 
 	const getFileIcon = (mimeType: string) => {
 		switch (mimeType) {
@@ -266,6 +276,7 @@ const ResourceCreateForm = ({ onClose }: ResourceCreateFormProps) => {
 						activeTab === 'drive' ? 'bg-foreground/10' : ''
 					}`}
 					onPress={() => setActiveTab('drive')}
+					onHoverStart={handleDriveTabHover}
 					aria-label="Google Drive"
 				>
 					<div className="flex items-center gap-2">
