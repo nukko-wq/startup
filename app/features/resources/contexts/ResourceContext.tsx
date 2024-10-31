@@ -18,12 +18,22 @@ type ResourceContextType = {
 	setResources: React.Dispatch<
 		React.SetStateAction<ResourceContextType['resources']>
 	>
-	removeResource: (id: string) => void
+	removeResource: (id: string) => Promise<void>
 	updateResource: (
 		id: string,
 		data: Partial<ResourceContextType['resources'][0]>,
-	) => void
-	addResource: (resource: ResourceContextType['resources'][0]) => void
+	) => Promise<void>
+	addResource: ((
+		resource: ResourceContextType['resources'][0],
+	) => Promise<void>) &
+		((
+			updater: (
+				prev: ResourceContextType['resources'],
+			) => ResourceContextType['resources'],
+		) => Promise<void>)
+	reorderResources: (
+		newResources: ResourceContextType['resources'],
+	) => Promise<void>
 }
 
 const ResourceContext = createContext<ResourceContextType | undefined>(
@@ -39,23 +49,106 @@ export function ResourceProvider({
 }) {
 	const [resources, setResources] = useState(initialResources)
 
-	const removeResource = (id: string) => {
+	const removeResource = async (id: string) => {
+		const previousResources = [...resources]
 		setResources((prev) => prev.filter((resource) => resource.id !== id))
+
+		try {
+			const response = await fetch(`/api/resources/${id}`, {
+				method: 'DELETE',
+			})
+			if (!response.ok) {
+				throw new Error('Failed to delete resource')
+			}
+		} catch (error) {
+			setResources(previousResources)
+			throw error
+		}
 	}
 
-	const updateResource = (
+	const updateResource = async (
 		id: string,
 		data: Partial<ResourceContextType['resources'][0]>,
 	) => {
+		const previousResources = [...resources]
 		setResources((prev) =>
 			prev.map((resource) =>
 				resource.id === id ? { ...resource, ...data } : resource,
 			),
 		)
+
+		try {
+			const response = await fetch(`/api/resources/${id}`, {
+				method: 'PATCH',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify(data),
+			})
+			if (!response.ok) {
+				throw new Error('Failed to update resource')
+			}
+		} catch (error) {
+			setResources(previousResources)
+			throw error
+		}
 	}
 
-	const addResource = (resource: ResourceContextType['resources'][0]) => {
-		setResources((prev) => [...prev, resource])
+	const addResource = async (
+		resourceOrUpdater:
+			| ResourceContextType['resources'][0]
+			| ((
+					prev: ResourceContextType['resources'],
+			  ) => ResourceContextType['resources']),
+	) => {
+		const previousResources = [...resources]
+
+		if (typeof resourceOrUpdater === 'function') {
+			setResources(resourceOrUpdater)
+			return
+		}
+
+		setResources((prev) => [...prev, resourceOrUpdater])
+
+		try {
+			const response = await fetch('/api/resources', {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify(resourceOrUpdater),
+			})
+			if (!response.ok) {
+				throw new Error('Failed to create resource')
+			}
+		} catch (error) {
+			setResources(previousResources)
+			throw error
+		}
+	}
+
+	const reorderResources = async (
+		newResources: ResourceContextType['resources'],
+	) => {
+		const previousResources = [...resources]
+		setResources(newResources)
+
+		try {
+			const payload = {
+				items: newResources.map((item, index) => ({
+					id: item.id,
+					position: index + 1,
+				})),
+			}
+
+			const response = await fetch('/api/resources/reorder', {
+				method: 'PUT',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify(payload),
+			})
+			if (!response.ok) {
+				throw new Error('Failed to reorder resources')
+			}
+		} catch (error) {
+			setResources(previousResources)
+			throw error
+		}
 	}
 
 	return (
@@ -66,6 +159,7 @@ export function ResourceProvider({
 				removeResource,
 				updateResource,
 				addResource,
+				reorderResources,
 			}}
 		>
 			{children}

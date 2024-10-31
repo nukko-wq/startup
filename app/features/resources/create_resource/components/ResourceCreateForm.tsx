@@ -9,6 +9,7 @@ import { Link } from 'lucide-react'
 import { useResources } from '@/app/features/resources/contexts/ResourceContext'
 import { useSession } from 'next-auth/react'
 import IconGoogle from '@/app/components/elements/IconGoogle'
+
 interface ResourceCreateFormProps {
 	onClose: () => void
 }
@@ -23,7 +24,7 @@ interface DriveFile {
 const ResourceCreateForm = ({ onClose }: ResourceCreateFormProps) => {
 	const urlInputRef = useRef<HTMLInputElement | null>(null)
 	const [urlPlaceholder, setUrlPlaceholder] = useState('URL')
-	const { resources, addResource } = useResources()
+	const { resources, addResource, setResources } = useResources()
 	const [driveFiles, setDriveFiles] = useState<DriveFile[]>([])
 	const [isLoadingFiles, setIsLoadingFiles] = useState(false)
 	const [error, setError] = useState<string | null>(null)
@@ -120,10 +121,20 @@ const ResourceCreateForm = ({ onClose }: ResourceCreateFormProps) => {
 				faviconUrl: faviconData.faviconUrl,
 				position: resources.length + 1,
 				description: data.description || '',
-				mimeType: data.mimeType || null,
+				mimeType: data.mimeType || '',
 				isGoogleDrive: data.isGoogleDrive || false,
 			}
 
+			// Optimistic Update
+			const tempId = `temp-${Date.now()}`
+			const optimisticResource = {
+				...submissionData,
+				id: tempId,
+			}
+			await addResource(optimisticResource)
+			onClose()
+
+			// APリクエストを実行
 			const response = await fetch('/api/resources', {
 				method: 'POST',
 				headers: {
@@ -136,15 +147,25 @@ const ResourceCreateForm = ({ onClose }: ResourceCreateFormProps) => {
 				throw new Error('Failed to create resource')
 			}
 
+			// 成功時は実際のIDで更新
 			const newResource = await response.json()
-			addResource({
-				...submissionData,
-				id: newResource.id,
-			})
-
-			onClose()
+			setResources((prev) =>
+				prev.map((resource) =>
+					resource.id === tempId
+						? {
+								...resource,
+								id: newResource.id,
+							}
+						: resource,
+				),
+			)
 		} catch (error) {
 			console.error('Resource creation error:', error)
+			// エラー時はリソースを削除
+			addResource((prev) =>
+				prev.filter((resource) => resource.id !== `temp-${Date.now()}`),
+			)
+			alert('リソースの作成に失敗しました')
 		}
 	}
 
@@ -163,13 +184,23 @@ const ResourceCreateForm = ({ onClose }: ResourceCreateFormProps) => {
 				title: file.name,
 				url: file.webViewLink,
 				driveFileId: file.id,
-				mimeType: file.mimeType,
+				mimeType: file.mimeType || '',
 				isGoogleDrive: true,
 				position: resources.length + 1,
 				description: '',
 				faviconUrl: '',
 			}
 
+			// Optimistic Update
+			const tempId = `temp-${Date.now()}`
+			const optimisticResource = {
+				...submissionData,
+				id: tempId,
+			}
+			addResource(optimisticResource)
+			onClose()
+
+			// APIリクエストを実行
 			const response = await fetch('/api/resources', {
 				method: 'POST',
 				headers: {
@@ -182,14 +213,21 @@ const ResourceCreateForm = ({ onClose }: ResourceCreateFormProps) => {
 				throw new Error('Failed to create resource')
 			}
 
+			// 成功時は実際のIDで更新
 			const newResource = await response.json()
-			addResource({
-				...submissionData,
-				id: newResource.id,
-			})
-			onClose()
+			setResources((prev) =>
+				prev.map((resource) =>
+					resource.id === tempId
+						? { ...resource, id: newResource.id }
+						: resource,
+				),
+			)
 		} catch (error) {
 			console.error('Resource creation error:', error)
+			// エラー時はリソースを削除
+			setResources((prev) =>
+				prev.filter((resource) => resource.id !== `temp-${Date.now()}`),
+			)
 		}
 	}
 

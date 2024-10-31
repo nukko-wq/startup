@@ -19,15 +19,7 @@ const ResourceDeleteButton = ({
 
 	const handleDelete = async () => {
 		try {
-			const response = await fetch(`/api/resources/${resource.id}`, {
-				method: 'DELETE',
-			})
-
-			if (!response.ok) {
-				throw new Error('Failed to delete resource')
-			}
-
-			removeResource(resource.id)
+			await removeResource(resource.id)
 		} catch (error) {
 			console.error('Resource delete error:', error)
 			alert('リソースの削除に失敗しました。')
