@@ -54,12 +54,31 @@ export default function ResourceEditForm({
 
 	const onSubmit = async (data: ResourceSchema) => {
 		try {
+			// Optimistic Update
+			const optimisticData = {
+				...resource,
+				title: data.title || resource.title,
+				url: data.url,
+				description: data.description || '',
+			}
+
+			// 更新に必要なフィールドのみ送信
+			const updateData = {
+				title: data.title,
+				url: data.url,
+				description: data.description,
+			}
+
+			await updateResource(resource.id, optimisticData)
+			onClose()
+
+			// APIリクエストを実行
 			const response = await fetch(`/api/resources/${resource.id}`, {
 				method: 'PATCH',
 				headers: {
 					'Content-Type': 'application/json',
 				},
-				body: JSON.stringify(data),
+				body: JSON.stringify(updateData),
 			})
 
 			if (!response.ok) {
@@ -69,10 +88,8 @@ export default function ResourceEditForm({
 				}
 				throw new Error(errorData.error || 'Failed to update resource')
 			}
-
-			updateResource(resource.id, data)
-			onClose()
 		} catch (err) {
+			await updateResource(resource.id, resource)
 			setError('root', {
 				message:
 					err instanceof Error ? err.message : 'Failed to update resource',
