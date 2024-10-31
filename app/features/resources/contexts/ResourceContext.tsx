@@ -3,6 +3,13 @@
 import { createContext, useContext, useState } from 'react'
 import type { Resource } from '@prisma/client'
 
+interface DriveFile {
+	id: string
+	name: string
+	webViewLink: string
+	mimeType: string
+}
+
 type ResourceContextType = {
 	resources: Pick<
 		Resource,
@@ -18,6 +25,8 @@ type ResourceContextType = {
 	setResources: React.Dispatch<
 		React.SetStateAction<ResourceContextType['resources']>
 	>
+	driveFiles: DriveFile[]
+	setDriveFiles: React.Dispatch<React.SetStateAction<DriveFile[]>>
 	removeResource: (id: string) => Promise<void>
 	updateResource: (
 		id: string,
@@ -48,6 +57,7 @@ export function ResourceProvider({
 	initialResources: ResourceContextType['resources']
 }) {
 	const [resources, setResources] = useState(initialResources)
+	const [driveFiles, setDriveFiles] = useState<DriveFile[]>([])
 
 	const removeResource = async (id: string) => {
 		const previousResources = [...resources]
@@ -142,6 +152,8 @@ export function ResourceProvider({
 			value={{
 				resources,
 				setResources,
+				driveFiles,
+				setDriveFiles,
 				removeResource,
 				updateResource,
 				addResource,
