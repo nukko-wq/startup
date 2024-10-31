@@ -110,6 +110,7 @@ const ResourceCreateForm = ({ onClose }: ResourceCreateFormProps) => {
 
 	const onSubmit = async (data: ResourceSchema) => {
 		try {
+			onClose()
 			const faviconResponse = await fetch(
 				`/api/favicon?url=${encodeURIComponent(data.url)}`,
 			)
@@ -132,7 +133,6 @@ const ResourceCreateForm = ({ onClose }: ResourceCreateFormProps) => {
 				id: tempId,
 			}
 			await addResource(optimisticResource)
-			onClose()
 
 			// APリクエストを実行
 			const response = await fetch('/api/resources', {
@@ -180,14 +180,32 @@ const ResourceCreateForm = ({ onClose }: ResourceCreateFormProps) => {
 	// ファイルを選択したときの処理
 	const handleDriveFileClick = async (file: DriveFile) => {
 		try {
+			onClose()
+
+			let description = ''
+			switch (file.mimeType) {
+				case 'application/vnd.google-apps.document':
+					description = 'Google Doc'
+					break
+				case 'application/vnd.google-apps.spreadsheet':
+					description = 'Google Sheet'
+					break
+				case 'application/vnd.google-apps.form':
+					description = 'Google Form'
+					break
+				case 'application/vnd.google-apps.presentation':
+					description = 'Google Slide'
+					break
+			}
+
 			const submissionData = {
 				title: file.name,
 				url: file.webViewLink,
 				driveFileId: file.id,
-				mimeType: file.mimeType || '',
+				mimeType: file.mimeType,
 				isGoogleDrive: true,
 				position: resources.length + 1,
-				description: '',
+				description: description,
 				faviconUrl: '',
 			}
 
@@ -198,7 +216,6 @@ const ResourceCreateForm = ({ onClose }: ResourceCreateFormProps) => {
 				id: tempId,
 			}
 			addResource(optimisticResource)
-			onClose()
 
 			// APIリクエストを実行
 			const response = await fetch('/api/resources', {

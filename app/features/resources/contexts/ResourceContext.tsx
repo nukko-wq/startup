@@ -107,20 +107,6 @@ export function ResourceProvider({
 		}
 
 		setResources((prev) => [...prev, resourceOrUpdater])
-
-		try {
-			const response = await fetch('/api/resources', {
-				method: 'POST',
-				headers: { 'Content-Type': 'application/json' },
-				body: JSON.stringify(resourceOrUpdater),
-			})
-			if (!response.ok) {
-				throw new Error('Failed to create resource')
-			}
-		} catch (error) {
-			setResources(previousResources)
-			throw error
-		}
 	}
 
 	const reorderResources = async (
