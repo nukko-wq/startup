@@ -39,7 +39,10 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
 		authorized: async ({ auth }) => {
 			return !!auth
 		},
-		async jwt({ token, account }) {
+		async jwt({ token, account, user }) {
+			if (user?.id) {
+				token.id = user.id
+			}
 			if (account) {
 				token.accessToken = account.access_token
 			}
@@ -48,8 +51,8 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
 		async session({ token, session }) {
 			if (session.user) {
 				session.user.id = token.id
+				session.accessToken = token.accessToken
 			}
-			session.accessToken = token.accessToken
 			return session
 		},
 	},

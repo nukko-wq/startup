@@ -1,19 +1,10 @@
 import type { NextRequest } from 'next/server'
-import { updateSession } from '@/utils/supabase/middleware'
 import { auth } from '@/lib/auth'
 
 export async function middleware(request: NextRequest) {
-	await updateSession(request)
-
 	const session = await auth()
 	const isAuth = !!session
 	const isAuthPage = request.nextUrl.pathname === '/login'
-
-	console.log({
-		pathname: request.nextUrl.pathname,
-		isAuth,
-		isAuthPage,
-	})
 
 	if (!isAuth && !isAuthPage) {
 		return Response.redirect(new URL('/login', request.nextUrl.origin))
