@@ -6,7 +6,14 @@ import type { Resource } from '@prisma/client'
 type ResourceContextType = {
 	resources: Pick<
 		Resource,
-		'id' | 'title' | 'description' | 'url' | 'faviconUrl' | 'position'
+		| 'id'
+		| 'title'
+		| 'description'
+		| 'url'
+		| 'faviconUrl'
+		| 'mimeType'
+		| 'isGoogleDrive'
+		| 'position'
 	>[]
 	setResources: React.Dispatch<
 		React.SetStateAction<ResourceContextType['resources']>

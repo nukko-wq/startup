@@ -25,6 +25,8 @@ const Resources = async () => {
 			faviconUrl: true,
 			position: true,
 			createdAt: true,
+			mimeType: true,
+			isGoogleDrive: true,
 		},
 		orderBy: {
 			position: 'asc',

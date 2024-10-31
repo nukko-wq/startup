@@ -10,19 +10,10 @@ import {
 	Button,
 	useDragAndDrop,
 } from 'react-aria-components'
-import Image from 'next/image'
-import pageOutline from '@/app/public/images/page_outline_white.png'
-import { useListData } from 'react-stately'
-import { Earth, GripVertical } from 'lucide-react'
+import { GripVertical } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { useResources } from '@/app/features/resources/contexts/ResourceContext'
-
-interface ResourceItemProps {
-	resource: Pick<
-		Resource,
-		'id' | 'title' | 'description' | 'url' | 'faviconUrl' | 'position'
-	>[]
-}
+import ResourceIcon from '@/app/features/resources/components/ResourceIcon'
 
 interface UpdatePositonPayload {
 	items: {
@@ -149,33 +140,11 @@ export default function ResourceItem() {
 									className="outline-none flex flex-grow"
 								>
 									<div className="flex items-end gap-2">
-										{item.faviconUrl ? (
-											<div className="relative w-8 h-8 p-1 top-[2px]">
-												<Image
-													src={pageOutline}
-													width={32}
-													height={32}
-													alt="page_outline"
-													className="absolute -left-1 -top-1 h-[32px] w-[32px]"
-												/>
-												<img
-													src={item.faviconUrl}
-													alt="Favicon"
-													className="relative h-[16px] w-[16px]"
-												/>
-											</div>
-										) : (
-											<div className="relative w-8 h-8 p-1 top-[2px]">
-												<Image
-													src={pageOutline}
-													width={32}
-													height={32}
-													alt="page_outline"
-													className="absolute -left-1 -top-1 h-[32px] w-[32px]"
-												/>
-												<Earth className="w-4 h-4 text-zinc-500" />
-											</div>
-										)}
+										<ResourceIcon
+											faviconUrl={item.faviconUrl}
+											mimeType={item.mimeType}
+											isGoogleDrive={item.isGoogleDrive}
+										/>
 										<div className="flex flex-col">
 											<div>{item.title}</div>
 											<div className="text-xs text-muted-foreground">

@@ -92,6 +92,9 @@ model Resource {
   url String
   position Int
   faviconUrl String?
+  driveFileId String?
+  mimeType String?
+  isGoogleDrive Boolean @default(false)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   userId String
