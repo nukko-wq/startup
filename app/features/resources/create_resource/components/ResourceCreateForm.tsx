@@ -120,6 +120,8 @@ const ResourceCreateForm = ({ onClose }: ResourceCreateFormProps) => {
 				faviconUrl: faviconData.faviconUrl,
 				position: resources.length + 1,
 				description: data.description || '',
+				mimeType: data.mimeType || null,
+				isGoogleDrive: data.isGoogleDrive || false,
 			}
 
 			const response = await fetch('/api/resources', {
@@ -152,6 +154,43 @@ const ResourceCreateForm = ({ onClose }: ResourceCreateFormProps) => {
 		setTimeout(() => {
 			urlInputRef.current?.focus()
 		}, 0)
+	}
+
+	// ファイルを選択したときの処理
+	const handleDriveFileClick = async (file: DriveFile) => {
+		try {
+			const submissionData = {
+				title: file.name,
+				url: file.webViewLink,
+				driveFileId: file.id,
+				mimeType: file.mimeType,
+				isGoogleDrive: true,
+				position: resources.length + 1,
+				description: '',
+				faviconUrl: '',
+			}
+
+			const response = await fetch('/api/resources', {
+				method: 'POST',
+				headers: {
+					'Content-Type': 'application/json',
+				},
+				body: JSON.stringify(submissionData),
+			})
+
+			if (!response.ok) {
+				throw new Error('Failed to create resource')
+			}
+
+			const newResource = await response.json()
+			addResource({
+				...submissionData,
+				id: newResource.id,
+			})
+			onClose()
+		} catch (error) {
+			console.error('Resource creation error:', error)
+		}
 	}
 
 	return (
@@ -264,11 +303,15 @@ const ResourceCreateForm = ({ onClose }: ResourceCreateFormProps) => {
 											if (urlInputRef.current) {
 												urlInputRef.current.value = file.webViewLink
 											}
+											handleDriveFileClick(file)
 										}}
 									>
 										<div className="flex items-center gap-2">
 											<div className="pl-4">{getFileIcon(file.mimeType)}</div>
-											<div className="text-ellipsis overflow-hidden whitespace-nowrap w-[355px] pr-6">
+											<div
+												className="text-ellipsis overflow-hidden whitespace-nowrap w-[355px] pr-6"
+												aria-label="Google Drive File Name"
+											>
 												{file.name}
 											</div>
 										</div>

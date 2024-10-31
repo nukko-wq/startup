@@ -5,6 +5,8 @@ export const resourceSchema = z.object({
 	title: z.string().max(128).optional(),
 	description: z.string().max(1024).optional(),
 	faviconUrl: z.string().url().optional(),
+	mimeType: z.string().optional(),
+	isGoogleDrive: z.boolean().optional(),
 })
 
 export type ResourceSchema = z.infer<typeof resourceSchema>

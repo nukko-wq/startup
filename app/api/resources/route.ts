@@ -9,6 +9,8 @@ const resourceCreateSchema = z.object({
 	url: z.string(),
 	faviconUrl: z.string().optional().default(''),
 	position: z.number(),
+	mimeType: z.string().optional(),
+	isGoogleDrive: z.boolean().optional().default(false),
 })
 
 export async function POST(req: NextRequest) {
@@ -18,12 +20,20 @@ export async function POST(req: NextRequest) {
 
 		if (!userId) {
 			console.log('Unauthorized - No user ID in session:', session)
-			return NextResponse.json({ error: 'Unauthorized' }, { status: 403 })
+			return NextResponse.json({ error: '認証が必要です' }, { status: 401 })
 		}
 
 		const json = await req.json()
 		const body = resourceCreateSchema.parse(json)
-		const { title, description = '', url, position, faviconUrl = '' } = body
+		const {
+			title,
+			description = '',
+			url,
+			position,
+			faviconUrl = '',
+			mimeType,
+			isGoogleDrive = false,
+		} = body
 
 		const resource = await db.resource.create({
 			data: {
@@ -32,6 +42,8 @@ export async function POST(req: NextRequest) {
 				url,
 				faviconUrl,
 				position,
+				mimeType,
+				isGoogleDrive,
 				user: {
 					connect: {
 						id: userId,
@@ -40,6 +52,13 @@ export async function POST(req: NextRequest) {
 			},
 			select: {
 				id: true,
+				title: true,
+				description: true,
+				url: true,
+				faviconUrl: true,
+				position: true,
+				mimeType: true,
+				isGoogleDrive: true,
 			},
 		})
 
@@ -49,14 +68,14 @@ export async function POST(req: NextRequest) {
 
 		if (error instanceof z.ZodError) {
 			return NextResponse.json(
-				{ error: 'Validation error', details: error.issues },
+				{ error: 'バリデーションエラー', details: error.issues },
 				{ status: 422 },
 			)
 		}
 		return NextResponse.json(
 			{
-				error: 'Internal server error',
-				message: error instanceof Error ? error.message : 'Unknown error',
+				error: 'サーバーエラーが発生しました',
+				message: error instanceof Error ? error.message : '不明なエラー',
 			},
 			{ status: 500 },
 		)

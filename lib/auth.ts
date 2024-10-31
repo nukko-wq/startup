@@ -2,6 +2,7 @@ import NextAuth from 'next-auth'
 import Google from 'next-auth/providers/google'
 import { PrismaAdapter } from '@auth/prisma-adapter'
 import { db } from '@/lib/db'
+import type { JWT } from 'next-auth/jwt'
 
 const allowedEmails = process.env.ALLOWED_EMAILS?.split(',') || []
 
@@ -39,14 +40,21 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
 		authorized: async ({ auth }) => {
 			return !!auth
 		},
-		async jwt({ token, account, user }) {
-			if (account) {
-				token.accessToken = account.access_token
-				token.refreshToken = account.refresh_token
-				token.expiresAt = account.expires_at
+		async jwt({ token, account, user }): Promise<JWT> {
+			// 初回認証時
+			if (account && user && user.id) {
+				const newToken = {
+					...token,
+					id: user.id,
+					accessToken: account.access_token ?? undefined,
+					refreshToken: account.refresh_token ?? undefined,
+					expiresAt: account.expires_at ?? undefined,
+				}
+				return newToken
 			}
-			if (user?.id) {
-				token.id = user.id
+
+			if (!token.id) {
+				throw new Error('Invalid token missing id')
 			}
 			return token
 		},

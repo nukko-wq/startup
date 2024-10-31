@@ -27,7 +27,10 @@ const ResourceEditMenu = ({
 				delay={700}
 				closeDelay={0}
 			>
-				<Button aria-label="Edit" className="outline-none pl-4 pr-2 py-4">
+				<Button
+					aria-label="Edit"
+					className="outline-none p-3 hover:bg-zinc-200 rounded-full"
+				>
 					<Pencil className="w-5 h-5 text-zinc-700" />
 				</Button>
 				<Tooltip className="bg-zinc-800 text-zinc-300 text-sm shadow-md rounded-lg px-2 py-1">
