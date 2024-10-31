@@ -1,6 +1,6 @@
 'use client'
 
-import { signIn } from '@/lib/auth'
+import { signIn } from 'next-auth/react'
 import SignInButton from '@/app/features/auth/components/signin-button'
 
 export default function SignInForm() {
@@ -10,7 +10,7 @@ export default function SignInForm() {
 				className="flex justify-center"
 				onSubmit={async (e) => {
 					e.preventDefault()
-					await signIn('google')
+					await signIn('google', { callbackUrl: '/' })
 				}}
 			>
 				<SignInButton />
