@@ -27,7 +27,7 @@ export async function GET() {
 		const response = await drive.files.list({
 			pageSize: 10,
 			orderBy: 'viewedByMeTime desc',
-			fields: 'files(id, name, webViewLink)',
+			fields: 'files(id, name, webViewLink, mimeType)',
 			q: "mimeType != 'application/vnd.google-apps.folder' and trashed = false",
 		})
 
