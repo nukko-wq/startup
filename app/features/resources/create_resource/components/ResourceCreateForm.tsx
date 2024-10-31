@@ -8,7 +8,7 @@ import { useEffect, useRef, useState } from 'react'
 import { Link } from 'lucide-react'
 import { useResources } from '@/app/features/resources/contexts/ResourceContext'
 import { useSession } from 'next-auth/react'
-import IconGoogleDrive from '@/app/components/elements/IconGoogleDrive'
+import IconGoogle from '@/app/components/elements/IconGoogle'
 interface ResourceCreateFormProps {
 	onClose: () => void
 }
@@ -17,6 +17,7 @@ interface DriveFile {
 	id: string
 	name: string
 	webViewLink: string
+	mimeType: string
 }
 
 const ResourceCreateForm = ({ onClose }: ResourceCreateFormProps) => {
@@ -59,6 +60,21 @@ const ResourceCreateForm = ({ onClose }: ResourceCreateFormProps) => {
 
 		fetchDriveFiles()
 	}, [session])
+
+	const getFileIcon = (mimeType: string) => {
+		switch (mimeType) {
+			case 'application/vnd.google-apps.document':
+				return <IconGoogle variant="docs" className="w-[20px] h-[20px]" />
+			case 'application/vnd.google-apps.spreadsheet':
+				return <IconGoogle variant="sheets" className="w-[20px] h-[20px]" />
+			case 'application/vnd.google-apps.presentation':
+				return <IconGoogle variant="slides" className="w-[20px] h-[20px]" />
+			case 'application/vnd.google-apps.form':
+				return <IconGoogle variant="forms" className="w-[20px] h-[20px]" />
+			default:
+				return <IconGoogle variant="drive" className="w-[20px] h-[20px]" />
+		}
+	}
 
 	useEffect(() => {
 		urlInputRef.current?.focus()
@@ -159,7 +175,7 @@ const ResourceCreateForm = ({ onClose }: ResourceCreateFormProps) => {
 					aria-label="Google Drive"
 				>
 					<div className="flex items-center gap-2">
-						<IconGoogleDrive className="w-[20px] h-[20px]" />
+						<IconGoogle variant="drive" className="w-[20px] h-[20px]" />
 						<div className="">Google Drive</div>
 					</div>
 				</Button>
@@ -243,15 +259,18 @@ const ResourceCreateForm = ({ onClose }: ResourceCreateFormProps) => {
 									// biome-ignore lint/a11y/useKeyWithClickEvents: <explanation>
 									<li
 										key={file.id}
-										className="h-[40px] px-8 flex items-center hover:bg-gray-100 rounded cursor-pointer"
+										className="h-[40px] flex items-center hover:bg-gray-100 rounded cursor-pointer"
 										onClick={() => {
 											if (urlInputRef.current) {
 												urlInputRef.current.value = file.webViewLink
 											}
 										}}
 									>
-										<div className="text-ellipsis overflow-hidden whitespace-nowrap">
-											{file.name}
+										<div className="flex items-center gap-2">
+											<div className="pl-4">{getFileIcon(file.mimeType)}</div>
+											<div className="text-ellipsis overflow-hidden whitespace-nowrap w-[355px] pr-6">
+												{file.name}
+											</div>
 										</div>
 									</li>
 								))}
