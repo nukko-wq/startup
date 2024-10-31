@@ -1,3 +1,5 @@
+'use client'
+
 import { resourceSchema, type ResourceSchema } from '@/lib/validations/resource'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { Button, Form, Input, Label, TextField } from 'react-aria-components'
@@ -5,15 +7,58 @@ import { useForm } from 'react-hook-form'
 import { useEffect, useRef, useState } from 'react'
 import { Link } from 'lucide-react'
 import { useResources } from '@/app/features/resources/contexts/ResourceContext'
-
+import { useSession } from 'next-auth/react'
+import IconGoogleDrive from '@/app/components/elements/IconGoogleDrive'
 interface ResourceCreateFormProps {
 	onClose: () => void
+}
+
+interface DriveFile {
+	id: string
+	name: string
+	webViewLink: string
 }
 
 const ResourceCreateForm = ({ onClose }: ResourceCreateFormProps) => {
 	const urlInputRef = useRef<HTMLInputElement | null>(null)
 	const [urlPlaceholder, setUrlPlaceholder] = useState('URL')
 	const { resources, addResource } = useResources()
+	const [driveFiles, setDriveFiles] = useState<DriveFile[]>([])
+	const [isLoadingFiles, setIsLoadingFiles] = useState(false)
+	const [error, setError] = useState<string | null>(null)
+	const { data: session } = useSession()
+	const [activeTab, setActiveTab] = useState<'url' | 'drive'>('url')
+
+	// Google Drive のファイル一覧を取得
+	useEffect(() => {
+		const fetchDriveFiles = async () => {
+			if (!session) {
+				setError('セッションが見つかりません')
+				return
+			}
+
+			setIsLoadingFiles(true)
+			setError(null)
+
+			try {
+				const response = await fetch('/api/googleapis')
+				if (!response.ok) {
+					throw new Error('ファイルの取得に失敗しました')
+				}
+				const data = await response.json()
+				setDriveFiles(data.files || [])
+			} catch (error) {
+				console.error('Error fetching Google Drive files:', error)
+				setError(
+					error instanceof Error ? error.message : 'エラーが発生しました',
+				)
+			} finally {
+				setIsLoadingFiles(false)
+			}
+		}
+
+		fetchDriveFiles()
+	}, [session])
 
 	useEffect(() => {
 		urlInputRef.current?.focus()
@@ -85,65 +130,136 @@ const ResourceCreateForm = ({ onClose }: ResourceCreateFormProps) => {
 		}
 	}
 
+	const handleUrlTabClick = () => {
+		if (activeTab === 'url') return
+		setActiveTab('url')
+		setTimeout(() => {
+			urlInputRef.current?.focus()
+		}, 0)
+	}
+
 	return (
-		<div className="flex">
-			<div className="bg-zinc-100" aria-label="Side Menu">
-				<div className="text-xl font-bold p-4">Add Resource</div>
-				<div className="text-muted-foreground bg-foreground/10 p-2 flex items-center gap-1">
-					<Link className="w-3 h-3" />
+		<div className="flex w-[600px] h-[468px]">
+			<div className="min-w-[200px] bg-zinc-100" aria-label="Side Menu">
+				<div className="text-xl font-bold p-4 text-zinc-700">Add Resource</div>
+				<Button
+					className={`w-full text-muted-foreground p-2 flex items-center gap-2 outline-none ${
+						activeTab === 'url' ? 'bg-foreground/10' : ''
+					}`}
+					onPress={handleUrlTabClick}
+				>
+					<Link className="w-[20px] h-[20px]" />
 					<div>URL</div>
-				</div>
+				</Button>
+				<Button
+					className={`w-full text-muted-foreground p-2 flex items-center gap-1 outline-none ${
+						activeTab === 'drive' ? 'bg-foreground/10' : ''
+					}`}
+					onPress={() => setActiveTab('drive')}
+					aria-label="Google Drive"
+				>
+					<div className="flex items-center gap-2">
+						<IconGoogleDrive className="w-[20px] h-[20px]" />
+						<div className="">Google Drive</div>
+					</div>
+				</Button>
 			</div>
-			<Form onSubmit={handleSubmit(onSubmit)} className="">
-				<div className="flex flex-col p-9 space-y-4">
-					<div className="">
-						<TextField>
-							<Label className="text-sm">URL</Label>
-							<Input
-								{...register('url')}
-								ref={(e) => {
-									register('url').ref(e)
-									if (e) {
-										urlInputRef.current = e
-									}
-								}}
-								type="url"
-								className="w-full p-2 border rounded mt-1 focus:outline-blue-500"
-								placeholder={urlPlaceholder}
-								aria-label="URL"
-							/>
-						</TextField>
+			{activeTab === 'url' && (
+				<Form
+					onSubmit={handleSubmit(onSubmit)}
+					className=""
+					aria-label="URL Form"
+				>
+					<div className="flex flex-col p-9 space-y-4 w-[400px]">
+						<div className="">
+							<TextField>
+								<Label className="text-sm">URL</Label>
+								<Input
+									{...register('url')}
+									ref={(e) => {
+										register('url').ref(e)
+										if (e) {
+											urlInputRef.current = e
+										}
+									}}
+									type="url"
+									className="w-full p-2 border rounded mt-1 focus:outline-blue-500"
+									placeholder={urlPlaceholder}
+									aria-label="URL"
+								/>
+							</TextField>
+						</div>
+						<div className="">
+							<TextField>
+								<Label className="text-sm">Name</Label>
+								<Input
+									{...register('title')}
+									type="text"
+									className="w-full p-2 border-gray-200 rounded border focus:outline-blue-500"
+									placeholder="Name"
+									aria-label="Name"
+								/>
+							</TextField>
+						</div>
+						<div className="flex justify-between">
+							<Button
+								type="button"
+								onPress={onClose}
+								className="px-4 py-2 text-sm border rounded hover:bg-gray-200 focus:outline-blue-500"
+							>
+								Cancel
+							</Button>
+							<Button
+								type="submit"
+								isDisabled={isSubmitting || !isValid}
+								className="px-4 py-2 text-sm border rounded bg-blue-500 disabled:bg-gray-200 text-white disabled:text-gray-700 hover:bg-blue-600 disabled:opacity-60 focus:outline-blue-500"
+							>
+								ADD RESOURCE
+							</Button>
+						</div>
 					</div>
-					<div className="">
-						<TextField>
-							<Label className="text-sm">Name</Label>
-							<Input
-								{...register('title')}
-								type="text"
-								className="w-full p-2 border-gray-200 rounded border focus:outline-blue-500"
-								placeholder="Name"
-								aria-label="Name"
-							/>
-						</TextField>
+				</Form>
+			)}
+			{activeTab === 'drive' && (
+				<div
+					className="flex flex-col w-[400px] border-l"
+					aria-label="Recent Google Drive Files"
+				>
+					<div className="flex items-center justify-center py-4">
+						<h2 className="text-lg font-bold text-zinc-700">
+							最近のGoogle Driveファイル
+						</h2>
 					</div>
-					<div className="flex justify-between">
-						<Button
-							type="button"
-							onPress={onClose}
-							className="px-4 py-2 text-sm border rounded hover:bg-gray-200 focus:outline-blue-500"
-						>
-							Cancel
-						</Button>
-						<Button
-							type="submit"
-							isDisabled={isSubmitting || !isValid}
-							className="px-4 py-2 text-sm border rounded bg-blue-500 disabled:bg-gray-200 text-white disabled:text-gray-700 hover:bg-blue-600 disabled:opacity-60 focus:outline-blue-500"
-						>
-							ADD RESOURCE
-						</Button>
-					</div>
+					{isLoadingFiles ? (
+						<div>読み込み中...</div>
+					) : error ? (
+						<div className="text-red-500">{error}</div>
+					) : driveFiles.length === 0 ? (
+						<div>ファイルが見つかりません</div>
+					) : (
+						<div className="overflow-y-auto">
+							<ul className="flex flex-col">
+								{driveFiles.map((file) => (
+									// biome-ignore lint/a11y/useKeyWithClickEvents: <explanation>
+									<li
+										key={file.id}
+										className="h-[40px] px-8 flex items-center hover:bg-gray-100 rounded cursor-pointer"
+										onClick={() => {
+											if (urlInputRef.current) {
+												urlInputRef.current.value = file.webViewLink
+											}
+										}}
+									>
+										<div className="text-ellipsis overflow-hidden whitespace-nowrap">
+											{file.name}
+										</div>
+									</li>
+								))}
+							</ul>
+						</div>
+					)}
 				</div>
-			</Form>
+			)}
 		</div>
 	)
 }
