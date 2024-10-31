@@ -5,8 +5,10 @@ import { auth } from '@/lib/auth'
 export async function GET() {
 	try {
 		const session = await auth()
+		const accessToken = session?.accessToken
 
-		if (!session?.accessToken) {
+		if (!accessToken) {
+			console.log('No access token found in session:', session)
 			return NextResponse.json(
 				{ error: 'アクセストークンが見つかりません' },
 				{ status: 401 },
@@ -16,11 +18,12 @@ export async function GET() {
 		const oauth2Client = new google.auth.OAuth2(
 			process.env.AUTH_GOOGLE_ID,
 			process.env.AUTH_GOOGLE_SECRET,
+			process.env.NEXTAUTH_URL,
 		)
 
 		oauth2Client.setCredentials({
-			access_token: session.accessToken,
-			// refresh_tokenも設定できる場合は追加
+			access_token: accessToken,
+			scope: 'https://www.googleapis.com/auth/drive.readonly',
 		})
 
 		const drive = google.drive({ version: 'v3', auth: oauth2Client })
@@ -31,7 +34,12 @@ export async function GET() {
 			q: "mimeType != 'application/vnd.google-apps.folder' and trashed = false",
 		})
 
-		return NextResponse.json({ files: response.data.files || [] })
+		if (!response.data.files) {
+			console.log('No files found in response:', response.data)
+			return NextResponse.json({ files: [] })
+		}
+
+		return NextResponse.json({ files: response.data.files })
 	} catch (error) {
 		console.error('Google Drive API error:', error)
 		return NextResponse.json(

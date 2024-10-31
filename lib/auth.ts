@@ -40,18 +40,22 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
 			return !!auth
 		},
 		async jwt({ token, account, user }) {
+			if (account) {
+				token.accessToken = account.access_token
+				token.refreshToken = account.refresh_token
+				token.expiresAt = account.expires_at
+			}
 			if (user?.id) {
 				token.id = user.id
 			}
-			if (account) {
-				token.accessToken = account.access_token
-			}
 			return token
 		},
-		async session({ token, session }) {
+		async session({ session, token }) {
 			if (session.user) {
 				session.user.id = token.id
 				session.accessToken = token.accessToken
+				session.refreshToken = token.refreshToken
+				session.expiresAt = token.expiresAt
 			}
 			return session
 		},
