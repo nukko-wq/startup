@@ -44,7 +44,7 @@ const ResourceDeleteButton = ({
 				onPress={handleDelete}
 				className="p-3 hover:bg-zinc-200 rounded-full"
 			>
-				<Trash2 className="w-5 h-5" />
+				<Trash2 className="w-5 h-5 text-zinc-700" />
 			</Button>
 			{isTooltipVisible && (
 				<Tooltip className="bg-zinc-800 text-zinc-300 text-sm shadow-md rounded-lg px-2 py-1">

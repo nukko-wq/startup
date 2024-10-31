@@ -78,3 +78,18 @@
 		margin-bottom: -2px;
 	}
 }
+
+::-webkit-scrollbar {
+	width: 5px;
+	height: 5px;
+	border-radius: 5px;
+}
+
+::-webkit-scrollbar-thumb {
+	background-color: #93c5fd;
+	border-radius: 5px;
+}
+
+a {
+	color: #3f3f46;
+}
