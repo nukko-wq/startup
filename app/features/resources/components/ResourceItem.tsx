@@ -22,9 +22,29 @@ interface UpdatePositonPayload {
 	}[]
 }
 
-export default function ResourceItem() {
+interface ResourceItemProps {
+	resource: Pick<
+		Resource,
+		| 'id'
+		| 'title'
+		| 'url'
+		| 'faviconUrl'
+		| 'mimeType'
+		| 'isGoogleDrive'
+		| 'position'
+		| 'description'
+		| 'sectionId'
+	>
+}
+
+export default function ResourceItem({ resource }: ResourceItemProps) {
 	const { resources, setResources } = useResources()
 	const [isDragging, setIsDragging] = useState(false)
+
+	// 同じセクション内のリソースのみをフィルタリング
+	const sectionResources = resources.filter(
+		(r) => r.sectionId === resource.sectionId,
+	)
 
 	// ドラッグ&ドロップの設定
 	const { dragAndDropHooks } = useDragAndDrop({
@@ -109,7 +129,7 @@ export default function ResourceItem() {
 	return (
 		<GridList
 			aria-label="Resources"
-			items={resources}
+			items={sectionResources}
 			dragAndDropHooks={dragAndDropHooks}
 			selectionMode="single"
 			className="w-full hover:cursor-pointer"

@@ -13,7 +13,11 @@ import {
 import { FilePlus } from 'lucide-react'
 import ResourceCreateForm from '@/app/features/resources/create_resource/components/ResourceCreateForm'
 
-const ResourceCreateButton = () => {
+interface ResourceCreateButtonProps {
+	sectionId: string
+}
+
+const ResourceCreateButton = ({ sectionId }: ResourceCreateButtonProps) => {
 	const [isOpen, setIsOpen] = useState<boolean>(false)
 	const [isTooltipVisible, setIsTooltipVisible] = useState<boolean>(false)
 
@@ -50,7 +54,10 @@ const ResourceCreateButton = () => {
 				<Popover placement="start">
 					<Dialog className="outline-none">
 						<div className="bg-white flex items-center justify-center rounded-lg shadow-md">
-							<ResourceCreateForm onClose={() => setIsOpen(false)} />
+							<ResourceCreateForm
+								sectionId={sectionId}
+								onClose={() => setIsOpen(false)}
+							/>
 						</div>
 					</Dialog>
 				</Popover>

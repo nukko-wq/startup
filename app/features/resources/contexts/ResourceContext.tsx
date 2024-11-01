@@ -21,6 +21,7 @@ type ResourceContextType = {
 		| 'mimeType'
 		| 'isGoogleDrive'
 		| 'position'
+		| 'sectionId'
 	>[]
 	setResources: React.Dispatch<
 		React.SetStateAction<ResourceContextType['resources']>
@@ -56,7 +57,10 @@ export function ResourceProvider({
 	children: React.ReactNode
 	initialResources: ResourceContextType['resources']
 }) {
-	const [resources, setResources] = useState(initialResources)
+	// postionでソートして初期化
+	const [resources, setResources] = useState(
+		initialResources.sort((a, b) => a.position - b.position),
+	)
 	const [driveFiles, setDriveFiles] = useState<DriveFile[]>([])
 
 	const removeResource = async (id: string) => {
@@ -109,8 +113,6 @@ export function ResourceProvider({
 					prev: ResourceContextType['resources'],
 			  ) => ResourceContextType['resources']),
 	) => {
-		const previousResources = [...resources]
-
 		if (typeof resourceOrUpdater === 'function') {
 			setResources(resourceOrUpdater)
 			return

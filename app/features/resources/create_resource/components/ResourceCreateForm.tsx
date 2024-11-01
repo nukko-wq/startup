@@ -20,6 +20,7 @@ import { useCallback } from 'react'
 
 interface ResourceCreateFormProps {
 	onClose: () => void
+	sectionId: string
 }
 
 interface DriveFile {
@@ -29,7 +30,10 @@ interface DriveFile {
 	mimeType: string
 }
 
-const ResourceCreateForm = ({ onClose }: ResourceCreateFormProps) => {
+const ResourceCreateForm = ({
+	onClose,
+	sectionId,
+}: ResourceCreateFormProps) => {
 	const urlInputRef = useRef<HTMLInputElement | null>(null)
 	const [urlPlaceholder, setUrlPlaceholder] = useState('URL')
 	const { resources, addResource, setResources, driveFiles, setDriveFiles } =
@@ -141,6 +145,7 @@ const ResourceCreateForm = ({ onClose }: ResourceCreateFormProps) => {
 				description: data.description || '',
 				mimeType: data.mimeType || '',
 				isGoogleDrive: data.isGoogleDrive || false,
+				sectionId: sectionId,
 			}
 
 			// Optimistic Update
@@ -148,6 +153,7 @@ const ResourceCreateForm = ({ onClose }: ResourceCreateFormProps) => {
 			const optimisticResource = {
 				...submissionData,
 				id: tempId,
+				sectionId,
 			}
 			await addResource(optimisticResource)
 
@@ -225,6 +231,7 @@ const ResourceCreateForm = ({ onClose }: ResourceCreateFormProps) => {
 				position: resources.length + 1,
 				description: description,
 				faviconUrl: '',
+				sectionId: sectionId,
 			}
 
 			// Optimistic Update
@@ -232,6 +239,7 @@ const ResourceCreateForm = ({ onClose }: ResourceCreateFormProps) => {
 			const optimisticResource = {
 				...submissionData,
 				id: tempId,
+				sectionId,
 			}
 			addResource(optimisticResource)
 
