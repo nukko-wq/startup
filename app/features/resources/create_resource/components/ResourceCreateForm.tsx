@@ -360,7 +360,7 @@ const ResourceCreateForm = ({ onClose }: ResourceCreateFormProps) => {
 							<Button
 								type="submit"
 								isDisabled={isSubmitting || !isValid}
-								className="px-4 py-2 text-sm border rounded bg-blue-500 disabled:bg-gray-200 text-white disabled:text-gray-700 hover:bg-blue-600 disabled:opacity-60 focus:outline-blue-500"
+								className="px-4 py-2 text-sm border rounded bg-blue-500 disabled:opacity-50 text-white hover:bg-blue-600 focus:outline-blue-500"
 							>
 								{isSubmitting ? 'Saving...' : 'ADD RESOURCE'}
 							</Button>
