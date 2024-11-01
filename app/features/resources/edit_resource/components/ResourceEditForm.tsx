@@ -142,7 +142,9 @@ export default function ResourceEditForm({
 							)}
 						/>
 						{errors.url && (
-							<Text className="text-red-500 text-sm">{errors.url.message}</Text>
+							<Text slot="errorMessage" className="text-red-500 text-sm">
+								{errors.url.message}
+							</Text>
 						)}
 					</TextField>
 				</div>
