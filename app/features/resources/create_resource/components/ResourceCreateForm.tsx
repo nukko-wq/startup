@@ -2,8 +2,15 @@
 
 import { resourceSchema, type ResourceSchema } from '@/lib/validations/resource'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { Button, Form, Input, Label, TextField } from 'react-aria-components'
-import { useForm } from 'react-hook-form'
+import {
+	Button,
+	Form,
+	Input,
+	Label,
+	TextField,
+	Text,
+} from 'react-aria-components'
+import { Controller, useForm } from 'react-hook-form'
 import { useEffect, useRef, useState } from 'react'
 import { Link } from 'lucide-react'
 import { useResources } from '@/app/features/resources/contexts/ResourceContext'
@@ -112,6 +119,7 @@ const ResourceCreateForm = ({ onClose }: ResourceCreateFormProps) => {
 	const {
 		register,
 		handleSubmit,
+		control,
 		formState: { errors, isSubmitting, isValid },
 	} = useForm<ResourceSchema>({
 		resolver: zodResolver(resourceSchema),
@@ -169,8 +177,10 @@ const ResourceCreateForm = ({ onClose }: ResourceCreateFormProps) => {
 						: resource,
 				),
 			)
-		} catch (error) {
+		} catch (err) {
 			console.error('Resource creation error:', error)
+			setError(err instanceof Error ? err.message : 'エラーが発生しました')
+
 			// エラー時はリソースを削除
 			addResource((prev) =>
 				prev.filter((resource) => resource.id !== `temp-${Date.now()}`),
@@ -295,31 +305,49 @@ const ResourceCreateForm = ({ onClose }: ResourceCreateFormProps) => {
 						<div className="">
 							<TextField>
 								<Label className="text-sm">URL</Label>
-								<Input
-									{...register('url')}
-									ref={(e) => {
-										register('url').ref(e)
-										if (e) {
-											urlInputRef.current = e
-										}
-									}}
-									type="url"
-									className="w-full p-2 border rounded mt-1 focus:outline-blue-500"
-									placeholder={urlPlaceholder}
-									aria-label="URL"
+								<Controller
+									name="url"
+									control={control}
+									render={({ field: { value, onChange, onBlur } }) => (
+										<Input
+											value={value}
+											onChange={onChange}
+											onBlur={onBlur}
+											type="url"
+											className="w-full p-2 border rounded mt-1 focus:outline-blue-500"
+											placeholder={urlPlaceholder}
+											aria-label="URL"
+											ref={urlInputRef}
+										/>
+									)}
 								/>
+								{errors.url && (
+									<Text slot="errorMessage" className="text-red-500 text-sm">
+										{errors.url.message}
+									</Text>
+								)}
 							</TextField>
 						</div>
 						<div className="">
 							<TextField>
 								<Label className="text-sm">Name</Label>
-								<Input
-									{...register('title')}
-									type="text"
-									className="w-full p-2 border-gray-200 rounded border focus:outline-blue-500"
-									placeholder="Name"
-									aria-label="Name"
+								<Controller
+									name="title"
+									control={control}
+									render={({ field: { value, onChange, onBlur } }) => (
+										<Input
+											type="text"
+											className="w-full p-2 border-gray-200 rounded border focus:outline-blue-500"
+											placeholder="Name"
+											aria-label="Name"
+										/>
+									)}
 								/>
+								{errors.title && (
+									<Text slot="errorMessage" className="text-red-500 text-sm">
+										{errors.title.message}
+									</Text>
+								)}
 							</TextField>
 						</div>
 						<div className="flex justify-between">
