@@ -128,7 +128,6 @@ const ResourceCreateForm = ({ onClose }: ResourceCreateFormProps) => {
 
 	const onSubmit = async (data: ResourceSchema) => {
 		try {
-			onClose()
 			const faviconResponse = await fetch(
 				`/api/favicon?url=${encodeURIComponent(data.url)}`,
 			)
@@ -177,6 +176,7 @@ const ResourceCreateForm = ({ onClose }: ResourceCreateFormProps) => {
 						: resource,
 				),
 			)
+			onClose()
 		} catch (err) {
 			console.error('Resource creation error:', error)
 			setError(err instanceof Error ? err.message : 'エラーが発生しました')
@@ -200,8 +200,6 @@ const ResourceCreateForm = ({ onClose }: ResourceCreateFormProps) => {
 	// ファイルを選択したときの処理
 	const handleDriveFileClick = async (file: DriveFile) => {
 		try {
-			onClose()
-
 			let description = ''
 			switch (file.mimeType) {
 				case 'application/vnd.google-apps.document':
@@ -259,6 +257,7 @@ const ResourceCreateForm = ({ onClose }: ResourceCreateFormProps) => {
 						: resource,
 				),
 			)
+			onClose()
 		} catch (error) {
 			console.error('Resource creation error:', error)
 			// エラー時はリソースを削除
