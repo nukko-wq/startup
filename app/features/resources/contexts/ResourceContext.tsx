@@ -150,11 +150,10 @@ export function ResourceProvider({
 				throw new Error(result.message || 'Failed to reorder resources')
 			}
 
-			// 成功の場合は何もしない（ステートは既に更新済み）
 			return result
 		} catch (error) {
 			console.error('Reorder error:', error)
-			setResources(previousResources) // エラー時は元の状態に戻す
+			setResources(previousResources)
 			throw error
 		}
 	}

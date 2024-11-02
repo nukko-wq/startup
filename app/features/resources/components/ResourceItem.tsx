@@ -3,22 +3,21 @@
 import type { Resource } from '@prisma/client'
 import ResourceEditMenu from '@/app/features/resources/edit_resource/components/ResourceEditMenu'
 import ResourceDeleteButton from '@/app/features/resources/delete_resource/components/ResourceDeleteButton'
-import { Link, GridList, GridListItem, Button } from 'react-aria-components'
-import { useDrag } from 'react-aria'
+import {
+	Link,
+	GridListItem,
+	Button,
+	useDragAndDrop,
+	isTextDropItem,
+	GridList,
+	DropIndicator,
+} from 'react-aria-components'
 import { GripVertical } from 'lucide-react'
-import { useEffect, useState } from 'react'
 import { useResources } from '@/app/features/resources/contexts/ResourceContext'
 import ResourceIcon from '@/app/features/resources/components/ResourceIcon'
 
-interface UpdatePositonPayload {
-	items: {
-		id: string
-		position: number
-	}[]
-}
-
 interface ResourceItemProps {
-	resource: Pick<
+	resources: Pick<
 		Resource,
 		| 'id'
 		| 'title'
@@ -29,70 +28,84 @@ interface ResourceItemProps {
 		| 'position'
 		| 'description'
 		| 'sectionId'
-	>
+	>[]
+	sectionId: string
 }
 
-export default function ResourceItem({ resource }: ResourceItemProps) {
-	const { resources, setResources, reorderResources } = useResources()
-	const [isDragging, setIsDragging] = useState(false)
+export default function ResourceItem({
+	resources,
+	sectionId,
+}: ResourceItemProps) {
+	const { reorderResources, resources: allResources } = useResources()
 
-	const { dragProps, dragButtonProps } = useDrag({
-		getItems() {
+	const { dragAndDropHooks } = useDragAndDrop({
+		getItems(keys) {
+			const resource = allResources.find((r) => r.id === Array.from(keys)[0])
 			return [
 				{
-					'text/plain': resource.title,
 					'resource-item': JSON.stringify(resource),
+					'text/plain': resource?.title || '',
 				},
 			]
 		},
-		onDragStart() {
-			setIsDragging(true)
+
+		// ドロップを受け入れる形式を指定
+		acceptedDragTypes: ['resource-item'],
+		getDropOperation: () => 'move',
+
+		// ドロップ位置のインジケーターをレンダリング
+		renderDropIndicator(target) {
+			return (
+				<DropIndicator
+					target={target}
+					className={({ isDropTarget }) =>
+						`drop-indicator ${isDropTarget ? 'active' : ''}`
+					}
+				/>
+			)
 		},
-		onDragEnd(e) {
-			setIsDragging(false)
-			if (e.dropOperation === 'move') {
-				const currentResource = resources.find((r) => r.id === resource.id)
-				if (!currentResource) return
 
-				if (currentResource.sectionId === resource.sectionId) {
-					return
-				}
+		// アイテムの並び替えを処理
+		async onReorder(e) {
+			try {
+				const draggedResource = allResources.find(
+					(r) => r.id === Array.from(e.keys)[0],
+				)
+				if (!draggedResource) return
 
-				const updatedResources = resources.map((r) => {
-					if (r.id === resource.id) {
-						return {
-							...r,
-							sectionId: resource.sectionId,
-						}
+				const targetIndex = resources.findIndex((r) => r.id === e.target.key)
+				const newPosition =
+					e.target.dropPosition === 'before' ? targetIndex : targetIndex + 1
+
+				const updatedResources = allResources.map((r) => {
+					if (r.id === draggedResource.id) {
+						return { ...r, sectionId, position: newPosition }
+					}
+					if (r.sectionId === sectionId) {
+						const pos = r.position >= newPosition ? r.position + 1 : r.position
+						return { ...r, position: pos }
 					}
 					return r
 				})
 
-				reorderResources(updatedResources).catch(console.error)
+				await reorderResources(updatedResources)
+			} catch (error) {
+				console.error('Failed to reorder resources:', error)
 			}
 		},
-		getAllowedDropOperations: () => ['move'],
 	})
 
 	return (
 		<GridList
-			aria-label="Resources"
-			items={[resource]}
-			className="w-full hover:cursor-pointer"
-			style={{
-				opacity: isDragging ? 0.5 : 1,
-			}}
+			aria-label="Resources in section"
+			items={resources}
+			className="flex flex-col border rounded-md"
+			dragAndDropHooks={dragAndDropHooks}
+			renderEmptyState={() => ''}
 		>
-			{(item) => (
-				<GridListItem
-					className="outline-none"
-					key={item.id}
-					textValue={item.title}
-				>
-					<div
-						{...dragProps}
-						className="flex justify-between items-center p-1 border-b border-gray-200 last:border-b-0 hover:bg-zinc-100"
-					>
+			{(resource) => (
+				<GridListItem textValue={resource.title} className="outline-none">
+					<div className="flex justify-between items-center p-1 border-b border-gray-200 last:border-b-0 hover:bg-zinc-100">
 						<div
 							className="flex flex-grow p-1 ml-1 gap-2 group"
 							aria-label="Resource Item Wrapper"
@@ -101,31 +114,26 @@ export default function ResourceItem({ resource }: ResourceItemProps) {
 								className="cursor-grab flex items-center opacity-0 group-hover:opacity-100"
 								aria-label="Drag Wrapper"
 							>
-								<Button
-									{...dragButtonProps}
-									className="cursor-grab"
-									slot="drag"
-									aria-label="Drag"
-								>
+								<Button className="cursor-grab" slot="drag" aria-label="Drag">
 									<GripVertical className="w-4 h-4 text-zinc-500" />
 								</Button>
 							</div>
 							<div className="flex flex-grow">
 								<Link
-									href={item.url}
+									href={resource.url}
 									target="_blank"
 									className="outline-none flex flex-grow"
 								>
 									<div className="flex items-end gap-2">
 										<ResourceIcon
-											faviconUrl={item.faviconUrl}
-											mimeType={item.mimeType}
-											isGoogleDrive={item.isGoogleDrive}
+											faviconUrl={resource.faviconUrl}
+											mimeType={resource.mimeType}
+											isGoogleDrive={resource.isGoogleDrive}
 										/>
 										<div className="flex flex-col">
-											<div>{item.title}</div>
+											<div>{resource.title}</div>
 											<div className="text-xs text-muted-foreground">
-												{item.description || 'Webpage'}
+												{resource.description || 'Webpage'}
 											</div>
 										</div>
 									</div>
@@ -133,8 +141,8 @@ export default function ResourceItem({ resource }: ResourceItemProps) {
 							</div>
 						</div>
 						<div className="flex items-center">
-							<ResourceEditMenu resource={item} />
-							<ResourceDeleteButton resource={item} />
+							<ResourceEditMenu resource={resource} />
+							<ResourceDeleteButton resource={resource} />
 						</div>
 					</div>
 				</GridListItem>
