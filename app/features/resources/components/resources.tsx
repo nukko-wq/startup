@@ -34,16 +34,22 @@ const Resources = ({
 					name: 'Resources',
 					order: sections.length,
 				}),
+				credentials: 'include',
 			})
 
 			if (!response.ok) {
-				throw new Error('Failed to create section')
+				const error = await response.json()
+				throw new Error(error.message || 'Failed to create section')
 			}
 
 			const newSection = await response.json()
 			setSections((prev) => [...prev, { ...newSection, resources: [] }])
 		} catch (error) {
 			console.error('Section creation error:', error)
+			if (error instanceof Error && error.message.includes('認証')) {
+				window.location.href = '/login'
+				return
+			}
 			alert('セクションの作成に失敗しました')
 		} finally {
 			setIsCreating(false)

@@ -5,9 +5,9 @@ import { redirect } from 'next/navigation'
 export async function getInitialSections() {
 	const session = await auth()
 
-	// セッションチェック
+	// セッションがない場合は早期リターン
 	if (!session?.user?.id) {
-		return redirect('/login')
+		throw new Error('Unauthorized')
 	}
 
 	// ユーザー存在確認
@@ -18,7 +18,7 @@ export async function getInitialSections() {
 	})
 
 	if (!user) {
-		return redirect('/login')
+		throw new Error('User not found')
 	}
 
 	// セクション取得
@@ -44,26 +44,25 @@ export async function getInitialSections() {
 
 	// デフォルトセクション作成
 	if (sections.length === 0) {
-		try {
-			const defaultSection = await db.section.create({
-				data: {
-					name: 'Resources',
-					order: 1,
-					userId: user.id, // 直接userIdを設定
+		const defaultSection = await db.section.create({
+			data: {
+				name: 'Resources',
+				order: 1,
+				user: {
+					connect: {
+						id: user.id,
+					},
 				},
-				select: {
-					id: true,
-					name: true,
-					order: true,
-					createdAt: true,
-					resources: true,
-				},
-			})
-			sections.push(defaultSection)
-		} catch (error) {
-			console.error('Error creating default section:', error)
-			// エラーが発生しても処理を継続
-		}
+			},
+			select: {
+				id: true,
+				name: true,
+				order: true,
+				createdAt: true,
+				resources: true,
+			},
+		})
+		sections.push(defaultSection)
 	}
 
 	return { sections, userId: user.id }
