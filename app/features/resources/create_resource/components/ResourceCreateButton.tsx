@@ -22,7 +22,7 @@ const ResourceCreateButton = ({ sectionId }: ResourceCreateButtonProps) => {
 	const [isTooltipVisible, setIsTooltipVisible] = useState<boolean>(false)
 
 	return (
-		<div className="mr-4">
+		<div>
 			<DialogTrigger isOpen={isOpen} onOpenChange={setIsOpen}>
 				<TooltipTrigger
 					isOpen={isTooltipVisible}
@@ -32,7 +32,7 @@ const ResourceCreateButton = ({ sectionId }: ResourceCreateButtonProps) => {
 				>
 					<Button
 						aria-label="Menu"
-						className="outline-none p-3 hover:bg-zinc-200 rounded-full"
+						className="outline-none hover:bg-zinc-200 rounded-full"
 					>
 						<FilePlus className="w-6 h-6 text-zinc-700" />
 					</Button>
@@ -51,7 +51,7 @@ const ResourceCreateButton = ({ sectionId }: ResourceCreateButtonProps) => {
 						Add Resource
 					</Tooltip>
 				</TooltipTrigger>
-				<Popover placement="start">
+				<Popover placement="start" className="">
 					<Dialog className="outline-none">
 						<div className="bg-white flex items-center justify-center rounded-lg shadow-md">
 							<ResourceCreateForm

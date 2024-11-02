@@ -276,8 +276,11 @@ const ResourceCreateForm = ({
 	}
 
 	return (
-		<div className="flex w-[600px] h-[468px]">
-			<div className="min-w-[200px] bg-zinc-100" aria-label="Side Menu">
+		<div className="flex w-full md:w-[600px] h-[468px]">
+			<div
+				className="hidden md:block min-w-[200px] bg-zinc-100"
+				aria-label="Side Menu"
+			>
 				<div className="text-xl font-bold p-4 text-zinc-700">Add Resource</div>
 				<Button
 					className={`w-full text-muted-foreground p-2 flex items-center gap-2 outline-none ${
