@@ -20,6 +20,7 @@ import { useCallback } from 'react'
 
 interface ResourceCreateFormProps {
 	onClose: () => void
+	sectionId: string
 }
 
 interface DriveFile {
@@ -29,7 +30,10 @@ interface DriveFile {
 	mimeType: string
 }
 
-const ResourceCreateForm = ({ onClose }: ResourceCreateFormProps) => {
+const ResourceCreateForm = ({
+	onClose,
+	sectionId,
+}: ResourceCreateFormProps) => {
 	const urlInputRef = useRef<HTMLInputElement | null>(null)
 	const [urlPlaceholder, setUrlPlaceholder] = useState('URL')
 	const { resources, addResource, setResources, driveFiles, setDriveFiles } =
@@ -128,7 +132,6 @@ const ResourceCreateForm = ({ onClose }: ResourceCreateFormProps) => {
 
 	const onSubmit = async (data: ResourceSchema) => {
 		try {
-			onClose()
 			const faviconResponse = await fetch(
 				`/api/favicon?url=${encodeURIComponent(data.url)}`,
 			)
@@ -142,6 +145,7 @@ const ResourceCreateForm = ({ onClose }: ResourceCreateFormProps) => {
 				description: data.description || '',
 				mimeType: data.mimeType || '',
 				isGoogleDrive: data.isGoogleDrive || false,
+				sectionId: sectionId,
 			}
 
 			// Optimistic Update
@@ -149,6 +153,7 @@ const ResourceCreateForm = ({ onClose }: ResourceCreateFormProps) => {
 			const optimisticResource = {
 				...submissionData,
 				id: tempId,
+				sectionId,
 			}
 			await addResource(optimisticResource)
 
@@ -177,6 +182,7 @@ const ResourceCreateForm = ({ onClose }: ResourceCreateFormProps) => {
 						: resource,
 				),
 			)
+			onClose()
 		} catch (err) {
 			console.error('Resource creation error:', error)
 			setError(err instanceof Error ? err.message : 'エラーが発生しました')
@@ -200,8 +206,6 @@ const ResourceCreateForm = ({ onClose }: ResourceCreateFormProps) => {
 	// ファイルを選択したときの処理
 	const handleDriveFileClick = async (file: DriveFile) => {
 		try {
-			onClose()
-
 			let description = ''
 			switch (file.mimeType) {
 				case 'application/vnd.google-apps.document':
@@ -227,6 +231,7 @@ const ResourceCreateForm = ({ onClose }: ResourceCreateFormProps) => {
 				position: resources.length + 1,
 				description: description,
 				faviconUrl: '',
+				sectionId: sectionId,
 			}
 
 			// Optimistic Update
@@ -234,6 +239,7 @@ const ResourceCreateForm = ({ onClose }: ResourceCreateFormProps) => {
 			const optimisticResource = {
 				...submissionData,
 				id: tempId,
+				sectionId,
 			}
 			addResource(optimisticResource)
 
@@ -259,6 +265,7 @@ const ResourceCreateForm = ({ onClose }: ResourceCreateFormProps) => {
 						: resource,
 				),
 			)
+			onClose()
 		} catch (error) {
 			console.error('Resource creation error:', error)
 			// エラー時はリソースを削除
@@ -361,9 +368,9 @@ const ResourceCreateForm = ({ onClose }: ResourceCreateFormProps) => {
 							<Button
 								type="submit"
 								isDisabled={isSubmitting || !isValid}
-								className="px-4 py-2 text-sm border rounded bg-blue-500 disabled:bg-gray-200 text-white disabled:text-gray-700 hover:bg-blue-600 disabled:opacity-60 focus:outline-blue-500"
+								className="px-4 py-2 text-sm border rounded bg-blue-500 disabled:opacity-50 text-white hover:bg-blue-600 focus:outline-blue-500"
 							>
-								ADD RESOURCE
+								{isSubmitting ? 'Saving...' : 'ADD RESOURCE'}
 							</Button>
 						</div>
 					</div>

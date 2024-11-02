@@ -45,6 +45,7 @@ export default function ResourceEditForm({
 		setError,
 	} = useForm<ResourceSchema>({
 		resolver: zodResolver(resourceSchema),
+		mode: 'onChange',
 		defaultValues: {
 			title: resource.title,
 			url: resource.url,
@@ -124,7 +125,7 @@ export default function ResourceEditForm({
 			</div>
 			<div className="flex flex-col px-[40px] py-[32px] gap-2">
 				<div className="">
-					<TextField>
+					<div>
 						<Label className="text-sm">URL</Label>
 						<Controller
 							name="url"
@@ -142,11 +143,9 @@ export default function ResourceEditForm({
 							)}
 						/>
 						{errors.url && (
-							<Text slot="errorMessage" className="text-red-500 text-sm">
-								{errors.url.message}
-							</Text>
+							<div className="text-red-500 text-sm">{errors.url.message}</div>
 						)}
-					</TextField>
+					</div>
 				</div>
 				<div>
 					<TextField>

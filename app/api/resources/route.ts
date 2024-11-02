@@ -11,6 +11,7 @@ const resourceCreateSchema = z.object({
 	position: z.number(),
 	mimeType: z.string().optional(),
 	isGoogleDrive: z.boolean().optional().default(false),
+	sectionId: z.string(),
 })
 
 export async function POST(req: NextRequest) {
@@ -25,6 +26,21 @@ export async function POST(req: NextRequest) {
 
 		const json = await req.json()
 		const body = resourceCreateSchema.parse(json)
+
+		const section = await db.section.findUnique({
+			where: {
+				id: body.sectionId,
+				userId,
+			},
+		})
+
+		if (!section) {
+			return NextResponse.json(
+				{ error: 'セクションが見つかりません' },
+				{ status: 404 },
+			)
+		}
+
 		const {
 			title,
 			description = '',
@@ -33,6 +49,7 @@ export async function POST(req: NextRequest) {
 			faviconUrl = '',
 			mimeType,
 			isGoogleDrive = false,
+			sectionId,
 		} = body
 
 		const resource = await db.resource.create({
@@ -49,6 +66,11 @@ export async function POST(req: NextRequest) {
 						id: userId,
 					},
 				},
+				section: {
+					connect: {
+						id: sectionId,
+					},
+				},
 			},
 			select: {
 				id: true,
@@ -59,6 +81,7 @@ export async function POST(req: NextRequest) {
 				position: true,
 				mimeType: true,
 				isGoogleDrive: true,
+				sectionId: true,
 			},
 		})
 

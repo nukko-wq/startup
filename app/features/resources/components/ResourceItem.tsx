@@ -5,121 +5,134 @@ import ResourceEditMenu from '@/app/features/resources/edit_resource/components/
 import ResourceDeleteButton from '@/app/features/resources/delete_resource/components/ResourceDeleteButton'
 import {
 	Link,
-	GridList,
 	GridListItem,
 	Button,
 	useDragAndDrop,
+	isTextDropItem,
+	GridList,
+	DropIndicator,
 } from 'react-aria-components'
 import { GripVertical } from 'lucide-react'
-import { useEffect, useState } from 'react'
 import { useResources } from '@/app/features/resources/contexts/ResourceContext'
 import ResourceIcon from '@/app/features/resources/components/ResourceIcon'
 
-interface UpdatePositonPayload {
-	items: {
-		id: string
-		position: number
-	}[]
+interface ResourceItemProps {
+	resources: Pick<
+		Resource,
+		| 'id'
+		| 'title'
+		| 'url'
+		| 'faviconUrl'
+		| 'mimeType'
+		| 'isGoogleDrive'
+		| 'position'
+		| 'description'
+		| 'sectionId'
+	>[]
+	sectionId: string
 }
 
-export default function ResourceItem() {
-	const { resources, setResources } = useResources()
-	const [isDragging, setIsDragging] = useState(false)
+export default function ResourceItem({
+	resources,
+	sectionId,
+}: ResourceItemProps) {
+	const { reorderResources, resources: allResources } = useResources()
 
-	// ドラッグ&ドロップの設定
 	const { dragAndDropHooks } = useDragAndDrop({
-		getItems: (keys) =>
-			[...keys].map((key) => {
-				const item = resources.find((r) => r.id === key)
-				if (!item) {
-					throw new Error(`Resource with key ${key} not found`)
-				}
-				return {
-					'text/plain': item.title,
-					'resource-item': JSON.stringify(item),
-					faviconUrl: item.faviconUrl || '',
-				}
-			}),
-
+		getItems(keys) {
+			const resource = allResources.find((r) => r.id === Array.from(keys)[0])
+			return [
+				{
+					'resource-item': JSON.stringify(resource),
+					'text/plain': resource?.title || '',
+				},
+			]
+		},
 		acceptedDragTypes: ['resource-item'],
 		getDropOperation: () => 'move',
-		renderDragPreview(items) {
+
+		renderDropIndicator(target) {
 			return (
-				<div className="flex bg-zinc-300 p-2 min-w-[120px] rounded-sm">
-					<div className="text-zinc-950">{items[0]['text/plain']}</div>
-				</div>
+				<DropIndicator
+					target={target}
+					className={({ isDropTarget }) =>
+						`drop-indicator ${isDropTarget ? 'active' : ''}`
+					}
+				/>
 			)
 		},
-		onReorder(e) {
-			const newItems = [...resources]
-			const movedItem = newItems.find((item) => item.id === [...e.keys][0])
-			if (!movedItem) return
-			const targetIndex = newItems.findIndex((item) => item.id === e.target.key)
 
-			newItems.splice(
-				newItems.findIndex((item) => item.id === movedItem.id),
-				1,
-			)
-			if (e.target.dropPosition === 'before') {
-				newItems.splice(targetIndex, 0, movedItem)
-			} else {
-				newItems.splice(targetIndex + 1, 0, movedItem)
+		async onInsert(e) {
+			try {
+				const items = await Promise.all(
+					e.items
+						.filter(isTextDropItem)
+						.map(async (item) =>
+							JSON.parse(await item.getText('resource-item')),
+						),
+				)
+
+				const targetIndex = resources.findIndex((r) => r.id === e.target.key)
+				const newPosition =
+					e.target.dropPosition === 'before'
+						? resources[targetIndex]?.position
+						: resources[targetIndex]?.position + 1
+
+				const updatedResources = allResources.map((r) => {
+					if (items.some((item) => item.id === r.id)) {
+						return { ...r, sectionId, position: newPosition }
+					}
+					if (r.sectionId === sectionId && r.position >= newPosition) {
+						return { ...r, position: r.position + 1 }
+					}
+					return r
+				})
+
+				await reorderResources(updatedResources)
+			} catch (error) {
+				console.error('Failed to insert resources:', error)
 			}
+		},
 
-			setResources(newItems)
-			setIsDragging(true)
+		onReorder(e) {
+			try {
+				const draggedResource = allResources.find(
+					(r) => r.id === Array.from(e.keys)[0],
+				)
+				if (!draggedResource) return
+
+				const targetIndex = resources.findIndex((r) => r.id === e.target.key)
+				const newPosition =
+					e.target.dropPosition === 'before'
+						? resources[targetIndex]?.position
+						: resources[targetIndex]?.position + 1
+
+				const updatedResources = allResources.map((r) => {
+					if (r.id === draggedResource.id) {
+						return { ...r, position: newPosition }
+					}
+					if (r.sectionId === sectionId && r.position >= newPosition) {
+						return { ...r, position: r.position + 1 }
+					}
+					return r
+				})
+
+				reorderResources(updatedResources)
+			} catch (error) {
+				console.error('Failed to reorder resources:', error)
+			}
 		},
 	})
 
-	useEffect(() => {
-		if (isDragging) {
-			updatePositions(resources)
-			setIsDragging(false)
-		}
-	}, [resources, isDragging])
-
-	// 並び順更新用の関数
-	const updatePositions = async (items: typeof resources) => {
-		console.log('Updating positions:', items)
-		const payload: UpdatePositonPayload = {
-			items: items.map((item, index) => ({
-				id: item.id,
-				position: index + 1,
-			})),
-		}
-
-		try {
-			const response = await fetch('/api/resources/reorder', {
-				method: 'PUT',
-				headers: {
-					'Content-Type': 'application/json',
-				},
-				body: JSON.stringify(payload),
-			})
-			if (!response.ok) {
-				console.error('Failed to update positions', response.statusText)
-			} else {
-				console.log('Positions updated successfully')
-			}
-		} catch (error) {
-			console.error('Failed to update positions', error)
-		}
-	}
-
 	return (
 		<GridList
-			aria-label="Resources"
+			aria-label="Resources in section"
 			items={resources}
+			className="flex flex-col border rounded-md"
 			dragAndDropHooks={dragAndDropHooks}
-			selectionMode="single"
-			className="w-full hover:cursor-pointer"
 		>
-			{(item) => (
-				<GridListItem
-					className="outline-none"
-					key={item.id}
-					textValue={item.title}
-				>
+			{(resource) => (
+				<GridListItem textValue={resource.title} className="outline-none">
 					<div className="flex justify-between items-center p-1 border-b border-gray-200 last:border-b-0 hover:bg-zinc-100">
 						<div
 							className="flex flex-grow p-1 ml-1 gap-2 group"
@@ -135,20 +148,20 @@ export default function ResourceItem() {
 							</div>
 							<div className="flex flex-grow">
 								<Link
-									href={item.url}
+									href={resource.url}
 									target="_blank"
 									className="outline-none flex flex-grow"
 								>
 									<div className="flex items-end gap-2">
 										<ResourceIcon
-											faviconUrl={item.faviconUrl}
-											mimeType={item.mimeType}
-											isGoogleDrive={item.isGoogleDrive}
+											faviconUrl={resource.faviconUrl}
+											mimeType={resource.mimeType}
+											isGoogleDrive={resource.isGoogleDrive}
 										/>
 										<div className="flex flex-col">
-											<div>{item.title}</div>
+											<div>{resource.title}</div>
 											<div className="text-xs text-muted-foreground">
-												{item.description || 'Webpage'}
+												{resource.description || 'Webpage'}
 											</div>
 										</div>
 									</div>
@@ -156,8 +169,8 @@ export default function ResourceItem() {
 							</div>
 						</div>
 						<div className="flex items-center">
-							<ResourceEditMenu resource={item} />
-							<ResourceDeleteButton resource={item} />
+							<ResourceEditMenu resource={resource} />
+							<ResourceDeleteButton resource={resource} />
 						</div>
 					</div>
 				</GridListItem>

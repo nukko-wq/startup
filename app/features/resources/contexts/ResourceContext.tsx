@@ -21,6 +21,7 @@ type ResourceContextType = {
 		| 'mimeType'
 		| 'isGoogleDrive'
 		| 'position'
+		| 'sectionId'
 	>[]
 	setResources: React.Dispatch<
 		React.SetStateAction<ResourceContextType['resources']>
@@ -56,7 +57,10 @@ export function ResourceProvider({
 	children: React.ReactNode
 	initialResources: ResourceContextType['resources']
 }) {
-	const [resources, setResources] = useState(initialResources)
+	// postionでソートして初期化
+	const [resources, setResources] = useState(
+		initialResources.sort((a, b) => a.position - b.position),
+	)
 	const [driveFiles, setDriveFiles] = useState<DriveFile[]>([])
 
 	const removeResource = async (id: string) => {
@@ -109,8 +113,6 @@ export function ResourceProvider({
 					prev: ResourceContextType['resources'],
 			  ) => ResourceContextType['resources']),
 	) => {
-		const previousResources = [...resources]
-
 		if (typeof resourceOrUpdater === 'function') {
 			setResources(resourceOrUpdater)
 			return
@@ -123,13 +125,16 @@ export function ResourceProvider({
 		newResources: ResourceContextType['resources'],
 	) => {
 		const previousResources = [...resources]
-		setResources(newResources)
 
 		try {
+			// 更新前にステート更新
+			setResources(newResources)
+
 			const payload = {
-				items: newResources.map((item, index) => ({
+				items: newResources.map((item) => ({
 					id: item.id,
-					position: index + 1,
+					position: item.position,
+					sectionId: item.sectionId,
 				})),
 			}
 
@@ -138,10 +143,16 @@ export function ResourceProvider({
 				headers: { 'Content-Type': 'application/json' },
 				body: JSON.stringify(payload),
 			})
+
+			const result = await response.json()
+
 			if (!response.ok) {
-				throw new Error('Failed to reorder resources')
+				throw new Error(result.message || 'Failed to reorder resources')
 			}
+
+			return result
 		} catch (error) {
+			console.error('Reorder error:', error)
 			setResources(previousResources)
 			throw error
 		}
