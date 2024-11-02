@@ -1,3 +1,4 @@
+import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 import { auth } from '@/lib/auth'
 
@@ -7,26 +8,16 @@ export async function middleware(request: NextRequest) {
 	const isAuthPage = request.nextUrl.pathname === '/login'
 
 	if (!isAuth && !isAuthPage) {
-		return Response.redirect(new URL('/login', request.nextUrl.origin))
+		return NextResponse.redirect(new URL('/login', request.url))
 	}
 
 	if (isAuth && isAuthPage) {
-		return Response.redirect(new URL('/', request.nextUrl.origin))
+		return NextResponse.redirect(new URL('/', request.url))
 	}
 
-	return null
+	return NextResponse.next()
 }
 
 export const config = {
-	matcher: [
-		/*
-		 * Match all request paths except:
-		 * - _next/static (static files)
-		 * - _next/image (image optimization files)
-		 * - favicon.ico (favicon file)
-		 * - images - .svg, .png, .jpg, .jpeg, .gif, .webp
-		 * Feel free to modify this pattern to include more paths.
-		 */
-		'/((?!api|_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
-	],
+	matcher: ['/((?!api|_next/static|_next/image|favicon.ico).*)'],
 }
