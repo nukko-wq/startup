@@ -2,10 +2,21 @@ import { redirect } from 'next/navigation'
 import Sidebar from '@/app/components/layouts/sidebar/sidebar'
 import Resources from '@/app/features/resources/components/resources'
 import { getInitialSections } from '@/app/features/resources/utils/getInitialSections'
+import { auth } from '@/lib/auth'
+
+// ページコンポーネントをキャッシュ化
+export const revalidate = 0
 
 export default async function Index() {
+	const session = await auth()
+	console.log('Session in Index:', session)
+
+	if (!session?.user?.id) {
+		redirect('/login')
+	}
+
 	try {
-		const initialData = await getInitialSections()
+		const initialData = await getInitialSections(session.user.id)
 
 		return (
 			<div className="flex flex-col min-h-screen">
@@ -18,15 +29,13 @@ export default async function Index() {
 			</div>
 		)
 	} catch (error) {
-		if (error instanceof Error) {
-			if (
-				error.message === 'Unauthorized' ||
-				error.message === 'User not found'
-			) {
-				redirect('/login')
-			}
+		console.error('Error in Index page:', error)
+		if (
+			error instanceof Error &&
+			error.message === 'ユーザーが見つかりません'
+		) {
+			redirect('/login')
 		}
-		// その他のエラーの場合
-		redirect('/error')
+		throw error
 	}
 }

@@ -1,69 +1,65 @@
 import { db } from '@/lib/db'
-import { auth } from '@/lib/auth'
-import { redirect } from 'next/navigation'
+import { cache } from 'react'
 
-export async function getInitialSections() {
-	const session = await auth()
+export const getInitialSections = cache(async (userId: string) => {
+	console.log('getInitialSections called with userId:', userId)
 
-	// セッションがない場合は早期リターン
-	if (!session?.user?.id) {
-		throw new Error('Unauthorized')
+	if (!userId) {
+		throw new Error('ユーザーIDが必要です')
 	}
 
-	// ユーザー存在確認
-	const user = await db.user.findUnique({
-		where: {
-			id: session.user.id,
-		},
-	})
+	try {
+		const user = await db.user.findUnique({
+			where: { id: userId },
+		})
 
-	if (!user) {
-		throw new Error('User not found')
-	}
+		console.log('Found user:', user)
 
-	// セクション取得
-	const sections = await db.section.findMany({
-		where: {
-			userId: user.id,
-		},
-		select: {
-			id: true,
-			name: true,
-			order: true,
-			createdAt: true,
-			resources: {
-				orderBy: {
-					position: 'asc',
-				},
-			},
-		},
-		orderBy: {
-			order: 'asc',
-		},
-	})
+		if (!user) {
+			throw new Error('ユーザーが見つかりません')
+		}
 
-	// デフォルトセクション作成
-	if (sections.length === 0) {
-		const defaultSection = await db.section.create({
-			data: {
-				name: 'Resources',
-				order: 1,
-				user: {
-					connect: {
-						id: user.id,
-					},
-				},
+		const sections = await db.section.findMany({
+			where: {
+				userId: user.id,
 			},
 			select: {
 				id: true,
 				name: true,
 				order: true,
 				createdAt: true,
-				resources: true,
+				resources: {
+					orderBy: {
+						position: 'asc',
+					},
+				},
+			},
+			orderBy: {
+				order: 'asc',
 			},
 		})
-		sections.push(defaultSection)
-	}
 
-	return { sections, userId: user.id }
-}
+		if (sections.length === 0) {
+			const defaultSection = await db.section.create({
+				data: {
+					name: 'Resources',
+					order: 1,
+					userId: user.id,
+				},
+				select: {
+					id: true,
+					name: true,
+					order: true,
+					createdAt: true,
+					resources: true,
+				},
+			})
+			sections.push(defaultSection)
+		}
+
+		return { sections, userId: user.id }
+	} catch (error) {
+		console.error('Error in getInitialSections:', error)
+		throw error
+	}
+})
