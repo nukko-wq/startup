@@ -39,7 +39,10 @@ const SectionMenuButton = ({ sectionId, onDelete }: SectionMenuButtonProps) => {
 
 	return (
 		<MenuTrigger>
-			<Button aria-label="Menu" className="outline-none">
+			<Button
+				aria-label="Menu"
+				className="outline-none p-2 hover:bg-zinc-200 rounded-full"
+			>
 				<EllipsisVertical className="w-6 h-6 text-zinc-700" />
 			</Button>
 			<Popover>

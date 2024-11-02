@@ -122,18 +122,49 @@ export default function ResourceItem({
 				console.error('Failed to reorder resources:', error)
 			}
 		},
+
+		async onRootDrop(e) {
+			try {
+				const items = await Promise.all(
+					e.items
+						.filter(isTextDropItem)
+						.map(async (item) =>
+							JSON.parse(await item.getText('resource-item')),
+						),
+				)
+
+				const newPosition = 0
+
+				const updatedResources = allResources.map((r) => {
+					if (items.some((item) => item.id === r.id)) {
+						return { ...r, sectionId, position: newPosition }
+					}
+					if (r.sectionId === sectionId && r.position >= newPosition) {
+						return { ...r, position: r.position + 1 }
+					}
+					return r
+				})
+
+				await reorderResources(updatedResources)
+			} catch (error) {
+				console.error('Failed to drop resources:', error)
+			}
+		},
 	})
 
 	return (
 		<GridList
 			aria-label="Resources in section"
 			items={resources}
-			className="flex flex-col border rounded-md"
+			className="flex flex-col border rounded-md min-h-[50px]"
 			dragAndDropHooks={dragAndDropHooks}
+			renderEmptyState={() => (
+				<div className="p-4 text-center text-gray-500">Add resources here</div>
+			)}
 		>
 			{(resource) => (
 				<GridListItem textValue={resource.title} className="outline-none">
-					<div className="flex justify-between items-center p-1 border-b border-gray-200 last:border-b-0 hover:bg-zinc-100">
+					<div className="flex justify-between items-center p-1 border-b border-gray-200 last:border-b-0 hover:bg-zinc-100 group">
 						<div
 							className="flex flex-grow p-1 ml-1 gap-2 group"
 							aria-label="Resource Item Wrapper"
@@ -168,7 +199,7 @@ export default function ResourceItem({
 								</Link>
 							</div>
 						</div>
-						<div className="flex items-center">
+						<div className="flex items-center opacity-0 group-hover:opacity-100">
 							<ResourceEditMenu resource={resource} />
 							<ResourceDeleteButton resource={resource} />
 						</div>
