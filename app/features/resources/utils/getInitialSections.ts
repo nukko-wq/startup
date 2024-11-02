@@ -5,52 +5,51 @@ import { redirect } from 'next/navigation'
 export async function getInitialSections() {
 	const session = await auth()
 
+	// セッションチェック
 	if (!session?.user?.id) {
-		redirect('/login')
+		return redirect('/login')
 	}
 
-	try {
-		// まずユーザーが存在することを確認
-		const user = await db.user.findUnique({
-			where: {
-				id: session.user.id,
-			},
-		})
+	// ユーザー存在確認
+	const user = await db.user.findUnique({
+		where: {
+			id: session.user.id,
+		},
+	})
 
-		if (!user) {
-			redirect('/login')
-		}
+	if (!user) {
+		return redirect('/login')
+	}
 
-		const sections = await db.section.findMany({
-			where: {
-				userId: user.id,
-			},
-			select: {
-				id: true,
-				name: true,
-				order: true,
-				createdAt: true,
-				resources: {
-					orderBy: {
-						position: 'asc',
-					},
+	// セクション取得
+	const sections = await db.section.findMany({
+		where: {
+			userId: user.id,
+		},
+		select: {
+			id: true,
+			name: true,
+			order: true,
+			createdAt: true,
+			resources: {
+				orderBy: {
+					position: 'asc',
 				},
 			},
-			orderBy: {
-				order: 'asc',
-			},
-		})
+		},
+		orderBy: {
+			order: 'asc',
+		},
+	})
 
-		if (sections.length === 0) {
+	// デフォルトセクション作成
+	if (sections.length === 0) {
+		try {
 			const defaultSection = await db.section.create({
 				data: {
 					name: 'Resources',
 					order: 1,
-					user: {
-						connect: {
-							id: user.id,
-						},
-					},
+					userId: user.id, // 直接userIdを設定
 				},
 				select: {
 					id: true,
@@ -61,11 +60,11 @@ export async function getInitialSections() {
 				},
 			})
 			sections.push(defaultSection)
+		} catch (error) {
+			console.error('Error creating default section:', error)
+			// エラーが発生しても処理を継続
 		}
-
-		return { sections, userId: user.id }
-	} catch (error) {
-		console.error('Error in getInitialSections:', error)
-		redirect('/login')
 	}
+
+	return { sections, userId: user.id }
 }
