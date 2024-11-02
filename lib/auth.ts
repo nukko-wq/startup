@@ -32,33 +32,60 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
 	},
 	pages: {
 		signIn: '/login',
+		error: '/login',
 	},
 	callbacks: {
-		async signIn({ user }) {
-			return allowedEmails.includes(user.email ?? '')
-		},
-		authorized: async ({ auth }) => {
-			return !!auth
-		},
-		async jwt({ token, account, user }): Promise<JWT> {
-			// 初回認証時
-			if (account && user && user.id) {
-				const newToken = {
-					...token,
-					id: user.id,
-					accessToken: account.access_token ?? undefined,
-					refreshToken: account.refresh_token ?? undefined,
-					expiresAt: account.expires_at ?? undefined,
-				}
-				return newToken
+		async signIn({ user, account, profile }) {
+			console.log('SignIn callback:', { user, account, profile })
+
+			if (!allowedEmails.includes(user.email ?? '')) {
+				return false
 			}
 
-			if (!token.id) {
-				throw new Error('Invalid token missing id')
+			try {
+				const existingUser = await db.user.findFirst({
+					where: {
+						email: user.email ?? '',
+						accounts: {
+							some: {
+								provider: 'google',
+								providerAccountId: account?.providerAccountId,
+							},
+						},
+					},
+				})
+
+				if (!existingUser) {
+					const newUser = await db.user.create({
+						data: {
+							email: user.email ?? '',
+							name: user.name,
+							accounts: {
+								create: {
+									type: account?.type ?? 'oauth',
+									provider: 'google',
+									providerAccountId: account?.providerAccountId ?? '',
+									access_token: account?.access_token,
+									token_type: account?.token_type,
+									refresh_token: account?.refresh_token,
+									expires_at: account?.expires_at,
+									scope: account?.scope,
+									id_token: account?.id_token,
+								},
+							},
+						},
+					})
+					return true
+				}
+
+				return true
+			} catch (error) {
+				console.error('Error in signIn callback:', error)
+				return false
 			}
-			return token
 		},
 		async session({ session, token }) {
+			console.log('Session callback:', { session, token })
 			if (session.user) {
 				session.user.id = token.id
 				session.accessToken = token.accessToken
@@ -66,6 +93,16 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
 				session.expiresAt = token.expiresAt
 			}
 			return session
+		},
+		async jwt({ token, account, user }) {
+			console.log('JWT callback:', { token, account, user })
+			if (account && user && user.id) {
+				token.id = user.id
+				token.accessToken = account.access_token ?? undefined
+				token.refreshToken = account.refresh_token ?? undefined
+				token.expiresAt = account.expires_at ?? undefined
+			}
+			return token
 		},
 	},
 	secret: process.env.AUTH_SECRET,
