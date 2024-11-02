@@ -79,7 +79,7 @@ const SectionNameEdit = ({
 		return (
 			<Button
 				onPress={() => setIsEditing(true)}
-				className="text-xl font-semibold text-zinc-700 cursor-pointer hover:bg-slate-50 px-2 py-1 rounded w-full text-left"
+				className="text-xl font-semibold text-zinc-700 cursor-pointer hover:bg-slate-50 px-2 py-1 rounded w-full text-left outline-none"
 			>
 				{initialName}
 			</Button>

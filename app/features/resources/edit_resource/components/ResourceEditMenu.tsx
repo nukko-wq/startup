@@ -29,7 +29,7 @@ const ResourceEditMenu = ({
 			>
 				<Button
 					aria-label="Edit"
-					className="outline-none p-3 hover:bg-zinc-200 rounded-full"
+					className="outline-none p-2 hover:bg-zinc-200 rounded-full"
 				>
 					<Pencil className="w-5 h-5 text-zinc-700" />
 				</Button>
