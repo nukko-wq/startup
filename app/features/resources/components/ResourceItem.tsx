@@ -3,13 +3,8 @@
 import type { Resource } from '@prisma/client'
 import ResourceEditMenu from '@/app/features/resources/edit_resource/components/ResourceEditMenu'
 import ResourceDeleteButton from '@/app/features/resources/delete_resource/components/ResourceDeleteButton'
-import {
-	Link,
-	GridList,
-	GridListItem,
-	Button,
-	useDragAndDrop,
-} from 'react-aria-components'
+import { Link, GridList, GridListItem, Button } from 'react-aria-components'
+import { useDrag } from 'react-aria'
 import { GripVertical } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { useResources } from '@/app/features/resources/contexts/ResourceContext'
@@ -38,101 +33,55 @@ interface ResourceItemProps {
 }
 
 export default function ResourceItem({ resource }: ResourceItemProps) {
-	const { resources, setResources } = useResources()
+	const { resources, setResources, reorderResources } = useResources()
 	const [isDragging, setIsDragging] = useState(false)
 
-	// 同じセクション内のリソースのみをフィルタリング
-	const sectionResources = resources.filter(
-		(r) => r.sectionId === resource.sectionId,
-	)
-
-	// ドラッグ&ドロップの設定
-	const { dragAndDropHooks } = useDragAndDrop({
-		getItems: (keys) =>
-			[...keys].map((key) => {
-				const item = resources.find((r) => r.id === key)
-				if (!item) {
-					throw new Error(`Resource with key ${key} not found`)
-				}
-				return {
-					'text/plain': item.title,
-					'resource-item': JSON.stringify(item),
-					faviconUrl: item.faviconUrl || '',
-				}
-			}),
-
-		acceptedDragTypes: ['resource-item'],
-		getDropOperation: () => 'move',
-		renderDragPreview(items) {
-			return (
-				<div className="flex bg-zinc-300 p-2 min-w-[120px] rounded-sm">
-					<div className="text-zinc-950">{items[0]['text/plain']}</div>
-				</div>
-			)
+	const { dragProps, dragButtonProps } = useDrag({
+		getItems() {
+			return [
+				{
+					'text/plain': resource.title,
+					'resource-item': JSON.stringify(resource),
+				},
+			]
 		},
-		onReorder(e) {
-			const newItems = [...resources]
-			const movedItem = newItems.find((item) => item.id === [...e.keys][0])
-			if (!movedItem) return
-			const targetIndex = newItems.findIndex((item) => item.id === e.target.key)
-
-			newItems.splice(
-				newItems.findIndex((item) => item.id === movedItem.id),
-				1,
-			)
-			if (e.target.dropPosition === 'before') {
-				newItems.splice(targetIndex, 0, movedItem)
-			} else {
-				newItems.splice(targetIndex + 1, 0, movedItem)
-			}
-
-			setResources(newItems)
+		onDragStart() {
 			setIsDragging(true)
 		},
-	})
-
-	useEffect(() => {
-		if (isDragging) {
-			updatePositions(resources)
+		onDragEnd(e) {
 			setIsDragging(false)
-		}
-	}, [resources, isDragging])
+			if (e.dropOperation === 'move') {
+				const currentResource = resources.find((r) => r.id === resource.id)
+				if (!currentResource) return
 
-	// 並び順更新用の関数
-	const updatePositions = async (items: typeof resources) => {
-		console.log('Updating positions:', items)
-		const payload: UpdatePositonPayload = {
-			items: items.map((item, index) => ({
-				id: item.id,
-				position: index + 1,
-			})),
-		}
+				if (currentResource.sectionId === resource.sectionId) {
+					return
+				}
 
-		try {
-			const response = await fetch('/api/resources/reorder', {
-				method: 'PUT',
-				headers: {
-					'Content-Type': 'application/json',
-				},
-				body: JSON.stringify(payload),
-			})
-			if (!response.ok) {
-				console.error('Failed to update positions', response.statusText)
-			} else {
-				console.log('Positions updated successfully')
+				const updatedResources = resources.map((r) => {
+					if (r.id === resource.id) {
+						return {
+							...r,
+							sectionId: resource.sectionId,
+						}
+					}
+					return r
+				})
+
+				reorderResources(updatedResources).catch(console.error)
 			}
-		} catch (error) {
-			console.error('Failed to update positions', error)
-		}
-	}
+		},
+		getAllowedDropOperations: () => ['move'],
+	})
 
 	return (
 		<GridList
 			aria-label="Resources"
-			items={sectionResources}
-			dragAndDropHooks={dragAndDropHooks}
-			selectionMode="single"
+			items={[resource]}
 			className="w-full hover:cursor-pointer"
+			style={{
+				opacity: isDragging ? 0.5 : 1,
+			}}
 		>
 			{(item) => (
 				<GridListItem
@@ -140,7 +89,10 @@ export default function ResourceItem({ resource }: ResourceItemProps) {
 					key={item.id}
 					textValue={item.title}
 				>
-					<div className="flex justify-between items-center p-1 border-b border-gray-200 last:border-b-0 hover:bg-zinc-100">
+					<div
+						{...dragProps}
+						className="flex justify-between items-center p-1 border-b border-gray-200 last:border-b-0 hover:bg-zinc-100"
+					>
 						<div
 							className="flex flex-grow p-1 ml-1 gap-2 group"
 							aria-label="Resource Item Wrapper"
@@ -149,7 +101,12 @@ export default function ResourceItem({ resource }: ResourceItemProps) {
 								className="cursor-grab flex items-center opacity-0 group-hover:opacity-100"
 								aria-label="Drag Wrapper"
 							>
-								<Button className="cursor-grab" slot="drag" aria-label="Drag">
+								<Button
+									{...dragButtonProps}
+									className="cursor-grab"
+									slot="drag"
+									aria-label="Drag"
+								>
 									<GripVertical className="w-4 h-4 text-zinc-500" />
 								</Button>
 							</div>

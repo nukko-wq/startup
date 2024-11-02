@@ -125,13 +125,16 @@ export function ResourceProvider({
 		newResources: ResourceContextType['resources'],
 	) => {
 		const previousResources = [...resources]
-		setResources(newResources)
 
 		try {
+			// 更新前にステート更新
+			setResources(newResources)
+
 			const payload = {
-				items: newResources.map((item, index) => ({
+				items: newResources.map((item) => ({
 					id: item.id,
-					position: index + 1,
+					position: item.position,
+					sectionId: item.sectionId,
 				})),
 			}
 
@@ -140,11 +143,18 @@ export function ResourceProvider({
 				headers: { 'Content-Type': 'application/json' },
 				body: JSON.stringify(payload),
 			})
+
+			const result = await response.json()
+
 			if (!response.ok) {
-				throw new Error('Failed to reorder resources')
+				throw new Error(result.message || 'Failed to reorder resources')
 			}
+
+			// 成功の場合は何もしない（ステートは既に更新済み）
+			return result
 		} catch (error) {
-			setResources(previousResources)
+			console.error('Reorder error:', error)
+			setResources(previousResources) // エラー時は元の状態に戻す
 			throw error
 		}
 	}

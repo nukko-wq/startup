@@ -13,17 +13,21 @@ const Resources = ({
 }: { initialData: Awaited<ReturnType<typeof getInitialSections>> }) => {
 	const { sections, userId } = initialData
 
+	// 重複を排除して初期リソースを作成
+	const uniqueResources = Array.from(
+		new Map(
+			sections
+				.flatMap((s) => s.resources)
+				.map((resource) => [resource.id, resource]),
+		).values(),
+	)
+
 	return (
 		<ResourceProvider initialResources={sections.flatMap((s) => s.resources)}>
 			<div className="flex flex-col w-full">
 				<div className="flex flex-col w-full items-center">
 					{sections.map((section) => (
-						<Section
-							key={section.id}
-							id={section.id}
-							name={section.name}
-							resources={section.resources}
-						/>
+						<Section key={section.id} id={section.id} name={section.name} />
 					))}
 				</div>
 				<div className="flex justify-center">
