@@ -48,12 +48,9 @@ export default function ResourceItem({
 				},
 			]
 		},
-
-		// ドロップを受け入れる形式を指定
 		acceptedDragTypes: ['resource-item'],
 		getDropOperation: () => 'move',
 
-		// ドロップ位置のインジケーターをレンダリング
 		renderDropIndicator(target) {
 			return (
 				<DropIndicator
@@ -65,8 +62,39 @@ export default function ResourceItem({
 			)
 		},
 
-		// アイテムの並び替えを処理
-		async onReorder(e) {
+		async onInsert(e) {
+			try {
+				const items = await Promise.all(
+					e.items
+						.filter(isTextDropItem)
+						.map(async (item) =>
+							JSON.parse(await item.getText('resource-item')),
+						),
+				)
+
+				const targetIndex = resources.findIndex((r) => r.id === e.target.key)
+				const newPosition =
+					e.target.dropPosition === 'before'
+						? resources[targetIndex]?.position
+						: resources[targetIndex]?.position + 1
+
+				const updatedResources = allResources.map((r) => {
+					if (items.some((item) => item.id === r.id)) {
+						return { ...r, sectionId, position: newPosition }
+					}
+					if (r.sectionId === sectionId && r.position >= newPosition) {
+						return { ...r, position: r.position + 1 }
+					}
+					return r
+				})
+
+				await reorderResources(updatedResources)
+			} catch (error) {
+				console.error('Failed to insert resources:', error)
+			}
+		},
+
+		onReorder(e) {
 			try {
 				const draggedResource = allResources.find(
 					(r) => r.id === Array.from(e.keys)[0],
@@ -75,20 +103,21 @@ export default function ResourceItem({
 
 				const targetIndex = resources.findIndex((r) => r.id === e.target.key)
 				const newPosition =
-					e.target.dropPosition === 'before' ? targetIndex : targetIndex + 1
+					e.target.dropPosition === 'before'
+						? resources[targetIndex]?.position
+						: resources[targetIndex]?.position + 1
 
 				const updatedResources = allResources.map((r) => {
 					if (r.id === draggedResource.id) {
-						return { ...r, sectionId, position: newPosition }
+						return { ...r, position: newPosition }
 					}
-					if (r.sectionId === sectionId) {
-						const pos = r.position >= newPosition ? r.position + 1 : r.position
-						return { ...r, position: pos }
+					if (r.sectionId === sectionId && r.position >= newPosition) {
+						return { ...r, position: r.position + 1 }
 					}
 					return r
 				})
 
-				await reorderResources(updatedResources)
+				reorderResources(updatedResources)
 			} catch (error) {
 				console.error('Failed to reorder resources:', error)
 			}
@@ -101,7 +130,6 @@ export default function ResourceItem({
 			items={resources}
 			className="flex flex-col border rounded-md"
 			dragAndDropHooks={dragAndDropHooks}
-			renderEmptyState={() => ''}
 		>
 			{(resource) => (
 				<GridListItem textValue={resource.title} className="outline-none">
