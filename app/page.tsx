@@ -1,6 +1,6 @@
 import { redirect } from 'next/navigation'
 import Sidebar from '@/app/components/layouts/sidebar/sidebar'
-import Resources from '@/app/features/resources/components/resources'
+import Resources from '@/app/features/resources/components/Resources'
 import { getInitialSections } from '@/app/features/resources/utils/getInitialSections'
 import { auth } from '@/lib/auth'
 

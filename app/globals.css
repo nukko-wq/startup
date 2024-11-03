@@ -69,7 +69,7 @@
 }
 
 .react-aria-DropIndicator[data-drop-target] {
-	outline: 1px solid #60a5fa;
+	outline: none;
 }
 
 @supports not selector(:has(.foo)) {
