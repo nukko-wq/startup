@@ -91,6 +91,7 @@ const SectionNameEdit = ({
 			<TextField>
 				<Input
 					{...register('name')}
+					value={initialName}
 					ref={(e) => {
 						if (inputRef.current !== e) {
 							inputRef.current = e
