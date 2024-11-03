@@ -7,8 +7,7 @@ import { useResources } from '@/app/features/resources/contexts/ResourceContext'
 import { useRef, useState } from 'react'
 import SectionMenuButton from '@/app/features/sections/section_menu/SectionMenuButton'
 import SectionNameEdit from '@/app/features/sections/edit_section/components/SectionNameEdit'
-import { useDragAndDrop, GridList } from 'react-aria-components'
-import { useListData } from 'react-stately'
+import { Button } from 'react-aria-components'
 
 interface SectionProps {
 	id: string
@@ -20,6 +19,7 @@ export default function Section({ id, name, onDelete }: SectionProps) {
 	const { resources } = useResources()
 	const ref = useRef<HTMLDivElement>(null)
 	const [sectionName, setSectionName] = useState(name)
+	const [isResourceCreateOpen, setIsResourceCreateOpen] = useState(false)
 
 	const sectionResources = resources
 		.filter((resource) => resource.sectionId === id)
@@ -36,7 +36,13 @@ export default function Section({ id, name, onDelete }: SectionProps) {
 		>
 			<div className="flex justify-between items-center mb-2 cursor-pointer">
 				<div className="flex items-center gap-2 ml-4">
-					<File className="w-6 h-6 text-zinc-700" />
+					<Button
+						slot="drag"
+						aria-label="ドラッグハンドル"
+						className="cursor-grab"
+					>
+						<File className="w-6 h-6 text-zinc-700" />
+					</Button>
 					<SectionNameEdit
 						initialName={sectionName}
 						sectionId={id}
@@ -44,8 +50,16 @@ export default function Section({ id, name, onDelete }: SectionProps) {
 					/>
 				</div>
 				<div className="flex">
-					<ResourceCreateButton sectionId={id} />
-					<SectionMenuButton sectionId={id} onDelete={onDelete} />
+					<ResourceCreateButton
+						sectionId={id}
+						isOpen={isResourceCreateOpen}
+						onOpenChange={setIsResourceCreateOpen}
+					/>
+					<SectionMenuButton
+						sectionId={id}
+						onDelete={onDelete}
+						onResourceCreate={() => setIsResourceCreateOpen(true)}
+					/>
 				</div>
 			</div>
 			<ResourceItem resources={sectionResources} sectionId={id} />

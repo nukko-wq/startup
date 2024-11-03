@@ -10,9 +10,14 @@ import {
 interface SectionMenuButtonProps {
 	sectionId: string
 	onDelete: (sectionId: string) => void
+	onResourceCreate: () => void
 }
 
-const SectionMenuButton = ({ sectionId, onDelete }: SectionMenuButtonProps) => {
+const SectionMenuButton = ({
+	sectionId,
+	onDelete,
+	onResourceCreate,
+}: SectionMenuButtonProps) => {
 	const handleDelete = async () => {
 		if (!confirm('このセクションを削除してもよろしいですか？')) return
 
@@ -48,7 +53,7 @@ const SectionMenuButton = ({ sectionId, onDelete }: SectionMenuButtonProps) => {
 			<Popover>
 				<Menu className="bg-zinc-50 outline-none border rounded-lg shadow-md">
 					<MenuItem
-						onAction={() => alert('add a resource')}
+						onAction={onResourceCreate}
 						className="p-2 outline-none hover:bg-zinc-200 hover:cursor-pointer"
 					>
 						Add a resource

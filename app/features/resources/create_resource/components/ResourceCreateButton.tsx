@@ -15,15 +15,20 @@ import ResourceCreateForm from '@/app/features/resources/create_resource/compone
 
 interface ResourceCreateButtonProps {
 	sectionId: string
+	isOpen?: boolean
+	onOpenChange?: (isOpen: boolean) => void
 }
 
-const ResourceCreateButton = ({ sectionId }: ResourceCreateButtonProps) => {
-	const [isOpen, setIsOpen] = useState<boolean>(false)
+const ResourceCreateButton = ({
+	sectionId,
+	isOpen,
+	onOpenChange,
+}: ResourceCreateButtonProps) => {
 	const [isTooltipVisible, setIsTooltipVisible] = useState<boolean>(false)
 
 	return (
 		<div>
-			<DialogTrigger isOpen={isOpen} onOpenChange={setIsOpen}>
+			<DialogTrigger isOpen={isOpen} onOpenChange={onOpenChange}>
 				<TooltipTrigger
 					isOpen={isTooltipVisible}
 					onOpenChange={setIsTooltipVisible}
@@ -56,7 +61,7 @@ const ResourceCreateButton = ({ sectionId }: ResourceCreateButtonProps) => {
 						<div className="bg-white flex items-center justify-center rounded-lg shadow-md">
 							<ResourceCreateForm
 								sectionId={sectionId}
-								onClose={() => setIsOpen(false)}
+								onClose={() => onOpenChange?.(false)}
 							/>
 						</div>
 					</Dialog>

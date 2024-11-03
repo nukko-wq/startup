@@ -1,8 +1,8 @@
 'use client'
 
-import { useForm } from 'react-hook-form'
+import { Controller, useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { Button } from 'react-aria-components'
+import { Button, Form, TextField, Input } from 'react-aria-components'
 import { sectionSchema } from '@/lib/validations/section'
 import { useState } from 'react'
 import type { z } from 'zod'
@@ -24,7 +24,7 @@ const SectionNameEdit = ({
 	const [isEditing, setIsEditing] = useState(false)
 	const inputRef = useRef<HTMLInputElement | null>(null)
 
-	const { register, handleSubmit, reset } = useForm<FormData>({
+	const { control, handleSubmit, reset } = useForm<FormData>({
 		resolver: zodResolver(sectionSchema),
 		defaultValues: {
 			name: initialName,
@@ -69,6 +69,7 @@ const SectionNameEdit = ({
 	}
 
 	const handleKeyDown = (e: React.KeyboardEvent) => {
+		e.stopPropagation()
 		if (e.key === 'Escape') {
 			reset({ name: initialName })
 			setIsEditing(false)
@@ -87,20 +88,35 @@ const SectionNameEdit = ({
 	}
 
 	return (
-		<form onSubmit={handleSubmit(onSubmit)}>
-			<input
-				{...register('name')}
-				ref={(e) => {
-					if (inputRef.current !== e) {
-						inputRef.current = e
-					}
-					register('name').ref(e)
-				}}
-				onKeyDown={handleKeyDown}
-				onBlur={handleSubmit(onSubmit)}
-				className="text-xl font-semibold text-zinc-700 bg-slate-50 hover:bg-slate-50 px-2 py-1 rounded outline-none w-full"
-			/>
-		</form>
+		<Form onSubmit={handleSubmit(onSubmit)}>
+			<TextField>
+				<Controller
+					control={control}
+					name="name"
+					render={({ field: { value, onChange, onBlur, ref } }) => (
+						<Input
+							ref={(e) => {
+								inputRef.current = e
+								ref(e)
+							}}
+							value={value}
+							onChange={onChange}
+							onBlur={(e) => {
+								// メニューボタンをクリックした場合は処理をスキップ
+								const relatedTarget = e.relatedTarget as HTMLElement
+								if (relatedTarget?.closest('[role="menu"]')) {
+									return
+								}
+								onBlur()
+								handleSubmit(onSubmit)(e)
+							}}
+							onKeyDown={handleKeyDown}
+							className="text-xl font-semibold text-zinc-700 bg-slate-50 hover:bg-slate-50 px-2 py-1 rounded outline-none w-full"
+						/>
+					)}
+				/>
+			</TextField>
+		</Form>
 	)
 }
 

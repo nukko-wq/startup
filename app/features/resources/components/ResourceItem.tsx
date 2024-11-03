@@ -177,7 +177,11 @@ export default function ResourceItem({
 								className="cursor-grab flex items-center opacity-0 group-hover:opacity-100"
 								aria-label="Drag Wrapper"
 							>
-								<Button className="cursor-grab" slot="drag" aria-label="Drag">
+								<Button
+									className="cursor-grab"
+									slot="drag"
+									aria-label="ドラッグハンドル"
+								>
 									<GripVertical className="w-4 h-4 text-zinc-500" />
 								</Button>
 							</div>
