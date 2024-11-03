@@ -34,8 +34,8 @@ export default function Section({ id, name, onDelete }: SectionProps) {
 			ref={ref}
 			className="min-w-[260px] max-w-[920px] w-full mx-auto p-5 outline-none"
 		>
-			<div className="flex justify-between items-center mb-2 cursor-pointer">
-				<div className="flex items-center gap-2 ml-4">
+			<div className="flex justify-between items-center mb-2 cursor-grab">
+				<div className="flex items-center ml-4">
 					<Button
 						slot="drag"
 						aria-label="ドラッグハンドル"
