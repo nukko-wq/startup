@@ -30,11 +30,13 @@ export default function Section({ id, name, onDelete }: SectionProps) {
 	}
 
 	return (
-		<div ref={ref} className="min-w-[260px] max-w-[920px] w-full p-5">
-			<div className="flex justify-between items-center mb-2">
+		<div
+			ref={ref}
+			className="min-w-[260px] max-w-[920px] w-full mx-auto p-5 outline-none"
+		>
+			<div className="flex justify-between items-center mb-2 cursor-pointer">
 				<div className="flex items-center gap-2 ml-4">
 					<File className="w-6 h-6 text-zinc-700" />
-					{/* Section name */}
 					<SectionNameEdit
 						initialName={sectionName}
 						sectionId={id}
