@@ -163,7 +163,12 @@ export default function ResourceItem({
 			)}
 		>
 			{(resource) => (
-				<GridListItem textValue={resource.title} className="outline-none">
+				<GridListItem
+					textValue={resource.title}
+					href={resource.url}
+					target="_blank"
+					className="outline-none cursor-pointer"
+				>
 					<div className="flex justify-between items-center p-1 border-b border-gray-200 last:border-b-0 hover:bg-zinc-100 group">
 						<div
 							className="flex flex-grow p-1 ml-1 gap-2 group"
@@ -178,11 +183,7 @@ export default function ResourceItem({
 								</Button>
 							</div>
 							<div className="flex flex-grow">
-								<Link
-									href={resource.url}
-									target="_blank"
-									className="outline-none flex flex-grow"
-								>
+								<div className="outline-none flex flex-grow">
 									<div className="flex items-end gap-2">
 										<ResourceIcon
 											faviconUrl={resource.faviconUrl}
@@ -196,7 +197,7 @@ export default function ResourceItem({
 											</div>
 										</div>
 									</div>
-								</Link>
+								</div>
 							</div>
 						</div>
 						<div className="flex items-center opacity-0 group-hover:opacity-100">
