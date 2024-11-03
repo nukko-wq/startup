@@ -20,6 +20,7 @@ export default function Section({ id, name, onDelete }: SectionProps) {
 	const { resources } = useResources()
 	const ref = useRef<HTMLDivElement>(null)
 	const [sectionName, setSectionName] = useState(name)
+	const [isResourceCreateOpen, setIsResourceCreateOpen] = useState(false)
 
 	const sectionResources = resources
 		.filter((resource) => resource.sectionId === id)
@@ -44,8 +45,16 @@ export default function Section({ id, name, onDelete }: SectionProps) {
 					/>
 				</div>
 				<div className="flex">
-					<ResourceCreateButton sectionId={id} />
-					<SectionMenuButton sectionId={id} onDelete={onDelete} />
+					<ResourceCreateButton
+						sectionId={id}
+						isOpen={isResourceCreateOpen}
+						onOpenChange={setIsResourceCreateOpen}
+					/>
+					<SectionMenuButton
+						sectionId={id}
+						onDelete={onDelete}
+						onResourceCreate={() => setIsResourceCreateOpen(true)}
+					/>
 				</div>
 			</div>
 			<ResourceItem resources={sectionResources} sectionId={id} />
