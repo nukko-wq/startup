@@ -2,11 +2,25 @@
 
 import { Controller, useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { Button, Form, TextField, Input } from 'react-aria-components'
+import {
+	Button,
+	Form,
+	TextField,
+	Input,
+	DialogTrigger,
+	TooltipTrigger,
+	Tooltip,
+	OverlayArrow,
+	ModalOverlay,
+	Modal,
+	Dialog,
+} from 'react-aria-components'
 import { sectionSchema } from '@/lib/validations/section'
 import { useState } from 'react'
 import type { z } from 'zod'
 import { useRef, useEffect } from 'react'
+import { Pencil } from 'lucide-react'
+import ResourceEditForm from '@/app/features/resources/edit_resource/components/ResourceEditForm'
 
 type FormData = z.infer<typeof sectionSchema>
 
@@ -21,9 +35,7 @@ const SectionNameEdit = ({
 	sectionId,
 	onEdit,
 }: SectionNameEditProps) => {
-	const [isEditing, setIsEditing] = useState(false)
-	const inputRef = useRef<HTMLInputElement | null>(null)
-
+	const [isOpen, setIsOpen] = useState(false)
 	const { control, handleSubmit, reset } = useForm<FormData>({
 		resolver: zodResolver(sectionSchema),
 		defaultValues: {
@@ -31,25 +43,9 @@ const SectionNameEdit = ({
 		},
 	})
 
-	useEffect(() => {
-		if (isEditing && inputRef.current) {
-			inputRef.current.focus()
-			inputRef.current.select()
-		}
-	}, [isEditing])
-
-	useEffect(() => {
-		const handleKeyDown = (e: KeyboardEvent) => {
-			console.log('Global keydown:', e.key, e.target)
-		}
-
-		window.addEventListener('keydown', handleKeyDown)
-		return () => window.removeEventListener('keydown', handleKeyDown)
-	}, [])
-
 	const onSubmit = async (data: FormData) => {
 		if (data.name === initialName) {
-			setIsEditing(false)
+			setIsOpen(false) // 変更がない場合はモーダルを閉じる
 			return
 		}
 
@@ -68,7 +64,7 @@ const SectionNameEdit = ({
 
 			if (result.success) {
 				onEdit?.(result.name)
-				setIsEditing(false)
+				setIsOpen(false) // 成功時にモーダルを閉じる
 			}
 		} catch (error) {
 			console.error('Section name update error:', error)
@@ -77,73 +73,57 @@ const SectionNameEdit = ({
 		}
 	}
 
-	const handleKeyDown = (e: React.KeyboardEvent) => {
-		e.stopPropagation()
-		if (e.key === 'Escape') {
-			reset({ name: initialName })
-			setIsEditing(false)
-		}
-	}
-
-	// 別のコンポーネントとして分離
-	const TestForm = () => {
-		return (
-			<div style={{ position: 'relative', zIndex: 1000 }}>
-				<form id="test-form">
-					<input
-						className="bg-gray-500 text-white"
-						onKeyDown={(e) => e.stopPropagation()}
-					/>
-				</form>
-			</div>
-		)
-	}
-
-	if (!isEditing) {
-		return (
-			<>
+	return (
+		<DialogTrigger isOpen={isOpen} onOpenChange={setIsOpen}>
+			<TooltipTrigger delay={700} closeDelay={0}>
 				<Button
-					onPress={() => setIsEditing(true)}
-					className="text-xl font-semibold text-zinc-700 cursor-pointer hover:bg-slate-50 px-2 py-1 rounded w-full text-left outline-none"
-					excludeFromTabOrder
+					aria-label="Edit"
+					className="text-[17px] outline-none px-3 py-2 hover:bg-zinc-200 rounded-full"
 				>
 					{initialName}
 				</Button>
-				<TestForm />
-			</>
-		)
-	}
-
-	return (
-		<Form onSubmit={handleSubmit(onSubmit)}>
-			<TextField>
-				<Controller
-					control={control}
-					name="name"
-					render={({ field: { value, onChange, onBlur, ref } }) => (
-						<Input
-							ref={(e) => {
-								inputRef.current = e
-								ref(e)
-							}}
-							value={value}
-							onChange={onChange}
-							onBlur={(e) => {
-								// メニューボタンをクリックした場合は処理をスキップ
-								const relatedTarget = e.relatedTarget as HTMLElement
-								if (relatedTarget?.closest('[role="menu"]')) {
-									return
-								}
-								onBlur()
-								handleSubmit(onSubmit)(e)
-							}}
-							onKeyDown={handleKeyDown}
-							className="text-xl font-semibold text-zinc-700 bg-slate-50 hover:bg-slate-50 px-2 py-1 rounded outline-none w-full"
-						/>
-					)}
-				/>
-			</TextField>
-		</Form>
+				<Tooltip className="bg-zinc-800 text-zinc-300 text-sm shadow-md rounded-lg px-2 py-1">
+					<OverlayArrow>
+						{/* biome-ignore lint/a11y/noSvgWithoutTitle: <explanation> */}
+						<svg
+							width={8}
+							height={8}
+							viewBox="0 0 8 8"
+							className="fill-zinc-800"
+						>
+							<path d="M0 0 L4 4 L8 0" />
+						</svg>
+					</OverlayArrow>
+					Edit
+				</Tooltip>
+			</TooltipTrigger>
+			<ModalOverlay
+				isDismissable
+				className="fixed flex top-0 left-0 w-screen h-screen z-100 bg-black/20 items-center justify-center"
+			>
+				<Modal className="flex items-center justify-center outline-none">
+					<Dialog className="outline-none">
+						<Form onSubmit={handleSubmit(onSubmit)}>
+							<TextField autoFocus>
+								<Controller
+									control={control}
+									name="name"
+									render={({ field: { value, onChange, onBlur, ref } }) => (
+										<Input
+											ref={ref}
+											value={value}
+											onChange={onChange}
+											onBlur={onBlur}
+											className="text-xl font-semibold text-zinc-700 bg-slate-50 hover:bg-slate-50 px-2 py-1 rounded outline-none w-full"
+										/>
+									)}
+								/>
+							</TextField>
+						</Form>
+					</Dialog>
+				</Modal>
+			</ModalOverlay>
+		</DialogTrigger>
 	)
 }
 
