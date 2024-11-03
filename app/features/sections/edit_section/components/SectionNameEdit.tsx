@@ -38,6 +38,15 @@ const SectionNameEdit = ({
 		}
 	}, [isEditing])
 
+	useEffect(() => {
+		const handleKeyDown = (e: KeyboardEvent) => {
+			console.log('Global keydown:', e.key, e.target)
+		}
+
+		window.addEventListener('keydown', handleKeyDown)
+		return () => window.removeEventListener('keydown', handleKeyDown)
+	}, [])
+
 	const onSubmit = async (data: FormData) => {
 		if (data.name === initialName) {
 			setIsEditing(false)
@@ -76,14 +85,32 @@ const SectionNameEdit = ({
 		}
 	}
 
+	// 別のコンポーネントとして分離
+	const TestForm = () => {
+		return (
+			<div style={{ position: 'relative', zIndex: 1000 }}>
+				<form id="test-form">
+					<input
+						className="bg-gray-500 text-white"
+						onKeyDown={(e) => e.stopPropagation()}
+					/>
+				</form>
+			</div>
+		)
+	}
+
 	if (!isEditing) {
 		return (
-			<Button
-				onPress={() => setIsEditing(true)}
-				className="text-xl font-semibold text-zinc-700 cursor-pointer hover:bg-slate-50 px-2 py-1 rounded w-full text-left outline-none"
-			>
-				{initialName}
-			</Button>
+			<>
+				<Button
+					onPress={() => setIsEditing(true)}
+					className="text-xl font-semibold text-zinc-700 cursor-pointer hover:bg-slate-50 px-2 py-1 rounded w-full text-left outline-none"
+					excludeFromTabOrder
+				>
+					{initialName}
+				</Button>
+				<TestForm />
+			</>
 		)
 	}
 
