@@ -7,6 +7,8 @@ import { useResources } from '@/app/features/resources/contexts/ResourceContext'
 import { useRef, useState } from 'react'
 import SectionMenuButton from '@/app/features/sections/section_menu/SectionMenuButton'
 import SectionNameEdit from '@/app/features/sections/edit_section/components/SectionNameEdit'
+import { useDragAndDrop, GridList } from 'react-aria-components'
+import { useListData } from 'react-stately'
 
 interface SectionProps {
 	id: string
