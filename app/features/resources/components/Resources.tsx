@@ -26,7 +26,7 @@ const Resources = ({
 			const section = sections.find((s) => s.id === Array.from(keys)[0])
 			return [{ 'section-item': JSON.stringify(section) }]
 		},
-		onReorder: (e) => {
+		onReorder: async (e) => {
 			const items = [...sections]
 			const draggedIndex = items.findIndex(
 				(item) => item.id === Array.from(e.keys)[0],
@@ -38,6 +38,27 @@ const Resources = ({
 			items.splice(targetIndex, 0, draggedItem)
 
 			setSections(items)
+
+			try {
+				const updatedItems = items.map((item, index) => ({
+					id: item.id,
+					order: index,
+				}))
+
+				const response = await fetch('/api/sections/reorder', {
+					method: 'PUT',
+					headers: { 'Content-Type': 'application/json' },
+					body: JSON.stringify({ items: updatedItems }),
+				})
+
+				if (!response.ok) {
+					throw new Error('Failed to update order')
+				}
+			} catch (error) {
+				console.error('Failed to update section order:', error)
+				setSections(sections)
+				alert('セクションの並び順の更新に失敗しました')
+			}
 		},
 	})
 
