@@ -7,6 +7,7 @@ import {
 	GridList,
 	GridListItem,
 	useDragAndDrop,
+	DropIndicator,
 } from 'react-aria-components'
 import Section from '@/app/features/sections/components/Section'
 import type { getInitialSections } from '@/app/features/resources/utils/getInitialSections'
@@ -24,22 +25,47 @@ const Resources = ({
 	const { dragAndDropHooks } = useDragAndDrop({
 		getItems: (keys) => {
 			const section = sections.find((s) => s.id === Array.from(keys)[0])
-			return [{ 'section-item': JSON.stringify(section) }]
+			return [
+				{
+					'section-item': JSON.stringify(section),
+					'text/plain': section?.name || '',
+				},
+			]
 		},
-		onReorder: async (e) => {
-			const items = [...sections]
-			const draggedIndex = items.findIndex(
-				(item) => item.id === Array.from(e.keys)[0],
+		acceptedDragTypes: ['section-item'],
+		getDropOperation: () => 'move',
+
+		/*
+		renderDropIndicator(target) {
+			return (
+				<DropIndicator
+					target={target}
+					className={({ isDropTarget }) =>
+						`drop-indicator ${isDropTarget ? 'active' : ''}`
+					}
+				/>
 			)
-			const targetIndex = items.findIndex((item) => item.id === e.target.key)
-			const draggedItem = items[draggedIndex]
+		},
+		*/
 
-			items.splice(draggedIndex, 1)
-			items.splice(targetIndex, 0, draggedItem)
-
-			setSections(items)
-
+		onReorder: async (e) => {
 			try {
+				const items = [...sections]
+				const draggedIndex = items.findIndex(
+					(item) => item.id === Array.from(e.keys)[0],
+				)
+				const targetIndex = items.findIndex((item) => item.id === e.target.key)
+				const draggedItem = items[draggedIndex]
+
+				items.splice(draggedIndex, 1)
+				items.splice(
+					e.target.dropPosition === 'before' ? targetIndex : targetIndex + 1,
+					0,
+					draggedItem,
+				)
+
+				setSections(items)
+
 				const updatedItems = items.map((item, index) => ({
 					id: item.id,
 					order: index,
