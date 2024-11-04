@@ -38,10 +38,10 @@ export default function CreateSpaceButton({
 	return (
 		<Button
 			onPress={handleCreateSpace}
-			className="flex items-center gap-2 px-3 py-2 rounded hover:bg-gray-700 w-full outline-none"
+			className="flex items-center gap-1 px-3 py-2 rounded hover:bg-gray-700 w-full outline-none"
 		>
 			<Plus className="w-4 h-4" />
-			<span>New Space</span>
+			<span className="text-zinc-50">New Space</span>
 		</Button>
 	)
 }
