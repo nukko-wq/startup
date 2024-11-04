@@ -37,19 +37,27 @@ export default function Sidebar() {
 
 	const handleSpaceClick = useCallback(
 		async (spaceId: string) => {
-			setActiveSpaceId(spaceId)
-			const params = new URLSearchParams(searchParams)
-			params.set('spaceId', spaceId)
-			router.push(`/?${params.toString()}`)
-			await handleSpaceSelect(spaceId)
+			if (spaceId === activeSpaceId) return
+
+			try {
+				setActiveSpaceId(spaceId)
+
+				const params = new URLSearchParams(searchParams)
+				params.set('spaceId', spaceId)
+
+				await handleSpaceSelect(spaceId)
+				router.push(`/?${params.toString()}`, { scroll: false })
+			} catch (error) {
+				console.error('Error switching space:', error)
+			}
 		},
-		[searchParams, router, setActiveSpaceId, handleSpaceSelect],
+		[searchParams, router, setActiveSpaceId, handleSpaceSelect, activeSpaceId],
 	)
 
 	const handleSpaceCreated = async (newSpace: Space) => {
 		try {
-			await handleSpaceClick(newSpace.id)
 			setSpaces((prevSpaces) => [...prevSpaces, newSpace])
+			await handleSpaceClick(newSpace.id)
 		} catch (error) {
 			console.error('Error handling new space:', error)
 		}
@@ -125,6 +133,13 @@ export default function Sidebar() {
 					items={spaces}
 					dragAndDropHooks={dragAndDropHooks}
 					selectionMode="single"
+					selectedKeys={activeSpaceId ? [activeSpaceId] : []}
+					onSelectionChange={(keys) => {
+						const selectedKey = Array.from(keys)[0]
+						if (selectedKey) {
+							handleSpaceClick(String(selectedKey))
+						}
+					}}
 					className="flex flex-col gap-4 py-4"
 				>
 					{(space) => (
@@ -146,14 +161,13 @@ export default function Sidebar() {
 										<GripVertical className="w-4 h-4 text-zinc-500" />
 									</Button>
 								</div>
-								<Button
-									onPress={() => handleSpaceClick(space.id)}
+								<div
 									className={`px-3 py-2 rounded hover:bg-gray-700 cursor-pointer block w-full text-left text-zinc-50 outline-none ${
 										currentSpaceId === space.id ? 'bg-gray-700' : ''
 									}`}
 								>
 									{space.name}
-								</Button>
+								</div>
 							</div>
 							<SpaceButtonMenu
 								spaceId={space.id}
