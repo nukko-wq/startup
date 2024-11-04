@@ -11,12 +11,12 @@ import {
 import { useRouter } from 'next/navigation'
 import type { Space } from '@/app/types/space'
 
-interface DeleteSpaceButtonProps {
+interface SpaceButtonMenuProps {
 	spaceId: string
 	setSpaces: React.Dispatch<React.SetStateAction<Space[]>>
 }
 
-const DeleteSpaceButton = ({ spaceId, setSpaces }: DeleteSpaceButtonProps) => {
+const SpaceButtonMenu = ({ spaceId, setSpaces }: SpaceButtonMenuProps) => {
 	const router = useRouter()
 
 	const handleDelete = async () => {
@@ -67,4 +67,4 @@ const DeleteSpaceButton = ({ spaceId, setSpaces }: DeleteSpaceButtonProps) => {
 	)
 }
 
-export default DeleteSpaceButton
+export default SpaceButtonMenu

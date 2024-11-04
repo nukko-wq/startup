@@ -4,8 +4,9 @@ import { useRouter, useSearchParams } from 'next/navigation'
 import { useEffect, useState } from 'react'
 import SidebarMenu from '@/app/components/layouts/sidebar/SidebarMenu'
 import CreateSpaceButton from '@/app/components/layouts/sidebar/CreateSpaceButton'
-import DeleteSpaceButton from '@/app/components/layouts/sidebar/DeleteSpaceButton'
+import SpaceButtonMenu from '@/app/components/layouts/sidebar/SpaceButtonMenu'
 import type { Space } from '@/app/types/space'
+import { Button } from 'react-aria-components'
 
 export default function Sidebar({
 	initialSpaces,
@@ -42,17 +43,16 @@ export default function Sidebar({
 									key={space.id}
 									className="flex items-center justify-between"
 								>
-									<button
+									<Button
 										key={space.id}
-										type="button"
-										onClick={() => handleSpaceClick(space.id)}
+										onPress={() => handleSpaceClick(space.id)}
 										className={`px-3 py-2 rounded hover:bg-gray-700 cursor-pointer block w-full text-left text-white ${
 											currentSpaceId === space.id ? 'bg-gray-700' : ''
 										}`}
 									>
 										{space.name}
-									</button>
-									<DeleteSpaceButton spaceId={space.id} setSpaces={setSpaces} />
+									</Button>
+									<SpaceButtonMenu spaceId={space.id} setSpaces={setSpaces} />
 								</div>
 							))}
 						</div>
