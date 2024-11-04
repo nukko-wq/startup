@@ -42,23 +42,40 @@ export default function Sidebar() {
 
 	const handleSpaceClick = useCallback(
 		async (spaceId: string) => {
+			if (spaceId === activeSpaceId) return
+
 			try {
 				setIsNavigating(true)
-				await router.push(`/?spaceId=${spaceId}`, { scroll: false })
 				setActiveSpaceId(spaceId)
+
+				// 状態更新を待ってからナビゲーション
+				await new Promise((resolve) => setTimeout(resolve, 50))
+				await router.push(`/?spaceId=${spaceId}`, { scroll: false })
 				await handleSpaceSelect(spaceId)
 			} catch (error) {
 				console.error('Error switching space:', error)
-				setIsNavigating(false)
+				setActiveSpaceId(activeSpaceId)
+			} finally {
+				setTimeout(() => {
+					setIsNavigating(false)
+				}, 100)
 			}
 		},
-		[router, handleSpaceSelect, setActiveSpaceId, setIsNavigating],
+		[
+			router,
+			handleSpaceSelect,
+			activeSpaceId,
+			setActiveSpaceId,
+			setIsNavigating,
+		],
 	)
 
 	const handleSpaceCreated = async (newSpace: Space) => {
 		try {
 			setSpaces((prevSpaces) => [...prevSpaces, newSpace])
-			await handleSpaceClick(newSpace.id)
+
+			// 新しいスペースを選択
+			handleSpaceClick(newSpace.id)
 		} catch (error) {
 			console.error('Error handling new space:', error)
 		}
@@ -146,7 +163,7 @@ export default function Sidebar() {
 					items={spaces}
 					dragAndDropHooks={dragAndDropHooks}
 					selectionMode="single"
-					selectedKeys={activeSpaceId ? [activeSpaceId] : []}
+					selectedKeys={activeSpaceId ? new Set([activeSpaceId]) : new Set()}
 					onSelectionChange={(keys) => {
 						const selectedKey = Array.from(keys)[0] as string
 						if (selectedKey) {

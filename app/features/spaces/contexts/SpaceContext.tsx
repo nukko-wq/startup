@@ -29,15 +29,23 @@ export function SpaceProvider({
 	const [activeSpaceId, setActiveSpaceId] = useState(initialActiveSpaceId)
 	const searchParams = useSearchParams()
 	const [isNavigating, setIsNavigating] = useState(false)
-	const previousSpaceId = useRef<string | null>(null)
+	const isUrlUpdate = useRef(false)
 
 	// URLのspaceIdパラメータとactiveSpaceIdの同期
 	useEffect(() => {
 		const spaceId = searchParams.get('spaceId')
-		if (!isNavigating && spaceId && spaceId !== activeSpaceId) {
+		if (
+			!isNavigating &&
+			spaceId &&
+			spaceId !== activeSpaceId &&
+			!isUrlUpdate.current
+		) {
 			console.log('Updating activeSpaceId from URL:', spaceId)
-			previousSpaceId.current = activeSpaceId || null
+			isUrlUpdate.current = true
 			setActiveSpaceId(spaceId)
+			setTimeout(() => {
+				isUrlUpdate.current = false
+			}, 100)
 		}
 	}, [searchParams, isNavigating, activeSpaceId])
 
@@ -46,7 +54,6 @@ export function SpaceProvider({
 		if (isNavigating) {
 			const timer = setTimeout(() => {
 				setIsNavigating(false)
-				previousSpaceId.current = null
 			}, 300) // タイムアウトを少し長めに
 			return () => clearTimeout(timer)
 		}
