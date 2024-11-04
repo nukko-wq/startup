@@ -1,7 +1,7 @@
 import { db } from '@/lib/db'
 import { auth } from '@/lib/auth'
 import { NextResponse } from 'next/server'
-import { sectionSchema } from '@/lib/validations/section'
+import { sectionSchema, sectionNameSchema } from '@/lib/validations/section'
 
 export async function DELETE(request: Request) {
 	try {
@@ -103,7 +103,7 @@ export async function PATCH(request: Request) {
 		}
 
 		const json = await request.json()
-		const validatedData = sectionSchema.parse(json)
+		const validatedData = sectionNameSchema.parse(json)
 
 		const section = await db.section.update({
 			where: {
