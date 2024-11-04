@@ -22,22 +22,14 @@ interface ResourceProps {
 const Resources = ({ initialData, spaceId, spaceName }: ResourceProps) => {
 	const [sections, setSections] = useState(initialData.sections)
 	const [isCreating, setIsCreating] = useState(false)
+	const [resources, setResources] = useState(
+		initialData.sections.flatMap((s) => s.resources),
+	)
 
 	useEffect(() => {
-		const fetchSections = async () => {
-			try {
-				const response = await fetch(`/api/sections?spaceId=${spaceId || ''}`)
-				if (response.ok) {
-					const data = await response.json()
-					setSections(data)
-				}
-			} catch (error) {
-				console.error('Error fetching sections:', error)
-			}
-		}
-
-		fetchSections()
-	}, [spaceId])
+		setSections(initialData.sections)
+		setResources(initialData.sections.flatMap((s) => s.resources))
+	}, [initialData.sections])
 
 	const { dragAndDropHooks } = useDragAndDrop({
 		getItems: (keys) => {
@@ -159,7 +151,9 @@ const Resources = ({ initialData, spaceId, spaceName }: ResourceProps) => {
 	}
 
 	return (
-		<ResourceProvider initialResources={sections.flatMap((s) => s.resources)}>
+		<ResourceProvider
+			initialResources={initialData.sections.flatMap((s) => s.resources)}
+		>
 			<div className="flex flex-col flex-grow w-full justify-center">
 				<div className="flex flex-col w-full outline-none">
 					<div className="flex flex-col w-full items-center">
