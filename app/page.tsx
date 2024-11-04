@@ -1,29 +1,49 @@
 import { redirect } from 'next/navigation'
-import Sidebar from '@/app/components/layouts/sidebar/sidebar'
+import Sidebar from '@/app/components/layouts/sidebar/Sidebar'
 import Resources from '@/app/features/resources/components/Resources'
 import { getInitialSections } from '@/app/features/resources/utils/getInitialSections'
+import { getSpaces } from '@/app/features/spaces/utils/getSpaces'
 import { auth } from '@/lib/auth'
+import type { Space } from '@/app/types/space'
+import type { Section } from '@/app/types/section'
 
 // ページコンポーネントをキャッシュ化
 export const revalidate = 0
 
-export default async function Index() {
+interface PageProps {
+	searchParams: Promise<{ [key: string]: string | string[] | undefined }>
+}
+
+export default async function Index({ searchParams }: PageProps) {
 	const session = await auth()
-	console.log('Session in Index:', session)
+	const params = await searchParams
+	const spaceId =
+		typeof params.spaceId === 'string' ? params.spaceId : undefined
 
 	if (!session?.user?.id) {
 		redirect('/login')
 	}
 
 	try {
-		const initialData = await getInitialSections(session.user.id)
+		const [initialData, spaces] = await Promise.all([
+			getInitialSections(session.user.id, spaceId),
+			getSpaces(session.user.id),
+		])
+		const sections = initialData.sections
 
 		return (
 			<div className="flex flex-col min-h-screen">
 				<div className="flex bg-slate-50 flex-grow">
-					<Sidebar />
+					<Sidebar initialSpaces={spaces} activeSpaceId={spaceId} />
 					<main className="flex flex-col flex-grow items-center justify-center">
-						<Resources initialData={initialData} />
+						<Resources
+							initialData={{
+								sections,
+								userId: session.user.id,
+								spaceId: spaceId || '',
+							}}
+							spaceId={spaceId}
+						/>
 					</main>
 				</div>
 			</div>

@@ -36,12 +36,19 @@ const SectionNameEdit = ({
 	onEdit,
 }: SectionNameEditProps) => {
 	const [isOpen, setIsOpen] = useState(false)
+	const inputRef = useRef<HTMLInputElement>(null)
 	const { control, handleSubmit, reset } = useForm<FormData>({
 		resolver: zodResolver(sectionSchema),
 		defaultValues: {
 			name: initialName,
 		},
 	})
+
+	useEffect(() => {
+		if (isOpen && inputRef.current) {
+			inputRef.current.select()
+		}
+	}, [isOpen])
 
 	const onSubmit = async (data: FormData) => {
 		if (data.name === initialName) {
@@ -73,8 +80,15 @@ const SectionNameEdit = ({
 		}
 	}
 
+	const handleOpenChange = (open: boolean) => {
+		if (!open) {
+			reset({ name: initialName })
+		}
+		setIsOpen(open)
+	}
+
 	return (
-		<DialogTrigger isOpen={isOpen} onOpenChange={setIsOpen}>
+		<DialogTrigger isOpen={isOpen} onOpenChange={handleOpenChange}>
 			<TooltipTrigger delay={700} closeDelay={0}>
 				<Button
 					aria-label="Edit"
@@ -108,9 +122,9 @@ const SectionNameEdit = ({
 								<Controller
 									control={control}
 									name="name"
-									render={({ field: { value, onChange, onBlur, ref } }) => (
+									render={({ field: { value, onChange, onBlur } }) => (
 										<Input
-											ref={ref}
+											ref={inputRef}
 											value={value}
 											onChange={onChange}
 											onBlur={onBlur}

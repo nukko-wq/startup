@@ -24,6 +24,7 @@ model User {
   sessions      Session[]
   resources     Resource[]
   sections      Section[]
+  spaces        Space[]
   // Optional for WebAuthn support
   Authenticator Authenticator[]
  
@@ -86,15 +87,30 @@ model Authenticator {
   @@id([userId, credentialID])
 }
 
+model Space {
+  id        String    @id @default(cuid())
+  name      String
+  order     Int
+  userId    String
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  sections  Section[]
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  @@index([order])
+}
+
 model Section {
-  id String @id @default(cuid())
-  name String
-  order Int
-  userId String
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id        String     @id @default(cuid())
+  name      String
+  order     Int
+  userId    String
+  spaceId   String
+  user      User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  space     Space      @relation(fields: [spaceId], references: [id], onDelete: Cascade)
   resources Resource[]
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
 
   @@index([order])
 }
