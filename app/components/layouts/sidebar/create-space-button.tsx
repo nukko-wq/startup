@@ -2,8 +2,15 @@
 
 import { Button } from 'react-aria-components'
 import { Plus } from 'lucide-react'
+import type { Space } from '@/app/types/space'
 
-export default function CreateSpaceButton() {
+interface CreateSpaceButtonProps {
+	setSpaces: React.Dispatch<React.SetStateAction<Space[]>>
+}
+
+export default function CreateSpaceButton({
+	setSpaces,
+}: CreateSpaceButtonProps) {
 	const handleCreateSpace = async () => {
 		try {
 			const response = await fetch('/api/spaces', {
@@ -13,7 +20,6 @@ export default function CreateSpaceButton() {
 				},
 				body: JSON.stringify({
 					name: 'New Space',
-					order: 0, // 適切な順序を設定
 				}),
 			})
 
@@ -21,8 +27,8 @@ export default function CreateSpaceButton() {
 				throw new Error('Failed to create space')
 			}
 
-			// ページをリフレッシュして新しいスペースを表示
-			window.location.reload()
+			const newSpace = await response.json()
+			setSpaces((prevSpaces) => [...prevSpaces, newSpace])
 		} catch (error) {
 			console.error('Error creating space:', error)
 			alert('スペースの作成に失敗しました')
@@ -32,7 +38,7 @@ export default function CreateSpaceButton() {
 	return (
 		<Button
 			onPress={handleCreateSpace}
-			className="flex items-center gap-2 px-3 py-2 rounded hover:bg-gray-700 w-full"
+			className="flex items-center gap-2 px-3 py-2 rounded hover:bg-gray-700 w-full outline-none"
 		>
 			<Plus className="w-4 h-4" />
 			<span>New Space</span>

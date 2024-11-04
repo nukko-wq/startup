@@ -26,16 +26,25 @@ export const getInitialSections = cache(
 					})
 				: await db.space.findFirst({
 						where: { userId: user.id },
+						orderBy: { createdAt: 'asc' },
 					})
 
 			if (!defaultSpace) {
-				defaultSpace = await db.space.create({
-					data: {
-						name: 'My Space',
-						order: 1,
-						userId: user.id,
-					},
+				const existingSpace = await db.space.findFirst({
+					where: { userId: user.id },
 				})
+
+				if (!existingSpace) {
+					defaultSpace = await db.space.create({
+						data: {
+							name: 'My Space',
+							order: 1,
+							userId: user.id,
+						},
+					})
+				} else {
+					defaultSpace = existingSpace
+				}
 			}
 
 			const sections = await db.section.findMany({

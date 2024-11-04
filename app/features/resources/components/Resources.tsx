@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { ResourceProvider } from '@/app/features/resources/contexts/ResourceContext'
 import {
 	Button,
@@ -14,13 +14,34 @@ import type { getInitialSections } from '@/app/features/resources/utils/getIniti
 
 interface ResourceProps {
 	initialData: Awaited<ReturnType<typeof getInitialSections>>
+	spaceId?: string
 }
 
 const Resources = ({
 	initialData,
-}: { initialData: Awaited<ReturnType<typeof getInitialSections>> }) => {
+	spaceId,
+}: {
+	initialData: Awaited<ReturnType<typeof getInitialSections>>
+	spaceId?: string
+}) => {
 	const [sections, setSections] = useState(initialData.sections)
 	const [isCreating, setIsCreating] = useState(false)
+
+	useEffect(() => {
+		const fetchSections = async () => {
+			try {
+				const response = await fetch(`/api/sections?spaceId=${spaceId || ''}`)
+				if (response.ok) {
+					const data = await response.json()
+					setSections(data)
+				}
+			} catch (error) {
+				console.error('Error fetching sections:', error)
+			}
+		}
+
+		fetchSections()
+	}, [spaceId])
 
 	const { dragAndDropHooks } = useDragAndDrop({
 		getItems: (keys) => {

@@ -1,12 +1,8 @@
 import { NextResponse, type NextRequest } from 'next/server'
 import { auth } from '@/lib/auth'
 import { db } from '@/lib/db'
+import { spaceCreateSchema } from '@/lib/validations/space'
 import { z } from 'zod'
-
-const spaceCreateSchema = z.object({
-	name: z.string(),
-	order: z.number(),
-})
 
 export async function POST(req: NextRequest) {
 	try {
@@ -20,10 +16,18 @@ export async function POST(req: NextRequest) {
 		const json = await req.json()
 		const body = spaceCreateSchema.parse(json)
 
+		const maxOrderSpace = await db.space.findFirst({
+			where: { userId },
+			orderBy: { order: 'desc' },
+			select: { order: true },
+		})
+
+		const newOrder = maxOrderSpace ? maxOrderSpace.order + 1 : 1
+
 		const space = await db.space.create({
 			data: {
 				name: body.name,
-				order: body.order,
+				order: newOrder,
 				userId,
 			},
 		})
@@ -31,6 +35,12 @@ export async function POST(req: NextRequest) {
 		return NextResponse.json(space)
 	} catch (error) {
 		console.error('Space creation error:', error)
+		if (error instanceof z.ZodError) {
+			return NextResponse.json(
+				{ error: 'バリデーションエラー', details: error.issues },
+				{ status: 422 },
+			)
+		}
 		return NextResponse.json(
 			{ error: 'スペースの作成に失敗しました' },
 			{ status: 500 },
