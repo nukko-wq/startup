@@ -6,6 +6,7 @@ import { z } from 'zod'
 const sectionCreateSchema = z.object({
 	name: z.string(),
 	order: z.number(),
+	spaceId: z.string(),
 })
 
 export async function POST(req: NextRequest) {
@@ -27,6 +28,11 @@ export async function POST(req: NextRequest) {
 				user: {
 					connect: {
 						id: userId,
+					},
+				},
+				space: {
+					connect: {
+						id: body.spaceId,
 					},
 				},
 			},
