@@ -101,13 +101,13 @@ const SectionMenuButton = ({
 									<div className="mt-6 flex justify-end gap-2">
 										<Button
 											onPress={close}
-											className="px-4 py-2 bg-slate-200 text-slate-800 rounded-md hover:bg-slate-300"
+											className="px-4 py-2 bg-slate-200 text-slate-800 rounded-md hover:bg-slate-300 outline-none"
 										>
 											キャンセル
 										</Button>
 										<Button
 											onPress={() => handleDelete(close)}
-											className="px-4 py-2 bg-red-500 text-white rounded-md hover:bg-red-600"
+											className="px-4 py-2 bg-red-500 text-white rounded-md hover:bg-red-600 outline-none"
 										>
 											削除
 										</Button>
