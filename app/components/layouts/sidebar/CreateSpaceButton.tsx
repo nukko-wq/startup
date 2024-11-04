@@ -5,11 +5,11 @@ import { Plus } from 'lucide-react'
 import type { Space } from '@/app/types/space'
 
 interface CreateSpaceButtonProps {
-	setSpaces: React.Dispatch<React.SetStateAction<Space[]>>
+	onSpaceCreated: (space: Space) => void
 }
 
 export default function CreateSpaceButton({
-	setSpaces,
+	onSpaceCreated,
 }: CreateSpaceButtonProps) {
 	const handleCreateSpace = async () => {
 		try {
@@ -28,7 +28,7 @@ export default function CreateSpaceButton({
 			}
 
 			const newSpace = await response.json()
-			setSpaces((prevSpaces) => [...prevSpaces, newSpace])
+			onSpaceCreated(newSpace)
 		} catch (error) {
 			console.error('Error creating space:', error)
 			alert('スペースの作成に失敗しました')
