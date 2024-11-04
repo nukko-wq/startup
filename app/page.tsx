@@ -49,8 +49,8 @@ export default async function Index({ searchParams }: PageProps) {
 		return (
 			<div className="flex flex-col min-h-screen">
 				<div className="flex bg-slate-50 flex-grow">
-					<SpaceProvider initialSpaces={spaces}>
-						<Sidebar initialSpaces={spaces} activeSpaceId={spaceId} />
+					<SpaceProvider initialSpaces={spaces} initialActiveSpaceId={spaceId}>
+						<Sidebar />
 						<main className="flex flex-col flex-grow items-center">
 							<Header
 								spaceName={activeSpace?.name ?? 'No Space Selected'}

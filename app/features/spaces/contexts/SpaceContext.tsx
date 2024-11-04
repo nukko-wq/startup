@@ -1,12 +1,15 @@
 'use client'
 
-import { createContext, useContext, useState } from 'react'
+import { createContext, useContext, useState, useEffect } from 'react'
 import type { Space } from '@/app/types/space'
+import { useSearchParams } from 'next/navigation'
 
 type SpaceContextType = {
 	spaces: Space[]
 	setSpaces: React.Dispatch<React.SetStateAction<Space[]>>
 	reorderSpaces: (newSpaces: Space[]) => Promise<void>
+	activeSpaceId?: string
+	setActiveSpaceId: React.Dispatch<React.SetStateAction<string | undefined>>
 }
 
 const SpaceContext = createContext<SpaceContextType | undefined>(undefined)
@@ -14,11 +17,23 @@ const SpaceContext = createContext<SpaceContextType | undefined>(undefined)
 export function SpaceProvider({
 	children,
 	initialSpaces,
+	initialActiveSpaceId,
 }: {
 	children: React.ReactNode
 	initialSpaces: Space[]
+	initialActiveSpaceId?: string
 }) {
 	const [spaces, setSpaces] = useState(initialSpaces)
+	const [activeSpaceId, setActiveSpaceId] = useState(initialActiveSpaceId)
+	const searchParams = useSearchParams()
+	/*
+	useEffect(() => {
+		const spaceId = searchParams.get('spaceId') || activeSpaceId
+		if (spaceId && spaceId !== activeSpaceId) {
+			setActiveSpaceId(spaceId)
+		}
+	}, [searchParams, activeSpaceId])
+  */
 
 	const reorderSpaces = async (newSpaces: Space[]) => {
 		const previousSpaces = [...spaces]
@@ -50,7 +65,15 @@ export function SpaceProvider({
 	}
 
 	return (
-		<SpaceContext.Provider value={{ spaces, setSpaces, reorderSpaces }}>
+		<SpaceContext.Provider
+			value={{
+				spaces,
+				setSpaces,
+				reorderSpaces,
+				activeSpaceId,
+				setActiveSpaceId,
+			}}
+		>
 			{children}
 		</SpaceContext.Provider>
 	)

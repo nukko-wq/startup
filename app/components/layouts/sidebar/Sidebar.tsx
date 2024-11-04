@@ -1,7 +1,7 @@
 'use client'
 
 import { useRouter, useSearchParams } from 'next/navigation'
-import { useEffect, useState, useCallback } from 'react'
+import { useEffect, useCallback } from 'react'
 import SidebarMenu from '@/app/components/layouts/sidebar/SidebarMenu'
 import CreateSpaceButton from '@/app/components/layouts/sidebar/CreateSpaceButton'
 import SpaceButtonMenu from '@/app/components/layouts/sidebar/SpaceButtonMenu'
@@ -16,29 +16,14 @@ import {
 import { useSpaces } from '@/app/features/spaces/contexts/SpaceContext'
 import { GripVertical } from 'lucide-react'
 
-export default function Sidebar({
-	initialSpaces,
-	activeSpaceId,
-}: {
-	initialSpaces: Space[]
-	activeSpaceId?: string
-}) {
+export default function Sidebar() {
 	const router = useRouter()
 	const searchParams = useSearchParams()
-	const { spaces, setSpaces, reorderSpaces } = useSpaces()
-	const currentSpaceId = searchParams.get('spaceId') || activeSpaceId
+	const { spaces, setSpaces, reorderSpaces, activeSpaceId, setActiveSpaceId } =
+		useSpaces()
+	const currentSpaceId = activeSpaceId
 
-	const handleSpaceClick = useCallback(
-		async (spaceId: string) => {
-			const params = new URLSearchParams(searchParams)
-			params.set('spaceId', spaceId)
-			router.push(`/?${params.toString()}`)
-			await handleSpaceSelect(spaceId)
-		},
-		[searchParams, router],
-	)
-
-	const handleSpaceSelect = async (spaceId: string) => {
+	const handleSpaceSelect = useCallback(async (spaceId: string) => {
 		try {
 			await fetch('/api/users/last-active-space', {
 				method: 'PUT',
@@ -48,7 +33,18 @@ export default function Sidebar({
 		} catch (error) {
 			console.error('Error updating last active space:', error)
 		}
-	}
+	}, [])
+
+	const handleSpaceClick = useCallback(
+		async (spaceId: string) => {
+			setActiveSpaceId(spaceId)
+			const params = new URLSearchParams(searchParams)
+			params.set('spaceId', spaceId)
+			router.push(`/?${params.toString()}`)
+			await handleSpaceSelect(spaceId)
+		},
+		[searchParams, router, setActiveSpaceId, handleSpaceSelect],
+	)
 
 	const handleSpaceCreated = async (newSpace: Space) => {
 		try {
