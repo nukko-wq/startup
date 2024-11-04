@@ -1,7 +1,7 @@
 'use client'
 
 import { useRouter, useSearchParams } from 'next/navigation'
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import SidebarMenu from '@/app/components/layouts/sidebar/SidebarMenu'
 import CreateSpaceButton from '@/app/components/layouts/sidebar/CreateSpaceButton'
 import SpaceButtonMenu from '@/app/components/layouts/sidebar/SpaceButtonMenu'
@@ -20,11 +20,43 @@ export default function Sidebar({
 	const [spaces, setSpaces] = useState<Space[]>(initialSpaces)
 	const currentSpaceId = searchParams.get('spaceId') || activeSpaceId
 
-	const handleSpaceClick = async (spaceId: string) => {
-		const params = new URLSearchParams(searchParams)
-		params.set('spaceId', spaceId)
-		router.push(`/?${params.toString()}`)
+	const handleSpaceClick = useCallback(
+		async (spaceId: string) => {
+			const params = new URLSearchParams(searchParams)
+			params.set('spaceId', spaceId)
+			router.push(`/?${params.toString()}`)
+			await handleSpaceSelect(spaceId)
+		},
+		[searchParams, router],
+	)
+
+	const handleSpaceSelect = async (spaceId: string) => {
+		try {
+			await fetch('/api/users/last-active-space', {
+				method: 'PUT',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({ spaceId }),
+			})
+		} catch (error) {
+			console.error('Error updating last active space:', error)
+		}
 	}
+
+	const handleSpaceCreated = async (newSpace: Space) => {
+		try {
+			await handleSpaceClick(newSpace.id)
+			setSpaces((prevSpaces) => [...prevSpaces, newSpace])
+		} catch (error) {
+			console.error('Error handling new space:', error)
+		}
+	}
+
+	useEffect(() => {
+		if (spaces.length > 0 && !currentSpaceId) {
+			const defaultSpace = spaces[0]
+			handleSpaceClick(defaultSpace.id)
+		}
+	}, [spaces, currentSpaceId, handleSpaceClick])
 
 	return (
 		<div className="hidden md:flex w-[320px] bg-gray-800">
@@ -33,7 +65,7 @@ export default function Sidebar({
 					<div className="text-2xl font-bold">StartUp</div>
 					<SidebarMenu />
 				</div>
-				<CreateSpaceButton setSpaces={setSpaces} />
+				<CreateSpaceButton onSpaceCreated={handleSpaceCreated} />
 				<div className="flex flex-col gap-4 p-4">
 					<div>
 						<div className="text-lg mb-2">Spaces</div>

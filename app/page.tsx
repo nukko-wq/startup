@@ -6,6 +6,7 @@ import { getSpaces } from '@/app/features/spaces/utils/getSpaces'
 import { auth } from '@/lib/auth'
 import type { Space } from '@/app/types/space'
 import type { Section } from '@/app/types/section'
+import { prisma } from '@/lib/prisma'
 
 // ページコンポーネントをキャッシュ化
 export const revalidate = 0
@@ -17,19 +18,29 @@ interface PageProps {
 export default async function Index({ searchParams }: PageProps) {
 	const session = await auth()
 	const params = await searchParams
-	const spaceId =
-		typeof params.spaceId === 'string' ? params.spaceId : undefined
 
 	if (!session?.user?.id) {
 		redirect('/login')
 	}
 
 	try {
+		const user = await prisma.user.findUnique({
+			where: { id: session.user.id },
+			select: { lastActiveSpaceId: true },
+		})
+
+		const spaceId =
+			typeof params.spaceId === 'string'
+				? params.spaceId
+				: user?.lastActiveSpaceId || undefined
+
 		const [initialData, spaces] = await Promise.all([
 			getInitialSections(session.user.id, spaceId),
 			getSpaces(session.user.id),
 		])
 		const sections = initialData.sections
+
+		console.log('Page spaceId:', spaceId)
 
 		return (
 			<div className="flex flex-col min-h-screen">
@@ -40,9 +51,9 @@ export default async function Index({ searchParams }: PageProps) {
 							initialData={{
 								sections,
 								userId: session.user.id,
-								spaceId: spaceId || '',
+								spaceId: spaceId ?? '',
 							}}
-							spaceId={spaceId}
+							spaceId={spaceId ?? ''}
 						/>
 					</main>
 				</div>

@@ -2,6 +2,8 @@ import { NextResponse, type NextRequest } from 'next/server'
 import { auth } from '@/lib/auth'
 import { db } from '@/lib/db'
 import { z } from 'zod'
+import { prisma } from '@/lib/prisma'
+import { sectionSchema } from '@/lib/validations/section'
 
 const sectionCreateSchema = z.object({
 	name: z.string(),
@@ -9,51 +11,50 @@ const sectionCreateSchema = z.object({
 	spaceId: z.string(),
 })
 
-export async function POST(req: NextRequest) {
+export async function POST(request: Request) {
 	try {
 		const session = await auth()
-		const userId = session?.user?.id
-
-		if (!userId) {
-			return NextResponse.json({ error: '認証が必要です' }, { status: 401 })
+		if (!session?.user?.id) {
+			return new NextResponse('Unauthorized', { status: 401 })
 		}
 
-		const json = await req.json()
-		const body = sectionCreateSchema.parse(json)
+		const json = await request.json()
+		console.log('Received request body:', json)
 
-		const section = await db.section.create({
+		const body = sectionSchema.parse(json)
+		console.log('Parsed body:', body)
+
+		const space = await prisma.space.findUnique({
+			where: { id: body.spaceId },
+		})
+		console.log('Found space:', space)
+
+		if (!space) {
+			return new NextResponse('Space not found', { status: 404 })
+		}
+
+		const section = await prisma.section.create({
 			data: {
 				name: body.name,
 				order: body.order,
-				user: {
-					connect: {
-						id: userId,
-					},
-				},
 				space: {
-					connect: {
-						id: body.spaceId,
-					},
+					connect: { id: body.spaceId },
+				},
+				user: {
+					connect: { id: session.user.id },
 				},
 			},
 		})
+		console.log('Created section:', section)
 
 		return NextResponse.json(section)
 	} catch (error) {
-		console.error('Section creation error:', error)
-
-		if (error instanceof z.ZodError) {
-			return NextResponse.json(
-				{ error: 'バリデーションエラー', details: error.issues },
-				{ status: 422 },
-			)
-		}
-		return NextResponse.json(
+		console.error('Section creation error details:', error)
+		return new NextResponse(
+			error instanceof Error ? error.message : 'Internal Server Error',
 			{
-				error: 'サーバーエラーが発生しました',
-				message: error instanceof Error ? error.message : '不明なエラー',
+				status: error instanceof Error ? 422 : 500,
 			},
-			{ status: 500 },
 		)
 	}
 }

@@ -114,19 +114,32 @@ const Resources = ({
 	}
 
 	const handleCreateSection = async () => {
-		if (isCreating) return
+		// spaceIdがない場合はアラートを表示
+		if (!spaceId) {
+			alert('スペースを選択してください')
+			return
+		}
+
+		if (isCreating) {
+			return
+		}
+
 		setIsCreating(true)
 
 		try {
+			const requestBody = {
+				name: 'Resources',
+				order: sections.length,
+				spaceId: spaceId,
+			}
+			console.log('Creating section with:', requestBody)
+
 			const response = await fetch('/api/sections', {
 				method: 'POST',
 				headers: {
 					'Content-Type': 'application/json',
 				},
-				body: JSON.stringify({
-					name: 'Resources',
-					order: sections.length,
-				}),
+				body: JSON.stringify(requestBody),
 				credentials: 'include',
 			})
 
