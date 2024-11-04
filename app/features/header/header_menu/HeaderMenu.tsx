@@ -4,20 +4,12 @@ import { EllipsisVertical, Pencil, Trash2 } from 'lucide-react'
 import { useState } from 'react'
 import {
 	Button,
-	Dialog,
-	DialogTrigger,
-	Form,
-	Input,
-	Label,
 	Menu,
 	MenuItem,
 	MenuTrigger,
-	Modal,
-	ModalOverlay,
 	Popover,
-	TextField,
 } from 'react-aria-components'
-import SpaceRenameForm from '@/app/features/header/header_menu/SpaceRenameForm'
+import SpaceRenameDialog from './SpaceRenameDialog'
 
 interface HeaderMenuProps {
 	spaceId: string
@@ -60,21 +52,12 @@ const HeaderMenu = ({ spaceId, spaceName }: HeaderMenuProps) => {
 				</Popover>
 			</MenuTrigger>
 
-			<DialogTrigger isOpen={isOpen} onOpenChange={setIsOpen}>
-				<ModalOverlay className="fixed inset-0 z-10 overflow-y-auto bg-black/25 flex min-h-full items-center justify-center p-4 text-center backdrop-blur">
-					<Modal className="w-full max-w-md overflow-hidden rounded-2xl bg-white p-6 text-left align-middle shadow-xl">
-						<Dialog className="outline-none relative">
-							{({ close }) => (
-								<SpaceRenameForm
-									spaceId={spaceId}
-									initialName={spaceName}
-									onClose={close}
-								/>
-							)}
-						</Dialog>
-					</Modal>
-				</ModalOverlay>
-			</DialogTrigger>
+			<SpaceRenameDialog
+				spaceId={spaceId}
+				initialName={spaceName}
+				isOpen={isOpen}
+				onOpenChange={setIsOpen}
+			/>
 		</>
 	)
 }

@@ -84,7 +84,11 @@ export default function Sidebar({
 									>
 										{space.name}
 									</Button>
-									<SpaceButtonMenu spaceId={space.id} setSpaces={setSpaces} />
+									<SpaceButtonMenu
+										spaceId={space.id}
+										spaceName={space.name}
+										setSpaces={setSpaces}
+									/>
 								</div>
 							))}
 						</div>
