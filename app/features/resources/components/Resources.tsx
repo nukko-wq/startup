@@ -11,6 +11,7 @@ import {
 } from 'react-aria-components'
 import Section from '@/app/features/sections/components/Section'
 import type { getInitialSections } from '@/app/features/resources/utils/getInitialSections'
+import { Plus } from 'lucide-react'
 
 interface ResourceProps {
 	initialData: Awaited<ReturnType<typeof getInitialSections>>
@@ -190,11 +191,12 @@ const Resources = ({
 				<div className="flex justify-center">
 					<div className="flex justify-center">
 						<Button
-							className="flex items-center gap-2 px-4 py-2 outline-none"
+							className="flex items-center gap-1 px-4 py-2 outline-none text-gray-500"
 							onPress={handleCreateSection}
 							isDisabled={isCreating}
 						>
-							+ RESOURCE SECTION
+							<Plus className="w-3 h-3" />
+							<div>RESOURCE SECTION</div>
 						</Button>
 					</div>
 				</div>
