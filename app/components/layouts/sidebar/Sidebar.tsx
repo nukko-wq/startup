@@ -21,7 +21,6 @@ export default function Sidebar() {
 	const searchParams = useSearchParams()
 	const { spaces, setSpaces, reorderSpaces, activeSpaceId, setActiveSpaceId } =
 		useSpaces()
-	const currentSpaceId = activeSpaceId
 
 	const handleSpaceSelect = useCallback(async (spaceId: string) => {
 		try {
@@ -39,19 +38,17 @@ export default function Sidebar() {
 		async (spaceId: string) => {
 			if (spaceId === activeSpaceId) return
 
+			setActiveSpaceId(spaceId)
+
 			try {
-				setActiveSpaceId(spaceId)
-
-				const params = new URLSearchParams(searchParams)
-				params.set('spaceId', spaceId)
-
 				await handleSpaceSelect(spaceId)
-				router.push(`/?${params.toString()}`, { scroll: false })
+				await router.push(`/?spaceId=${spaceId}`, { scroll: false })
 			} catch (error) {
 				console.error('Error switching space:', error)
+				setActiveSpaceId(activeSpaceId)
 			}
 		},
-		[searchParams, router, setActiveSpaceId, handleSpaceSelect, activeSpaceId],
+		[router, handleSpaceSelect, activeSpaceId, setActiveSpaceId],
 	)
 
 	const handleSpaceCreated = async (newSpace: Space) => {
@@ -64,11 +61,11 @@ export default function Sidebar() {
 	}
 
 	useEffect(() => {
-		if (spaces.length > 0 && !currentSpaceId) {
+		if (spaces.length > 0 && !activeSpaceId) {
 			const defaultSpace = spaces[0]
 			handleSpaceClick(defaultSpace.id)
 		}
-	}, [spaces, currentSpaceId, handleSpaceClick])
+	}, [spaces, activeSpaceId, handleSpaceClick])
 
 	const { dragAndDropHooks } = useDragAndDrop({
 		getItems(keys) {
@@ -135,9 +132,9 @@ export default function Sidebar() {
 					selectionMode="single"
 					selectedKeys={activeSpaceId ? [activeSpaceId] : []}
 					onSelectionChange={(keys) => {
-						const selectedKey = Array.from(keys)[0]
+						const selectedKey = Array.from(keys)[0] as string
 						if (selectedKey) {
-							handleSpaceClick(String(selectedKey))
+							handleSpaceClick(selectedKey)
 						}
 					}}
 					className="flex flex-col gap-4 py-4"
@@ -155,7 +152,7 @@ export default function Sidebar() {
 								>
 									<Button
 										slot="drag"
-										aria-label="ドラッグハンドル"
+										aria-label="ドラッグハンル"
 										className="cursor-grab p-2"
 									>
 										<GripVertical className="w-4 h-4 text-zinc-500" />
@@ -163,7 +160,7 @@ export default function Sidebar() {
 								</div>
 								<div
 									className={`px-3 py-2 rounded hover:bg-gray-700 cursor-pointer block w-full text-left text-zinc-50 outline-none ${
-										currentSpaceId === space.id ? 'bg-gray-700' : ''
+										activeSpaceId === space.id ? 'bg-gray-700' : ''
 									}`}
 								>
 									{space.name}

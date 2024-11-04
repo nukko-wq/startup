@@ -27,13 +27,6 @@ export function SpaceProvider({
 	const [activeSpaceId, setActiveSpaceId] = useState(initialActiveSpaceId)
 	const searchParams = useSearchParams()
 
-	useEffect(() => {
-		const spaceId = searchParams.get('spaceId')
-		if (spaceId) {
-			setActiveSpaceId(spaceId)
-		}
-	}, [searchParams])
-
 	const reorderSpaces = async (newSpaces: Space[]) => {
 		const previousSpaces = [...spaces]
 
