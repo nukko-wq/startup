@@ -1,6 +1,6 @@
 'use client'
 
-import { createContext, useContext, useState, useEffect } from 'react'
+import { createContext, useContext, useState, useEffect, useRef } from 'react'
 import type { Space } from '@/app/types/space'
 import { useSearchParams } from 'next/navigation'
 
@@ -29,21 +29,28 @@ export function SpaceProvider({
 	const [activeSpaceId, setActiveSpaceId] = useState(initialActiveSpaceId)
 	const searchParams = useSearchParams()
 	const [isNavigating, setIsNavigating] = useState(false)
+	const previousSpaceId = useRef<string | null>(null)
 
-	// URLのspaceIdパラメータとactiveSpaceIdを同期を修正
-	// biome-ignore lint/correctness/useExhaustiveDependencies: <explanation>
+	// URLのspaceIdパラメータとactiveSpaceIdの同期
 	useEffect(() => {
 		const spaceId = searchParams.get('spaceId')
 		if (!isNavigating && spaceId && spaceId !== activeSpaceId) {
 			console.log('Updating activeSpaceId from URL:', spaceId)
+			previousSpaceId.current = activeSpaceId || null
 			setActiveSpaceId(spaceId)
 		}
-	}, [searchParams, isNavigating])
+	}, [searchParams, isNavigating, activeSpaceId])
 
-	// activeSpaceIdの変更を監視して状態を更新
+	// isNavigatingの制御
 	useEffect(() => {
-		console.log('activeSpaceId changed:', activeSpaceId)
-	}, [activeSpaceId])
+		if (isNavigating) {
+			const timer = setTimeout(() => {
+				setIsNavigating(false)
+				previousSpaceId.current = null
+			}, 300) // タイムアウトを少し長めに
+			return () => clearTimeout(timer)
+		}
+	}, [isNavigating])
 
 	const reorderSpaces = async (newSpaces: Space[]) => {
 		const previousSpaces = [...spaces]

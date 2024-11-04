@@ -42,29 +42,17 @@ export default function Sidebar() {
 
 	const handleSpaceClick = useCallback(
 		async (spaceId: string) => {
-			if (spaceId === activeSpaceId) {
-				return
-			}
-
 			try {
 				setIsNavigating(true)
+				await router.push(`/?spaceId=${spaceId}`, { scroll: false })
 				setActiveSpaceId(spaceId)
 				await handleSpaceSelect(spaceId)
-				await router.push(`/?spaceId=${spaceId}`, { scroll: false })
 			} catch (error) {
 				console.error('Error switching space:', error)
-				setActiveSpaceId(activeSpaceId)
-			} finally {
 				setIsNavigating(false)
 			}
 		},
-		[
-			router,
-			handleSpaceSelect,
-			activeSpaceId,
-			setActiveSpaceId,
-			setIsNavigating,
-		],
+		[router, handleSpaceSelect, setActiveSpaceId, setIsNavigating],
 	)
 
 	const handleSpaceCreated = async (newSpace: Space) => {
@@ -171,9 +159,10 @@ export default function Sidebar() {
 						<GridListItem
 							key={space.id}
 							textValue={space.name}
-							className={`flex items-center justify-between outline-none cursor-pointer ${
-								activeSpaceId === space.id ? 'bg-gray-700' : 'bg-transparent'
-							}`}
+							className={({ isSelected }) => `
+								flex items-center justify-between outline-none cursor-pointer
+								${isSelected ? 'bg-gray-700' : 'bg-transparent'}
+							`}
 						>
 							<div className="flex items-center w-full group">
 								<div
