@@ -2,8 +2,8 @@
 
 import { useRouter, useSearchParams } from 'next/navigation'
 import { useEffect, useState } from 'react'
-import SidebarMenu from '@/app/components/layouts/sidebar/sidebar-menu'
-import CreateSpaceButton from '@/app/components/layouts/sidebar/create-space-button'
+import SidebarMenu from '@/app/components/layouts/sidebar/SidebarMenu'
+import CreateSpaceButton from '@/app/components/layouts/sidebar/CreateSpaceButton'
 import DeleteSpaceButton from '@/app/components/layouts/sidebar/DeleteSpaceButton'
 import type { Space } from '@/app/types/space'
 
