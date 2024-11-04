@@ -7,6 +7,7 @@ import { auth } from '@/lib/auth'
 import type { Space } from '@/app/types/space'
 import type { Section } from '@/app/types/section'
 import { prisma } from '@/lib/prisma'
+import Header from '@/app/features/header/Header'
 
 // ページコンポーネントをキャッシュ化
 export const revalidate = 0
@@ -42,11 +43,14 @@ export default async function Index({ searchParams }: PageProps) {
 
 		console.log('Page spaceId:', spaceId)
 
+		const activeSpace = spaces.find((space) => space.id === spaceId)
+
 		return (
 			<div className="flex flex-col min-h-screen">
 				<div className="flex bg-slate-50 flex-grow">
 					<Sidebar initialSpaces={spaces} activeSpaceId={spaceId} />
-					<main className="flex flex-col flex-grow items-center justify-center">
+					<main className="flex flex-col flex-grow items-center">
+						<Header spaceName={activeSpace?.name ?? 'No Space Selected'} />
 						<Resources
 							initialData={{
 								sections,
