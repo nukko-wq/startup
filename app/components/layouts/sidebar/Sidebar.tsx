@@ -7,6 +7,14 @@ import CreateSpaceButton from '@/app/components/layouts/sidebar/CreateSpaceButto
 import SpaceButtonMenu from '@/app/components/layouts/sidebar/SpaceButtonMenu'
 import type { Space } from '@/app/types/space'
 import { Button } from 'react-aria-components'
+import {
+	GridList,
+	GridListItem,
+	useDragAndDrop,
+	DropIndicator,
+} from 'react-aria-components'
+import { useSpaces } from '@/app/features/spaces/contexts/SpaceContext'
+import { GripVertical } from 'lucide-react'
 
 export default function Sidebar({
 	initialSpaces,
@@ -17,7 +25,7 @@ export default function Sidebar({
 }) {
 	const router = useRouter()
 	const searchParams = useSearchParams()
-	const [spaces, setSpaces] = useState<Space[]>(initialSpaces)
+	const { spaces, setSpaces, reorderSpaces } = useSpaces()
 	const currentSpaceId = searchParams.get('spaceId') || activeSpaceId
 
 	const handleSpaceClick = useCallback(
@@ -58,42 +66,106 @@ export default function Sidebar({
 		}
 	}, [spaces, currentSpaceId, handleSpaceClick])
 
+	const { dragAndDropHooks } = useDragAndDrop({
+		getItems(keys) {
+			const space = spaces.find((s) => s.id === Array.from(keys)[0])
+			return [
+				{
+					'space-item': JSON.stringify(space),
+					'text/plain': space?.name || '',
+				},
+			]
+		},
+		acceptedDragTypes: ['space-item'],
+		getDropOperation: () => 'move',
+		renderDropIndicator(target) {
+			return (
+				<DropIndicator
+					target={target}
+					className={({ isDropTarget }) =>
+						`sidebar-drop-indicator ${isDropTarget ? 'active' : ''}`
+					}
+				/>
+			)
+		},
+
+		onReorder: async (e) => {
+			try {
+				const items = [...spaces]
+				const draggedIndex = items.findIndex(
+					(item) => item.id === Array.from(e.keys)[0],
+				)
+				const targetIndex = items.findIndex((item) => item.id === e.target.key)
+				const draggedItem = items[draggedIndex]
+
+				const newIndex =
+					e.target.dropPosition === 'before' ? targetIndex : targetIndex + 1
+
+				items.splice(draggedIndex, 1)
+				items.splice(
+					newIndex > draggedIndex ? newIndex - 1 : newIndex,
+					0,
+					draggedItem,
+				)
+
+				await reorderSpaces(items)
+			} catch (error) {
+				console.error('Failed to reorder spaces:', error)
+				alert('スペースの並び順の更新に失敗しました')
+			}
+		},
+	})
+
 	return (
 		<div className="hidden md:flex w-[320px] bg-gray-800">
 			<div className="flex-grow text-zinc-50">
-				<div className="flex items-center justify-between p-4">
+				<div className="flex items-center justify-between">
 					<div className="text-2xl font-bold text-zinc-50">StartUp</div>
 					<SidebarMenu />
 				</div>
 				<CreateSpaceButton onSpaceCreated={handleSpaceCreated} />
-				<div className="flex flex-col gap-4 py-4 pl-4">
-					<div className="flex flex-col">
-						<div className="text-lg mb-2 text-zinc-50">Spaces</div>
-						<div className="space-y-2">
-							{spaces.map((space) => (
+				<GridList
+					aria-label="Spaces"
+					items={spaces}
+					dragAndDropHooks={dragAndDropHooks}
+					className="flex flex-col gap-4 py-4"
+				>
+					{(space) => (
+						<GridListItem
+							key={space.id}
+							textValue={space.name}
+							className="flex items-center justify-between outline-none cursor-pointer"
+						>
+							<div className="flex items-center w-full group">
 								<div
-									key={space.id}
-									className="flex items-center justify-between"
+									className="cursor-grab flex items-center opacity-0 group-hover:opacity-100"
+									aria-label="Drag Wrapper"
 								>
 									<Button
-										key={space.id}
-										onPress={() => handleSpaceClick(space.id)}
-										className={`px-3 py-2 rounded hover:bg-gray-700 cursor-pointer block w-full text-left text-zinc-50 outline-none ${
-											currentSpaceId === space.id ? 'bg-gray-700' : ''
-										}`}
+										slot="drag"
+										aria-label="ドラッグハンドル"
+										className="cursor-grab p-2"
 									>
-										{space.name}
+										<GripVertical className="w-4 h-4 text-zinc-500" />
 									</Button>
-									<SpaceButtonMenu
-										spaceId={space.id}
-										spaceName={space.name}
-										setSpaces={setSpaces}
-									/>
 								</div>
-							))}
-						</div>
-					</div>
-				</div>
+								<Button
+									onPress={() => handleSpaceClick(space.id)}
+									className={`px-3 py-2 rounded hover:bg-gray-700 cursor-pointer block w-full text-left text-zinc-50 outline-none ${
+										currentSpaceId === space.id ? 'bg-gray-700' : ''
+									}`}
+								>
+									{space.name}
+								</Button>
+							</div>
+							<SpaceButtonMenu
+								spaceId={space.id}
+								spaceName={space.name}
+								setSpaces={setSpaces}
+							/>
+						</GridListItem>
+					)}
+				</GridList>
 			</div>
 		</div>
 	)
