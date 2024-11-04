@@ -78,7 +78,7 @@ export default function Sidebar({
 									<Button
 										key={space.id}
 										onPress={() => handleSpaceClick(space.id)}
-										className={`px-3 py-2 rounded hover:bg-gray-700 cursor-pointer block w-full text-left text-zinc-50 ${
+										className={`px-3 py-2 rounded hover:bg-gray-700 cursor-pointer block w-full text-left text-zinc-50 outline-none ${
 											currentSpaceId === space.id ? 'bg-gray-700' : ''
 										}`}
 									>
