@@ -38,6 +38,7 @@ export default function Sidebar() {
 		async (spaceId: string) => {
 			console.log('handleSpaceClick called with:', spaceId)
 			console.log('Current activeSpaceId:', activeSpaceId)
+			console.log('Current URL:', window.location.href)
 
 			if (spaceId === activeSpaceId) {
 				console.log('Same space clicked, returning')
@@ -156,7 +157,9 @@ export default function Sidebar() {
 						<GridListItem
 							key={space.id}
 							textValue={space.name}
-							className="flex items-center justify-between outline-none cursor-pointer"
+							className={`flex items-center justify-between outline-none cursor-pointer ${
+								activeSpaceId === space.id ? 'bg-gray-700' : ''
+							}`}
 						>
 							<div className="flex items-center w-full group">
 								<div
@@ -165,16 +168,14 @@ export default function Sidebar() {
 								>
 									<Button
 										slot="drag"
-										aria-label="ドラッグハンル"
+										aria-label="ドラッグハンドル"
 										className="cursor-grab p-2"
 									>
 										<GripVertical className="w-4 h-4 text-zinc-500" />
 									</Button>
 								</div>
 								<Button
-									className={`px-3 py-2 rounded hover:bg-gray-700 cursor-pointer block w-full text-left text-zinc-50 outline-none ${
-										activeSpaceId === space.id ? 'bg-gray-700' : ''
-									}`}
+									className="px-3 py-2 rounded hover:bg-gray-700 cursor-pointer block w-full text-left text-zinc-50 outline-none"
 									onPress={() => handleSpaceClick(space.id)}
 								>
 									{space.name}

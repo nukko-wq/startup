@@ -27,10 +27,13 @@ export function SpaceProvider({
 	const [activeSpaceId, setActiveSpaceId] = useState(initialActiveSpaceId)
 	const searchParams = useSearchParams()
 
-	// デバッグ用のuseEffect
+	// URLのspaceIdパラメータとactiveSpaceIdを同期
 	useEffect(() => {
-		console.log('SpaceProvider: activeSpaceId changed to:', activeSpaceId)
-	}, [activeSpaceId])
+		const spaceId = searchParams.get('spaceId')
+		if (spaceId && spaceId !== activeSpaceId) {
+			setActiveSpaceId(spaceId)
+		}
+	}, [searchParams, activeSpaceId])
 
 	const reorderSpaces = async (newSpaces: Space[]) => {
 		const previousSpaces = [...spaces]
