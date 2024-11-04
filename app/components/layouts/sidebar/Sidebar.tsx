@@ -128,6 +128,7 @@ export default function Sidebar({
 					aria-label="Spaces"
 					items={spaces}
 					dragAndDropHooks={dragAndDropHooks}
+					selectionMode="single"
 					className="flex flex-col gap-4 py-4"
 				>
 					{(space) => (
