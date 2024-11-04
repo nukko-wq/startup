@@ -2,6 +2,7 @@ import type { NextRequest } from 'next/server'
 import { auth } from '@/lib/auth'
 import { db } from '@/lib/db'
 import { NextResponse } from 'next/server'
+import { spaceCreateSchema } from '@/lib/validations/space'
 
 export async function DELETE(request: NextRequest) {
 	try {
@@ -58,6 +59,42 @@ export async function DELETE(request: NextRequest) {
 		console.error('Space delete error:', error)
 		return NextResponse.json(
 			{ error: 'Failed to delete space' },
+			{ status: 500 },
+		)
+	}
+}
+
+export async function PATCH(request: Request) {
+	try {
+		const session = await auth()
+		if (!session) {
+			return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+		}
+
+		const url = new URL(request.url)
+		const spaceId = url.pathname.split('/').pop()
+		const json = await request.json()
+		const validatedData = spaceCreateSchema.parse(json)
+
+		const space = await db.space.update({
+			where: {
+				id: spaceId,
+				userId: session.user.id,
+			},
+			data: {
+				name: validatedData.name,
+			},
+		})
+
+		return NextResponse.json({
+			success: true,
+			message: 'Space updated successfully',
+			space,
+		})
+	} catch (error) {
+		console.error('Space update error:', error)
+		return NextResponse.json(
+			{ error: 'Failed to update space' },
 			{ status: 500 },
 		)
 	}

@@ -50,7 +50,10 @@ export default async function Index({ searchParams }: PageProps) {
 				<div className="flex bg-slate-50 flex-grow">
 					<Sidebar initialSpaces={spaces} activeSpaceId={spaceId} />
 					<main className="flex flex-col flex-grow items-center">
-						<Header spaceName={activeSpace?.name ?? 'No Space Selected'} />
+						<Header
+							spaceName={activeSpace?.name ?? 'No Space Selected'}
+							spaceId={spaceId ?? ''}
+						/>
 						<Resources
 							initialData={{
 								sections,
