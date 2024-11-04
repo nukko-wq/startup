@@ -1,6 +1,6 @@
 'use client'
 
-import { EllipsisVertical, Trash2 } from 'lucide-react'
+import { EllipsisVertical, Pencil, Trash2 } from 'lucide-react'
 import {
 	Button,
 	Menu,
@@ -52,9 +52,15 @@ const SpaceButtonMenu = ({ spaceId, setSpaces }: SpaceButtonMenuProps) => {
 			</Button>
 			<Popover>
 				<Menu className="bg-zinc-50 outline-none border rounded-lg shadow-md">
+					<MenuItem className="pl-3 pr-4 py-2 outline-none hover:bg-zinc-100 hover:cursor-pointer">
+						<div className="flex items-center gap-2">
+							<Pencil className="w-4 h-4" />
+							Rename
+						</div>
+					</MenuItem>
 					<MenuItem
 						onAction={handleDelete}
-						className="px-3 py-2 outline-none hover:bg-zinc-200 text-red-600 hover:cursor-pointer"
+						className="pl-3 pr-4 py-2 outline-none hover:bg-zinc-100 text-red-600 hover:cursor-pointer"
 					>
 						<div className="flex items-center gap-2">
 							<Trash2 className="w-4 h-4" />
