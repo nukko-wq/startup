@@ -54,8 +54,12 @@ const SpaceRenameForm = ({
 				name="name"
 				control={control}
 				render={({ field, fieldState }) => (
-					<TextField isInvalid={!!fieldState.error} autoFocus>
-						<Label>スペース名</Label>
+					<TextField
+						isInvalid={!!fieldState.error}
+						autoFocus
+						className="space-y-[2px]"
+					>
+						<Label className="text-sm">Space Name</Label>
 						<Input
 							{...field}
 							className="w-full px-3 py-2 border rounded focus:outline-blue-500"
