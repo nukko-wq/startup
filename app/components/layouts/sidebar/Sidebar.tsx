@@ -19,8 +19,14 @@ import { GripVertical } from 'lucide-react'
 export default function Sidebar() {
 	const router = useRouter()
 	const searchParams = useSearchParams()
-	const { spaces, setSpaces, reorderSpaces, activeSpaceId, setActiveSpaceId } =
-		useSpaces()
+	const {
+		spaces,
+		setSpaces,
+		reorderSpaces,
+		activeSpaceId,
+		setActiveSpaceId,
+		setIsNavigating,
+	} = useSpaces()
 
 	const handleSpaceSelect = useCallback(async (spaceId: string) => {
 		try {
@@ -36,27 +42,29 @@ export default function Sidebar() {
 
 	const handleSpaceClick = useCallback(
 		async (spaceId: string) => {
-			console.log('handleSpaceClick called with:', spaceId)
-			console.log('Current activeSpaceId:', activeSpaceId)
-			console.log('Current URL:', window.location.href)
-
 			if (spaceId === activeSpaceId) {
-				console.log('Same space clicked, returning')
 				return
 			}
 
-			console.log('Setting new activeSpaceId:', spaceId)
-			setActiveSpaceId(spaceId)
-
 			try {
+				setIsNavigating(true)
+				setActiveSpaceId(spaceId)
 				await handleSpaceSelect(spaceId)
 				await router.push(`/?spaceId=${spaceId}`, { scroll: false })
 			} catch (error) {
 				console.error('Error switching space:', error)
 				setActiveSpaceId(activeSpaceId)
+			} finally {
+				setIsNavigating(false)
 			}
 		},
-		[router, handleSpaceSelect, activeSpaceId, setActiveSpaceId],
+		[
+			router,
+			handleSpaceSelect,
+			activeSpaceId,
+			setActiveSpaceId,
+			setIsNavigating,
+		],
 	)
 
 	const handleSpaceCreated = async (newSpace: Space) => {
@@ -151,6 +159,12 @@ export default function Sidebar() {
 					dragAndDropHooks={dragAndDropHooks}
 					selectionMode="single"
 					selectedKeys={activeSpaceId ? [activeSpaceId] : []}
+					onSelectionChange={(keys) => {
+						const selectedKey = Array.from(keys)[0] as string
+						if (selectedKey) {
+							handleSpaceClick(selectedKey)
+						}
+					}}
 					className="flex flex-col gap-4 py-4"
 				>
 					{(space) => (
@@ -158,7 +172,7 @@ export default function Sidebar() {
 							key={space.id}
 							textValue={space.name}
 							className={`flex items-center justify-between outline-none cursor-pointer ${
-								activeSpaceId === space.id ? 'bg-gray-700' : ''
+								activeSpaceId === space.id ? 'bg-gray-700' : 'bg-transparent'
 							}`}
 						>
 							<div className="flex items-center w-full group">
