@@ -7,21 +7,27 @@ import { auth } from '@/lib/auth'
 // ページコンポーネントをキャッシュ化
 export const revalidate = 0
 
-export default async function Index() {
+interface PageProps {
+	searchParams: Promise<{ [key: string]: string | string[] | undefined }>
+}
+
+export default async function Index({ searchParams }: PageProps) {
 	const session = await auth()
-	console.log('Session in Index:', session)
+	const params = await searchParams
+	const spaceId =
+		typeof params.spaceId === 'string' ? params.spaceId : undefined
 
 	if (!session?.user?.id) {
 		redirect('/login')
 	}
 
 	try {
-		const initialData = await getInitialSections(session.user.id)
+		const initialData = await getInitialSections(session.user.id, spaceId)
 
 		return (
 			<div className="flex flex-col min-h-screen">
 				<div className="flex bg-slate-50 flex-grow">
-					<Sidebar />
+					<Sidebar activeSpaceId={spaceId} />
 					<main className="flex flex-col flex-grow items-center justify-center">
 						<Resources initialData={initialData} />
 					</main>
