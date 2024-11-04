@@ -62,13 +62,13 @@ export default function Sidebar({
 		<div className="hidden md:flex w-[320px] bg-gray-800">
 			<div className="flex-grow text-zinc-50">
 				<div className="flex items-center justify-between p-4">
-					<div className="text-2xl font-bold">StartUp</div>
+					<div className="text-2xl font-bold text-zinc-50">StartUp</div>
 					<SidebarMenu />
 				</div>
 				<CreateSpaceButton onSpaceCreated={handleSpaceCreated} />
-				<div className="flex flex-col gap-4 p-4">
-					<div>
-						<div className="text-lg mb-2">Spaces</div>
+				<div className="flex flex-col gap-4 py-4 pl-4">
+					<div className="flex flex-col">
+						<div className="text-lg mb-2 text-zinc-50">Spaces</div>
 						<div className="space-y-2">
 							{spaces.map((space) => (
 								<div
@@ -78,7 +78,7 @@ export default function Sidebar({
 									<Button
 										key={space.id}
 										onPress={() => handleSpaceClick(space.id)}
-										className={`px-3 py-2 rounded hover:bg-gray-700 cursor-pointer block w-full text-left text-white ${
+										className={`px-3 py-2 rounded hover:bg-gray-700 cursor-pointer block w-full text-left text-zinc-50 outline-none ${
 											currentSpaceId === space.id ? 'bg-gray-700' : ''
 										}`}
 									>

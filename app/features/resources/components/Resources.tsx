@@ -11,19 +11,15 @@ import {
 } from 'react-aria-components'
 import Section from '@/app/features/sections/components/Section'
 import type { getInitialSections } from '@/app/features/resources/utils/getInitialSections'
+import { Plus } from 'lucide-react'
 
 interface ResourceProps {
 	initialData: Awaited<ReturnType<typeof getInitialSections>>
 	spaceId?: string
+	spaceName?: string
 }
 
-const Resources = ({
-	initialData,
-	spaceId,
-}: {
-	initialData: Awaited<ReturnType<typeof getInitialSections>>
-	spaceId?: string
-}) => {
+const Resources = ({ initialData, spaceId, spaceName }: ResourceProps) => {
 	const [sections, setSections] = useState(initialData.sections)
 	const [isCreating, setIsCreating] = useState(false)
 
@@ -164,38 +160,41 @@ const Resources = ({
 
 	return (
 		<ResourceProvider initialResources={sections.flatMap((s) => s.resources)}>
-			<div className="flex flex-col w-full outline-none">
-				<div className="flex flex-col w-full items-center">
-					<GridList
-						aria-label="Draggable sections"
-						items={sections}
-						dragAndDropHooks={dragAndDropHooks}
-						className="w-full outline-none"
-					>
-						{(section) => (
-							<GridListItem
-								key={section.id}
-								textValue={section.name}
-								className="w-full outline-none"
-							>
-								<Section
-									id={section.id}
-									name={section.name}
-									onDelete={handleSectionDelete}
-								/>
-							</GridListItem>
-						)}
-					</GridList>
-				</div>
-				<div className="flex justify-center">
-					<div className="flex justify-center">
-						<Button
-							className="flex items-center gap-2 px-4 py-2 outline-none"
-							onPress={handleCreateSection}
-							isDisabled={isCreating}
+			<div className="flex flex-col flex-grow w-full justify-center">
+				<div className="flex flex-col w-full outline-none">
+					<div className="flex flex-col w-full items-center">
+						<GridList
+							aria-label="Draggable sections"
+							items={sections}
+							dragAndDropHooks={dragAndDropHooks}
+							className="w-full outline-none"
 						>
-							+ RESOURCE SECTION
-						</Button>
+							{(section) => (
+								<GridListItem
+									key={section.id}
+									textValue={section.name}
+									className="w-full outline-none"
+								>
+									<Section
+										id={section.id}
+										name={section.name}
+										onDelete={handleSectionDelete}
+									/>
+								</GridListItem>
+							)}
+						</GridList>
+					</div>
+					<div className="flex justify-center">
+						<div className="flex justify-center">
+							<Button
+								className="flex items-center gap-1 px-4 py-2 outline-none text-gray-500"
+								onPress={handleCreateSection}
+								isDisabled={isCreating}
+							>
+								<Plus className="w-3 h-3" />
+								<div>RESOURCE SECTION</div>
+							</Button>
+						</div>
 					</div>
 				</div>
 			</div>

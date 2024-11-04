@@ -46,9 +46,9 @@ const SpaceButtonMenu = ({ spaceId, setSpaces }: SpaceButtonMenuProps) => {
 		<MenuTrigger>
 			<Button
 				aria-label="Menu"
-				className="outline-none p-2 hover:bg-zinc-200 rounded-full"
+				className="outline-none p-2 mx-1 hover:bg-gray-700 rounded-full group"
 			>
-				<EllipsisVertical className="w-6 h-6 text-zinc-700" />
+				<EllipsisVertical className="w-6 h-6 text-zinc-700 group-hover:text-zinc-200" />
 			</Button>
 			<Popover>
 				<Menu className="bg-zinc-50 outline-none border rounded-lg shadow-md">
