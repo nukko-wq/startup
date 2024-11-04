@@ -36,8 +36,15 @@ export default function Sidebar() {
 
 	const handleSpaceClick = useCallback(
 		async (spaceId: string) => {
-			if (spaceId === activeSpaceId) return
+			console.log('handleSpaceClick called with:', spaceId)
+			console.log('Current activeSpaceId:', activeSpaceId)
 
+			if (spaceId === activeSpaceId) {
+				console.log('Same space clicked, returning')
+				return
+			}
+
+			console.log('Setting new activeSpaceId:', spaceId)
 			setActiveSpaceId(spaceId)
 
 			try {
@@ -117,6 +124,18 @@ export default function Sidebar() {
 		},
 	})
 
+	// activeSpaceIdの変更を監視
+	useEffect(() => {
+		console.log('activeSpaceId updated:', activeSpaceId)
+		console.log('selectedKeys value:', activeSpaceId ? [activeSpaceId] : [])
+	}, [activeSpaceId])
+
+	// デバッグ用のuseEffect
+	// biome-ignore lint/correctness/useExhaustiveDependencies: <explanation>
+	useEffect(() => {
+		console.log('Component rendered with activeSpaceId:', activeSpaceId)
+	}, [])
+
 	return (
 		<div className="hidden md:flex w-[320px] bg-gray-800">
 			<div className="flex-grow text-zinc-50">
@@ -131,12 +150,6 @@ export default function Sidebar() {
 					dragAndDropHooks={dragAndDropHooks}
 					selectionMode="single"
 					selectedKeys={activeSpaceId ? [activeSpaceId] : []}
-					onSelectionChange={(keys) => {
-						const selectedKey = Array.from(keys)[0] as string
-						if (selectedKey) {
-							handleSpaceClick(selectedKey)
-						}
-					}}
 					className="flex flex-col gap-4 py-4"
 				>
 					{(space) => (
@@ -158,13 +171,14 @@ export default function Sidebar() {
 										<GripVertical className="w-4 h-4 text-zinc-500" />
 									</Button>
 								</div>
-								<div
+								<Button
 									className={`px-3 py-2 rounded hover:bg-gray-700 cursor-pointer block w-full text-left text-zinc-50 outline-none ${
 										activeSpaceId === space.id ? 'bg-gray-700' : ''
 									}`}
+									onPress={() => handleSpaceClick(space.id)}
 								>
 									{space.name}
-								</div>
+								</Button>
 							</div>
 							<SpaceButtonMenu
 								spaceId={space.id}
