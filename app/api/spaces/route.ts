@@ -27,7 +27,7 @@ export async function POST(req: NextRequest) {
 			workspace = await db.workspace.create({
 				data: {
 					name: 'Default Workspace',
-					order: 1,
+					order: 0,
 					isDefault: true,
 					userId,
 				},

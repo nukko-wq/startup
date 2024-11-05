@@ -230,6 +230,9 @@ export default function Sidebar() {
 						</GridListItem>
 					)}
 				</GridList>
+				<div className="flex items-center justify-center p-4">
+					<div>Workspaces</div>
+				</div>
 			</div>
 		</div>
 	)
