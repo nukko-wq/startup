@@ -103,3 +103,13 @@ a {
 .drop-indicator.active {
 	background: #3b82f6;
 }
+
+.sidebar-drop-indicator {
+	height: 2px;
+	background: transparent;
+	position: relative;
+}
+
+.sidebar-drop-indicator.active {
+	background: #3b82f6;
+}

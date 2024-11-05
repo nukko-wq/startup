@@ -1,36 +1,36 @@
 'use client'
 
 import { useRouter, useSearchParams } from 'next/navigation'
-import { useEffect, useState, useCallback } from 'react'
+import { useEffect, useCallback, useRef } from 'react'
 import SidebarMenu from '@/app/components/layouts/sidebar/SidebarMenu'
 import CreateSpaceButton from '@/app/components/layouts/sidebar/CreateSpaceButton'
 import SpaceButtonMenu from '@/app/components/layouts/sidebar/SpaceButtonMenu'
 import type { Space } from '@/app/types/space'
 import { Button } from 'react-aria-components'
+import {
+	GridList,
+	GridListItem,
+	useDragAndDrop,
+	DropIndicator,
+} from 'react-aria-components'
+import { useSpaces } from '@/app/features/spaces/contexts/SpaceContext'
+import { GripVertical } from 'lucide-react'
 
-export default function Sidebar({
-	initialSpaces,
-	activeSpaceId,
-}: {
-	initialSpaces: Space[]
-	activeSpaceId?: string
-}) {
+export default function Sidebar() {
 	const router = useRouter()
 	const searchParams = useSearchParams()
-	const [spaces, setSpaces] = useState<Space[]>(initialSpaces)
-	const currentSpaceId = searchParams.get('spaceId') || activeSpaceId
+	const {
+		spaces,
+		setSpaces,
+		reorderSpaces,
+		activeSpaceId,
+		setActiveSpaceId,
+		setIsNavigating,
+	} = useSpaces()
 
-	const handleSpaceClick = useCallback(
-		async (spaceId: string) => {
-			const params = new URLSearchParams(searchParams)
-			params.set('spaceId', spaceId)
-			router.push(`/?${params.toString()}`)
-			await handleSpaceSelect(spaceId)
-		},
-		[searchParams, router],
-	)
+	const lastUpdateSource = useRef<string | null>(null)
 
-	const handleSpaceSelect = async (spaceId: string) => {
+	const handleSpaceSelect = useCallback(async (spaceId: string) => {
 		try {
 			await fetch('/api/users/last-active-space', {
 				method: 'PUT',
@@ -40,23 +40,121 @@ export default function Sidebar({
 		} catch (error) {
 			console.error('Error updating last active space:', error)
 		}
-	}
+	}, [])
+
+	const handleSpaceClick = useCallback(
+		async (spaceId: string) => {
+			try {
+				setIsNavigating(true)
+				lastUpdateSource.current = 'click'
+
+				// 状態更新を同期的に行う
+				setActiveSpaceId(spaceId)
+
+				// 少し待ってからナビゲーションを実行
+				await new Promise((resolve) => setTimeout(resolve, 50))
+
+				await Promise.all([
+					router.push(`/?spaceId=${spaceId}`, { scroll: false }),
+					handleSpaceSelect(spaceId),
+				])
+			} catch (error) {
+				console.error('Error switching space:', error)
+				setActiveSpaceId(activeSpaceId)
+			} finally {
+				setTimeout(() => {
+					setIsNavigating(false)
+				}, 500) // タイマーを500msに延長
+			}
+		},
+		[
+			router,
+			handleSpaceSelect,
+			setActiveSpaceId,
+			setIsNavigating,
+			activeSpaceId,
+		],
+	)
 
 	const handleSpaceCreated = async (newSpace: Space) => {
 		try {
-			await handleSpaceClick(newSpace.id)
 			setSpaces((prevSpaces) => [...prevSpaces, newSpace])
+
+			// 新しいスペースを選択
+			handleSpaceClick(newSpace.id)
 		} catch (error) {
 			console.error('Error handling new space:', error)
 		}
 	}
 
 	useEffect(() => {
-		if (spaces.length > 0 && !currentSpaceId) {
+		if (spaces.length > 0 && !activeSpaceId) {
 			const defaultSpace = spaces[0]
 			handleSpaceClick(defaultSpace.id)
 		}
-	}, [spaces, currentSpaceId, handleSpaceClick])
+	}, [spaces, activeSpaceId, handleSpaceClick])
+
+	const { dragAndDropHooks } = useDragAndDrop({
+		getItems(keys) {
+			const space = spaces.find((s) => s.id === Array.from(keys)[0])
+			return [
+				{
+					'space-item': JSON.stringify(space),
+					'text/plain': space?.name || '',
+				},
+			]
+		},
+		acceptedDragTypes: ['space-item'],
+		getDropOperation: () => 'move',
+		renderDropIndicator(target) {
+			return (
+				<DropIndicator
+					target={target}
+					className={({ isDropTarget }) =>
+						`sidebar-drop-indicator ${isDropTarget ? 'active' : ''}`
+					}
+				/>
+			)
+		},
+
+		onReorder: async (e) => {
+			try {
+				const items = [...spaces]
+				const draggedIndex = items.findIndex(
+					(item) => item.id === Array.from(e.keys)[0],
+				)
+				const targetIndex = items.findIndex((item) => item.id === e.target.key)
+				const draggedItem = items[draggedIndex]
+
+				const newIndex =
+					e.target.dropPosition === 'before' ? targetIndex : targetIndex + 1
+
+				items.splice(draggedIndex, 1)
+				items.splice(
+					newIndex > draggedIndex ? newIndex - 1 : newIndex,
+					0,
+					draggedItem,
+				)
+
+				await reorderSpaces(items)
+			} catch (error) {
+				console.error('Failed to reorder spaces:', error)
+				alert('スペースの並び順の更新に失敗しました')
+			}
+		},
+	})
+
+	// activeSpaceIdの変更を監視
+	useEffect(() => {
+		console.log('activeSpaceId updated:', activeSpaceId)
+		console.log('selectedKeys value:', activeSpaceId ? [activeSpaceId] : [])
+	}, [activeSpaceId])
+
+	// デバッグ用のuseEffect
+	// biome-ignore lint/correctness/useExhaustiveDependencies: <explanation>
+	useEffect(() => {
+		console.log('Component rendered with activeSpaceId:', activeSpaceId)
+	}, [])
 
 	return (
 		<div className="hidden md:flex w-[320px] bg-gray-800">
@@ -66,34 +164,59 @@ export default function Sidebar({
 					<SidebarMenu />
 				</div>
 				<CreateSpaceButton onSpaceCreated={handleSpaceCreated} />
-				<div className="flex flex-col gap-4 py-4 pl-4">
-					<div className="flex flex-col">
-						<div className="text-lg mb-2 text-zinc-50">Spaces</div>
-						<div className="space-y-2">
-							{spaces.map((space) => (
+				<GridList
+					aria-label="Spaces"
+					items={spaces}
+					dragAndDropHooks={dragAndDropHooks}
+					selectionMode="single"
+					selectedKeys={activeSpaceId ? new Set([activeSpaceId]) : new Set()}
+					disallowEmptySelection
+					onSelectionChange={(keys) => {
+						const selectedKey = Array.from(keys)[0] as string
+						if (selectedKey) {
+							handleSpaceClick(selectedKey)
+						}
+					}}
+					className="flex flex-col gap-4 py-4"
+				>
+					{(space) => (
+						<GridListItem
+							key={space.id}
+							textValue={space.name}
+							className={({ isSelected, isFocusVisible }) => `
+								flex items-center justify-between outline-none cursor-pointer hover:bg-gray-700 group
+								${isSelected ? 'bg-gray-700' : ''}
+								${isFocusVisible ? 'ring-2 ring-blue-500' : ''}
+							`}
+						>
+							<div className="flex items-center w-full group">
 								<div
-									key={space.id}
-									className="flex items-center justify-between"
+									className="cursor-grab flex items-center opacity-0 group-hover:opacity-100"
+									aria-label="Drag Wrapper"
 								>
 									<Button
-										key={space.id}
-										onPress={() => handleSpaceClick(space.id)}
-										className={`px-3 py-2 rounded hover:bg-gray-700 cursor-pointer block w-full text-left text-zinc-50 outline-none ${
-											currentSpaceId === space.id ? 'bg-gray-700' : ''
-										}`}
+										slot="drag"
+										aria-label="ドラッグハンドル"
+										className="cursor-grab p-2"
 									>
-										{space.name}
+										<GripVertical className="w-4 h-4 text-zinc-500" />
 									</Button>
-									<SpaceButtonMenu
-										spaceId={space.id}
-										spaceName={space.name}
-										setSpaces={setSpaces}
-									/>
 								</div>
-							))}
-						</div>
-					</div>
-				</div>
+								<Button
+									className="px-2 py-2 rounded cursor-pointer block w-full text-left text-zinc-50 outline-none"
+									onPress={() => handleSpaceClick(space.id)}
+								>
+									{space.name}
+								</Button>
+							</div>
+							<SpaceButtonMenu
+								spaceId={space.id}
+								spaceName={space.name}
+								setSpaces={setSpaces}
+							/>
+						</GridListItem>
+					)}
+				</GridList>
 			</div>
 		</div>
 	)

@@ -1,6 +1,6 @@
 'use client'
 
-import { createContext, useContext, useState } from 'react'
+import { createContext, useContext, useEffect, useState } from 'react'
 import type { Resource } from '@prisma/client'
 
 interface DriveFile {
@@ -44,6 +44,7 @@ type ResourceContextType = {
 	reorderResources: (
 		newResources: ResourceContextType['resources'],
 	) => Promise<void>
+	updateAllResources: (newResources: ResourceContextType['resources']) => void
 }
 
 const ResourceContext = createContext<ResourceContextType | undefined>(
@@ -57,11 +58,14 @@ export function ResourceProvider({
 	children: React.ReactNode
 	initialResources: ResourceContextType['resources']
 }) {
-	// postionでソートして初期化
 	const [resources, setResources] = useState(
 		initialResources.sort((a, b) => a.position - b.position),
 	)
 	const [driveFiles, setDriveFiles] = useState<DriveFile[]>([])
+
+	useEffect(() => {
+		setResources(initialResources.sort((a, b) => a.position - b.position))
+	}, [initialResources])
 
 	const removeResource = async (id: string) => {
 		const previousResources = [...resources]
@@ -158,6 +162,12 @@ export function ResourceProvider({
 		}
 	}
 
+	const updateAllResources = (
+		newResources: ResourceContextType['resources'],
+	) => {
+		setResources(newResources.sort((a, b) => a.position - b.position))
+	}
+
 	return (
 		<ResourceContext.Provider
 			value={{
@@ -169,6 +179,7 @@ export function ResourceProvider({
 				updateResource,
 				addResource,
 				reorderResources,
+				updateAllResources,
 			}}
 		>
 			{children}
