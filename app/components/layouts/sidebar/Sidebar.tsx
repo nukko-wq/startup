@@ -159,7 +159,7 @@ export default function Sidebar() {
 	return (
 		<div className="hidden md:flex w-[320px] bg-gray-800">
 			<div className="flex-grow text-zinc-50">
-				<div className="flex items-center justify-between">
+				<div className="flex items-center justify-between p-4">
 					<div className="text-2xl font-bold text-zinc-50">StartUp</div>
 					<SidebarMenu />
 				</div>
@@ -184,7 +184,7 @@ export default function Sidebar() {
 							key={space.id}
 							textValue={space.name}
 							className={({ isSelected, isFocusVisible }) => `
-								flex items-center justify-between outline-none cursor-pointer
+								flex items-center justify-between outline-none cursor-pointer hover:bg-gray-700 group
 								${isSelected ? 'bg-gray-700' : ''}
 								${isFocusVisible ? 'ring-2 ring-blue-500' : ''}
 							`}
@@ -203,7 +203,7 @@ export default function Sidebar() {
 									</Button>
 								</div>
 								<Button
-									className="px-3 py-2 rounded hover:bg-gray-700 cursor-pointer block w-full text-left text-zinc-50 outline-none"
+									className="px-2 py-2 rounded cursor-pointer block w-full text-left text-zinc-50 outline-none"
 									onPress={() => handleSpaceClick(space.id)}
 								>
 									{space.name}
