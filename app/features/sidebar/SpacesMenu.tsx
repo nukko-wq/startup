@@ -30,19 +30,21 @@ const SpacesMenu = ({ onSpaceCreated }: SpacesMenuProps) => {
 				headers: {
 					'Content-Type': 'application/json',
 				},
-				body: JSON.stringify(data),
+				body: JSON.stringify({
+					name: data.name,
+					workspaceId: 'default',
+				}),
 			})
 
 			if (!response.ok) {
-				throw new Error('Failed to create space')
+				throw new Error('スペースの作成に失敗しました')
 			}
 
-			const newSpace = await response.json()
-			onSpaceCreated(newSpace)
+			const space = await response.json()
+			onSpaceCreated(space)
 			setIsCreateDialogOpen(false)
 		} catch (error) {
 			console.error('Error creating space:', error)
-			alert('スペースの作成に失敗しました')
 		}
 	}
 

@@ -3,4 +3,5 @@ export interface Space {
 	name: string
 	order: number
 	userId: string
+	workspaceId: string
 }

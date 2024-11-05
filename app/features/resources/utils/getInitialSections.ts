@@ -9,48 +9,26 @@ export const getInitialSections = cache(
 			throw new Error('ユーザーIDが必要です')
 		}
 
+		if (!spaceId) {
+			return { sections: [], userId, spaceId: null }
+		}
+
 		try {
-			const user = await db.user.findUnique({
-				where: { id: userId },
+			const space = await db.space.findUnique({
+				where: {
+					id: spaceId,
+					userId,
+				},
 			})
 
-			console.log('Found user:', user)
-
-			if (!user) {
-				throw new Error('ユーザーが見つかりません')
-			}
-
-			let defaultSpace = spaceId
-				? await db.space.findUnique({
-						where: { id: spaceId },
-					})
-				: await db.space.findFirst({
-						where: { userId: user.id },
-						orderBy: { createdAt: 'asc' },
-					})
-
-			if (!defaultSpace) {
-				const existingSpace = await db.space.findFirst({
-					where: { userId: user.id },
-				})
-
-				if (!existingSpace) {
-					defaultSpace = await db.space.create({
-						data: {
-							name: 'My Space',
-							order: 1,
-							userId: user.id,
-						},
-					})
-				} else {
-					defaultSpace = existingSpace
-				}
+			if (!space) {
+				return { sections: [], userId, spaceId }
 			}
 
 			const sections = await db.section.findMany({
 				where: {
-					userId: user.id,
-					spaceId: defaultSpace.id,
+					userId: userId,
+					spaceId: spaceId,
 				},
 				select: {
 					id: true,
@@ -68,26 +46,7 @@ export const getInitialSections = cache(
 				},
 			})
 
-			if (sections.length === 0) {
-				const defaultSection = await db.section.create({
-					data: {
-						name: 'Resources',
-						order: 1,
-						userId: user.id,
-						spaceId: defaultSpace.id,
-					},
-					select: {
-						id: true,
-						name: true,
-						order: true,
-						createdAt: true,
-						resources: true,
-					},
-				})
-				sections.push(defaultSection)
-			}
-
-			return { sections, userId: user.id, spaceId: defaultSpace.id }
+			return { sections, userId, spaceId }
 		} catch (error) {
 			console.error('Error in getInitialSections:', error)
 			throw error

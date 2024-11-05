@@ -65,7 +65,7 @@ export default async function Index({ searchParams }: PageProps) {
 							) : (
 								<div className="flex flex-col items-center justify-center flex-grow">
 									<div className="text-2xl font-semibold text-gray-500">
-										Open a Space to get started
+										Open a space to get started
 									</div>
 								</div>
 							)}
