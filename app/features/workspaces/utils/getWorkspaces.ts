@@ -1,32 +1,32 @@
 import { db } from '@/lib/db'
 import { cache } from 'react'
-import type { Space } from '@/app/types/space'
 
-export const getSpaces = cache(async (userId: string): Promise<Space[]> => {
+export const getWorkspaces = cache(async (userId: string) => {
 	if (!userId) {
 		throw new Error('ユーザーIDが必要です')
 	}
 
 	try {
-		const spaces = await db.space.findMany({
+		const workspaces = await db.workspace.findMany({
 			where: {
 				userId,
+				isDefault: false,
+			},
+			orderBy: {
+				order: 'asc',
 			},
 			select: {
 				id: true,
 				name: true,
 				order: true,
 				userId: true,
-				workspaceId: true,
-			},
-			orderBy: {
-				order: 'asc',
+				isDefault: true,
 			},
 		})
 
-		return spaces
+		return workspaces
 	} catch (error) {
-		console.error('Error in getSpaces:', error)
+		console.error('Error in getWorkspaces:', error)
 		throw error
 	}
 })

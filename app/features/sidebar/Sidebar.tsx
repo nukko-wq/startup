@@ -15,8 +15,13 @@ import {
 import { useSpaces } from '@/app/features/spaces/contexts/SpaceContext'
 import { GripVertical, Layers3 } from 'lucide-react'
 import SpacesMenu from '@/app/features/sidebar/SpacesMenu'
+import type { Workspace } from '@/app/types/workspace'
 
-export default function Sidebar() {
+interface SidebarProps {
+	workspaces: Workspace[]
+}
+
+export default function Sidebar({ workspaces }: SidebarProps) {
 	const router = useRouter()
 	const searchParams = useSearchParams()
 	const {
@@ -230,8 +235,20 @@ export default function Sidebar() {
 						</GridListItem>
 					)}
 				</GridList>
-				<div className="flex items-center justify-center p-4">
-					<div>Workspaces</div>
+				<div className="mt-4">
+					<div className="px-4 py-2 text-sm font-semibold text-zinc-400">
+						Workspaces
+					</div>
+					<ul className="space-y-1">
+						{workspaces.map((workspace) => (
+							<li
+								key={workspace.id}
+								className="px-4 py-2 text-sm text-zinc-300 hover:bg-zinc-800"
+							>
+								{workspace.name}
+							</li>
+						))}
+					</ul>
 				</div>
 			</div>
 		</div>

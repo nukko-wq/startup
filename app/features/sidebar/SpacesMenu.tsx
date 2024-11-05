@@ -22,6 +22,7 @@ interface SpacesMenuProps {
 
 const SpacesMenu = ({ onSpaceCreated }: SpacesMenuProps) => {
 	const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false)
+	const [isCreatingWorkspace, setIsCreatingWorkspace] = useState(false)
 
 	const handleCreateSpace = async (data: { name: string }) => {
 		try {
@@ -48,6 +49,34 @@ const SpacesMenu = ({ onSpaceCreated }: SpacesMenuProps) => {
 		}
 	}
 
+	const handleCreateWorkspace = async (data: { name: string }) => {
+		try {
+			const workspaceData = {
+				name: data.name || 'New Workspace',
+			}
+
+			const response = await fetch('/api/workspaces', {
+				method: 'POST',
+				headers: {
+					'Content-Type': 'application/json',
+				},
+				body: JSON.stringify(workspaceData),
+			})
+
+			if (!response.ok) {
+				const errorData = await response.json()
+				throw new Error(errorData.error || 'ワークスペースの作成に失敗しました')
+			}
+
+			const workspace = await response.json()
+			setIsCreateDialogOpen(false)
+			return workspace
+		} catch (error) {
+			console.error('Error creating workspace:', error)
+			throw error
+		}
+	}
+
 	return (
 		<>
 			<MenuTrigger>
@@ -60,12 +89,27 @@ const SpacesMenu = ({ onSpaceCreated }: SpacesMenuProps) => {
 				<Popover>
 					<Menu className="bg-zinc-50 outline-none border shadow-md min-w-[200px] rounded-sm">
 						<MenuItem
-							onAction={() => setIsCreateDialogOpen(true)}
+							onAction={() => {
+								setIsCreatingWorkspace(false)
+								setIsCreateDialogOpen(true)
+							}}
 							className="p-2 outline-none hover:bg-zinc-200 cursor-pointer"
 						>
 							<div className="flex items-center gap-2">
 								<SquarePlus className="w-4 h-4" />
 								New Space
+							</div>
+						</MenuItem>
+						<MenuItem
+							onAction={() => {
+								setIsCreatingWorkspace(true)
+								setIsCreateDialogOpen(true)
+							}}
+							className="p-2 outline-none hover:bg-zinc-200 cursor-pointer"
+						>
+							<div className="flex items-center gap-2">
+								<SquarePlus className="w-4 h-4" />
+								New Workspace
 							</div>
 						</MenuItem>
 					</Menu>
@@ -83,11 +127,17 @@ const SpacesMenu = ({ onSpaceCreated }: SpacesMenuProps) => {
 							{({ close }) => (
 								<div>
 									<h2 className="text-lg font-semibold mb-4">
-										新しいスペースを作成
+										{isCreatingWorkspace
+											? '新しいワークスペースを作成'
+											: '新しいスペースを作成'}
 									</h2>
 									<CreateSpaceForm
 										onClose={close}
-										onSubmit={handleCreateSpace}
+										onSubmit={
+											isCreatingWorkspace
+												? handleCreateWorkspace
+												: handleCreateSpace
+										}
 									/>
 								</div>
 							)}
