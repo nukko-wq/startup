@@ -78,12 +78,19 @@ export default function Sidebar() {
 
 	const handleSpaceCreated = async (newSpace: Space) => {
 		try {
+			setIsNavigating(true)
 			setSpaces((prevSpaces) => [...prevSpaces, newSpace])
+			setActiveSpaceId(newSpace.id)
 
-			// 新しいスペースを選択
-			handleSpaceClick(newSpace.id)
+			await new Promise((resolve) => setTimeout(resolve, 50))
+			await router.push(`/?spaceId=${newSpace.id}`, { scroll: false })
+			await handleSpaceSelect(newSpace.id)
 		} catch (error) {
 			console.error('Error handling new space:', error)
+		} finally {
+			setTimeout(() => {
+				setIsNavigating(false)
+			}, 500)
 		}
 	}
 

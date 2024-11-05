@@ -42,12 +42,19 @@ export function SpaceProvider({
 			lastUpdateSource.current !== 'click' &&
 			pendingUpdate.current !== spaceId
 		) {
-			console.log('Updating activeSpaceId from URL:', spaceId)
-			lastUpdateSource.current = 'url'
-			pendingUpdate.current = spaceId
-			setActiveSpaceId(spaceId)
+			// URLの更新が新規スペース作成によるものかチェック
+			const isNewSpace = spaces.some(
+				(space) =>
+					space.id === spaceId && !spaces.some((s) => s.id === activeSpaceId),
+			)
+			if (!isNewSpace) {
+				console.log('Updating activeSpaceId from URL:', spaceId)
+				lastUpdateSource.current = 'url'
+				pendingUpdate.current = spaceId
+				setActiveSpaceId(spaceId)
+			}
 		}
-	}, [searchParams, isNavigating, activeSpaceId])
+	}, [searchParams, isNavigating, activeSpaceId, spaces])
 
 	// activeSpaceIdが変更されたときの処理
 	useEffect(() => {
