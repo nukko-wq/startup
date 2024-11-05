@@ -37,7 +37,7 @@ const ResourceCreateButton = ({
 				>
 					<Button
 						aria-label="Menu"
-						className="outline-none hover:bg-zinc-200 rounded-full p-2"
+						className="outline-none hover:bg-zinc-200 transition-colors duration-200 rounded-full p-2"
 					>
 						<FilePlus className="w-6 h-6 text-zinc-700" />
 					</Button>

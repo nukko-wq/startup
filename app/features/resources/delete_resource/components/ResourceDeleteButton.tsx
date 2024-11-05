@@ -34,7 +34,7 @@ const ResourceDeleteButton = ({
 		>
 			<Button
 				onPress={handleDelete}
-				className="p-2 mr-1 hover:bg-zinc-200 rounded-full outline-none"
+				className="p-2 mr-1 hover:bg-zinc-200 transition-colors duration-200 rounded-full outline-none"
 			>
 				<Trash2 className="w-5 h-5 text-zinc-700" />
 			</Button>
