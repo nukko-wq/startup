@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import HeaderMenu from '@/app/features/header/header_menu/HeaderMenu'
 import { useSpaces } from '@/app/features/spaces/contexts/SpaceContext'
 import { Button, TextField, Input, Label, Text } from 'react-aria-components'
@@ -15,6 +15,12 @@ export default function Header({ spaceName, spaceId }: HeaderProps) {
 	const [isEditing, setIsEditing] = useState(false)
 	const [editedName, setEditedName] = useState(spaceName)
 	const { setSpaces } = useSpaces()
+
+	// spaceNameが変更されたときにeditedNameを更新
+	useEffect(() => {
+		setEditedName(spaceName)
+		setIsEditing(false)
+	}, [spaceName])
 
 	const handleSubmit = async (e: React.FormEvent) => {
 		e.preventDefault()
