@@ -3,7 +3,7 @@
 import { useRouter, useSearchParams } from 'next/navigation'
 import { useEffect, useCallback, useRef } from 'react'
 import SidebarMenu from '@/app/components/layouts/sidebar/SidebarMenu'
-import CreateSpaceButton from '@/app/components/layouts/sidebar/CreateSpaceButton'
+import CreateSpaceButton from '@/app/features/spaces/create_space/CreateSpaceButton'
 import SpaceButtonMenu from '@/app/components/layouts/sidebar/SpaceButtonMenu'
 import type { Space } from '@/app/types/space'
 import { Button } from 'react-aria-components'
@@ -177,14 +177,14 @@ export default function Sidebar() {
 							handleSpaceClick(selectedKey)
 						}
 					}}
-					className="flex flex-col gap-4 py-4"
+					className="flex flex-col py-4"
 				>
 					{(space) => (
 						<GridListItem
 							key={space.id}
 							textValue={space.name}
 							className={({ isSelected, isFocusVisible }) => `
-								flex items-center justify-between outline-none cursor-pointer hover:bg-gray-700 group
+								flex items-center justify-between outline-none cursor-pointer hover:bg-gray-700 hover:bg-opacity-75 group py-1
 								${isSelected ? 'bg-gray-700' : ''}
 								${isFocusVisible ? 'ring-2 ring-blue-500' : ''}
 							`}
