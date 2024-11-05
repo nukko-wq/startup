@@ -3,7 +3,6 @@
 import { useRouter, useSearchParams } from 'next/navigation'
 import { useEffect, useCallback, useRef } from 'react'
 import SidebarMenu from '@/app/components/layouts/sidebar/SidebarMenu'
-import CreateSpaceButton from '@/app/features/spaces/create_space/CreateSpaceButton'
 import SpaceButtonMenu from '@/app/components/layouts/sidebar/SpaceButtonMenu'
 import type { Space } from '@/app/types/space'
 import { Button } from 'react-aria-components'
@@ -14,7 +13,8 @@ import {
 	DropIndicator,
 } from 'react-aria-components'
 import { useSpaces } from '@/app/features/spaces/contexts/SpaceContext'
-import { GripVertical } from 'lucide-react'
+import { GripVertical, Layers3 } from 'lucide-react'
+import SpacesMenu from '@/app/components/layouts/sidebar/SpacesMenu'
 
 export default function Sidebar() {
 	const router = useRouter()
@@ -163,7 +163,13 @@ export default function Sidebar() {
 					<div className="text-2xl font-bold text-zinc-50">StartUp</div>
 					<SidebarMenu />
 				</div>
-				<CreateSpaceButton onSpaceCreated={handleSpaceCreated} />
+				<div className="flex justify-between items-center pl-3 pr-2">
+					<div className="flex items-center gap-2">
+						<Layers3 className="w-5 h-5 text-gray-400" />
+						<div className="text-gray-400 font-semibold text-lg">Spaces</div>
+					</div>
+					<SpacesMenu onSpaceCreated={handleSpaceCreated} />
+				</div>
 				<GridList
 					aria-label="Spaces"
 					items={spaces}
@@ -177,7 +183,7 @@ export default function Sidebar() {
 							handleSpaceClick(selectedKey)
 						}
 					}}
-					className="flex flex-col py-4"
+					className="flex flex-col pt-2"
 				>
 					{(space) => (
 						<GridListItem
