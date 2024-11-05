@@ -1,5 +1,5 @@
 import { redirect } from 'next/navigation'
-import Sidebar from '@/app/components/layouts/sidebar/Sidebar'
+import Sidebar from '@/app/features/sidebar/Sidebar'
 import Resources from '@/app/features/resources/components/Resources'
 import { getInitialSections } from '@/app/features/resources/utils/getInitialSections'
 import { getSpaces } from '@/app/features/spaces/utils/getSpaces'

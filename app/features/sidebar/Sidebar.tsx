@@ -2,8 +2,8 @@
 
 import { useRouter, useSearchParams } from 'next/navigation'
 import { useEffect, useCallback, useRef } from 'react'
-import SidebarMenu from '@/app/components/layouts/sidebar/SidebarMenu'
-import SpaceButtonMenu from '@/app/components/layouts/sidebar/SpaceButtonMenu'
+import SidebarMenu from '@/app/features/sidebar/SidebarMenu'
+import SpaceButtonMenu from '@/app/features/sidebar/SpaceButtonMenu'
 import type { Space } from '@/app/types/space'
 import { Button } from 'react-aria-components'
 import {
@@ -14,7 +14,7 @@ import {
 } from 'react-aria-components'
 import { useSpaces } from '@/app/features/spaces/contexts/SpaceContext'
 import { GripVertical, Layers3 } from 'lucide-react'
-import SpacesMenu from '@/app/components/layouts/sidebar/SpacesMenu'
+import SpacesMenu from '@/app/features/sidebar/SpacesMenu'
 
 export default function Sidebar() {
 	const router = useRouter()
