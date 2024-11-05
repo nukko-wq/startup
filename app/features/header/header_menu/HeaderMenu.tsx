@@ -24,7 +24,7 @@ const HeaderMenu = ({ spaceId, spaceName }: HeaderMenuProps) => {
 			<MenuTrigger>
 				<Button
 					aria-label="Menu"
-					className="outline-none p-2 hover:bg-zinc-200 rounded-full"
+					className="outline-none p-2 hover:bg-zinc-200 transition-colors duration-200 rounded-full"
 				>
 					<EllipsisVertical className="w-6 h-6 text-zinc-700" />
 				</Button>
@@ -39,6 +39,7 @@ const HeaderMenu = ({ spaceId, spaceName }: HeaderMenuProps) => {
 								Rename
 							</div>
 						</MenuItem>
+						{/* TODO: 削除ダイアログを表示してスペースの削除をできるようにする */}
 						<MenuItem
 							//onAction={() => setIsDeleteDialogOpen(true)}
 							className="p-2 outline-none hover:bg-zinc-200 text-red-600 cursor-pointer"

@@ -1,7 +1,7 @@
 'use client'
 
 import { handleSignOut } from '@/app/features/auth/actions/auth'
-import { LogOut } from 'lucide-react'
+import { AlignJustify, LogOut } from 'lucide-react'
 import {
 	Button,
 	Menu,
@@ -18,7 +18,7 @@ const SidebarMenu = () => {
 	return (
 		<MenuTrigger>
 			<Button className="outline-none text-zinc-50" aria-label="Menu">
-				☰
+				<AlignJustify className="w-5 h-5 text-zinc-50" />
 			</Button>
 			<Popover>
 				<Menu className="p-1 outline-none bg-zinc-200 rounded-md shadow-md">

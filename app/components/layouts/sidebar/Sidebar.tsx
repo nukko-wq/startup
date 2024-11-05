@@ -3,7 +3,6 @@
 import { useRouter, useSearchParams } from 'next/navigation'
 import { useEffect, useCallback, useRef } from 'react'
 import SidebarMenu from '@/app/components/layouts/sidebar/SidebarMenu'
-import CreateSpaceButton from '@/app/components/layouts/sidebar/CreateSpaceButton'
 import SpaceButtonMenu from '@/app/components/layouts/sidebar/SpaceButtonMenu'
 import type { Space } from '@/app/types/space'
 import { Button } from 'react-aria-components'
@@ -14,7 +13,8 @@ import {
 	DropIndicator,
 } from 'react-aria-components'
 import { useSpaces } from '@/app/features/spaces/contexts/SpaceContext'
-import { GripVertical } from 'lucide-react'
+import { GripVertical, Layers3 } from 'lucide-react'
+import SpacesMenu from '@/app/components/layouts/sidebar/SpacesMenu'
 
 export default function Sidebar() {
 	const router = useRouter()
@@ -78,12 +78,19 @@ export default function Sidebar() {
 
 	const handleSpaceCreated = async (newSpace: Space) => {
 		try {
+			setIsNavigating(true)
 			setSpaces((prevSpaces) => [...prevSpaces, newSpace])
+			setActiveSpaceId(newSpace.id)
 
-			// 新しいスペースを選択
-			handleSpaceClick(newSpace.id)
+			await new Promise((resolve) => setTimeout(resolve, 50))
+			await router.push(`/?spaceId=${newSpace.id}`, { scroll: false })
+			await handleSpaceSelect(newSpace.id)
 		} catch (error) {
 			console.error('Error handling new space:', error)
+		} finally {
+			setTimeout(() => {
+				setIsNavigating(false)
+			}, 500)
 		}
 	}
 
@@ -163,7 +170,13 @@ export default function Sidebar() {
 					<div className="text-2xl font-bold text-zinc-50">StartUp</div>
 					<SidebarMenu />
 				</div>
-				<CreateSpaceButton onSpaceCreated={handleSpaceCreated} />
+				<div className="flex justify-between items-center pl-3 pr-2">
+					<div className="flex items-center gap-2">
+						<Layers3 className="w-5 h-5 text-gray-400" />
+						<div className="text-gray-400 font-semibold text-lg">Spaces</div>
+					</div>
+					<SpacesMenu onSpaceCreated={handleSpaceCreated} />
+				</div>
 				<GridList
 					aria-label="Spaces"
 					items={spaces}
@@ -177,14 +190,14 @@ export default function Sidebar() {
 							handleSpaceClick(selectedKey)
 						}
 					}}
-					className="flex flex-col gap-4 py-4"
+					className="flex flex-col pt-2"
 				>
 					{(space) => (
 						<GridListItem
 							key={space.id}
 							textValue={space.name}
 							className={({ isSelected, isFocusVisible }) => `
-								flex items-center justify-between outline-none cursor-pointer hover:bg-gray-700 group
+								flex items-center justify-between outline-none cursor-pointer hover:bg-gray-700 hover:bg-opacity-75 group py-1
 								${isSelected ? 'bg-gray-700' : ''}
 								${isFocusVisible ? 'ring-2 ring-blue-500' : ''}
 							`}
