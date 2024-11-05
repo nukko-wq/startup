@@ -39,6 +39,7 @@ const HeaderMenu = ({ spaceId, spaceName }: HeaderMenuProps) => {
 								Rename
 							</div>
 						</MenuItem>
+						{/* TODO: 削除ダイアログを表示してスペースの削除をできるようにする */}
 						<MenuItem
 							//onAction={() => setIsDeleteDialogOpen(true)}
 							className="p-2 outline-none hover:bg-zinc-200 text-red-600 cursor-pointer"
