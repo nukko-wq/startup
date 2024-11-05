@@ -12,12 +12,28 @@ export const getInitialSections = cache(
 		try {
 			const user = await db.user.findUnique({
 				where: { id: userId },
+				include: {
+					workspaces: {
+						orderBy: { createdAt: 'asc' },
+						take: 1,
+					},
+				},
 			})
-
-			console.log('Found user:', user)
 
 			if (!user) {
 				throw new Error('ユーザーが見つかりません')
+			}
+
+			let defaultWorkspace = user.workspaces[0]
+			if (!defaultWorkspace) {
+				defaultWorkspace = await db.workspace.create({
+					data: {
+						name: 'My Workspace',
+						order: 1,
+						isDefault: true,
+						userId: user.id,
+					},
+				})
 			}
 
 			let defaultSpace = spaceId
@@ -25,26 +41,22 @@ export const getInitialSections = cache(
 						where: { id: spaceId },
 					})
 				: await db.space.findFirst({
-						where: { userId: user.id },
+						where: {
+							userId: user.id,
+							workspaceId: defaultWorkspace.id,
+						},
 						orderBy: { createdAt: 'asc' },
 					})
 
 			if (!defaultSpace) {
-				const existingSpace = await db.space.findFirst({
-					where: { userId: user.id },
+				defaultSpace = await db.space.create({
+					data: {
+						name: 'My Space',
+						order: 1,
+						userId: user.id,
+						workspaceId: defaultWorkspace.id,
+					},
 				})
-
-				if (!existingSpace) {
-					defaultSpace = await db.space.create({
-						data: {
-							name: 'My Space',
-							order: 1,
-							userId: user.id,
-						},
-					})
-				} else {
-					defaultSpace = existingSpace
-				}
 			}
 
 			const sections = await db.section.findMany({
