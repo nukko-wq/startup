@@ -41,9 +41,6 @@ export default async function Index({ searchParams }: PageProps) {
 			getSpaces(session.user.id),
 		])
 		const sections = initialData.sections
-
-		console.log('Page spaceId:', spaceId)
-
 		const activeSpace = spaces.find((space) => space.id === spaceId)
 
 		return (
@@ -53,17 +50,25 @@ export default async function Index({ searchParams }: PageProps) {
 						<Sidebar />
 						<main className="flex flex-col flex-grow items-center">
 							<Header
-								spaceName={activeSpace?.name ?? 'No Space Selected'}
+								spaceName={activeSpace?.name ?? ''}
 								spaceId={spaceId ?? ''}
 							/>
-							<Resources
-								initialData={{
-									sections,
-									userId: session.user.id,
-									spaceId: spaceId ?? '',
-								}}
-								spaceId={spaceId ?? ''}
-							/>
+							{activeSpace ? (
+								<Resources
+									initialData={{
+										sections,
+										userId: session.user.id,
+										spaceId: spaceId ?? '',
+									}}
+									spaceId={spaceId ?? ''}
+								/>
+							) : (
+								<div className="flex flex-col items-center justify-center flex-grow">
+									<div className="text-2xl font-semibold text-gray-500">
+										Open a Space to get started
+									</div>
+								</div>
+							)}
 						</main>
 					</SpaceProvider>
 				</div>
