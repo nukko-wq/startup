@@ -12,6 +12,7 @@ import { useRouter } from 'next/navigation'
 import { useState } from 'react'
 import type { Space } from '@/app/types/space'
 import SpaceRenameDialog from '@/app/features/header/header_menu/SpaceRenameDialog'
+import DeleteSpaceDialog from '@/app/features/spaces/delete_space/DeleteSpaceDialog'
 
 interface SpaceButtonMenuProps {
 	spaceId: string
@@ -26,29 +27,7 @@ const SpaceButtonMenu = ({
 }: SpaceButtonMenuProps) => {
 	const router = useRouter()
 	const [isRenameOpen, setIsRenameOpen] = useState(false)
-
-	const handleDelete = async () => {
-		try {
-			const response = await fetch(`/api/spaces/${spaceId}`, {
-				method: 'DELETE',
-			})
-
-			if (!response.ok) {
-				throw new Error('Failed to delete space')
-			}
-
-			setSpaces((prevSpaces) =>
-				prevSpaces.filter((space) => space.id !== spaceId),
-			)
-
-			// ルートパスに戻る
-			router.push('/')
-			router.refresh()
-		} catch (error) {
-			console.error('Error deleting space:', error)
-			alert('スペースの削除に失敗しました')
-		}
-	}
+	const [isDeleteOpen, setIsDeleteOpen] = useState(false)
 
 	return (
 		<>
@@ -71,7 +50,7 @@ const SpaceButtonMenu = ({
 							</div>
 						</MenuItem>
 						<MenuItem
-							onAction={handleDelete}
+							onAction={() => setIsDeleteOpen(true)}
 							className="pl-3 pr-4 py-2 outline-none hover:bg-zinc-100 text-red-600 hover:cursor-pointer"
 						>
 							<div className="flex items-center gap-2">
@@ -88,6 +67,12 @@ const SpaceButtonMenu = ({
 				initialName={spaceName}
 				isOpen={isRenameOpen}
 				onOpenChange={setIsRenameOpen}
+			/>
+			<DeleteSpaceDialog
+				spaceId={spaceId}
+				setSpaces={setSpaces}
+				isOpen={isDeleteOpen}
+				onOpenChange={setIsDeleteOpen}
 			/>
 		</>
 	)

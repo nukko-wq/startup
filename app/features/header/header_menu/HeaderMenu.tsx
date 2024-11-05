@@ -10,6 +10,8 @@ import {
 	Popover,
 } from 'react-aria-components'
 import SpaceRenameDialog from './SpaceRenameDialog'
+import DeleteSpaceDialog from '@/app/features/spaces/delete_space/DeleteSpaceDialog'
+import { useSpaces } from '@/app/features/spaces/contexts/SpaceContext'
 
 interface HeaderMenuProps {
 	spaceId: string
@@ -17,7 +19,9 @@ interface HeaderMenuProps {
 }
 
 const HeaderMenu = ({ spaceId, spaceName }: HeaderMenuProps) => {
-	const [isOpen, setIsOpen] = useState(false)
+	const [isRenameOpen, setIsRenameOpen] = useState(false)
+	const [isDeleteOpen, setIsDeleteOpen] = useState(false)
+	const { setSpaces } = useSpaces()
 
 	return (
 		<>
@@ -31,7 +35,7 @@ const HeaderMenu = ({ spaceId, spaceName }: HeaderMenuProps) => {
 				<Popover>
 					<Menu className="bg-zinc-50 outline-none border rounded-lg shadow-md min-w-[200px]">
 						<MenuItem
-							onAction={() => setIsOpen(true)}
+							onAction={() => setIsRenameOpen(true)}
 							className="p-2 outline-none hover:bg-zinc-200 cursor-pointer"
 						>
 							<div className="flex items-center gap-2">
@@ -39,9 +43,8 @@ const HeaderMenu = ({ spaceId, spaceName }: HeaderMenuProps) => {
 								Rename
 							</div>
 						</MenuItem>
-						{/* TODO: 削除ダイアログを表示してスペースの削除をできるようにする */}
 						<MenuItem
-							//onAction={() => setIsDeleteDialogOpen(true)}
+							onAction={() => setIsDeleteOpen(true)}
 							className="p-2 outline-none hover:bg-zinc-200 text-red-600 cursor-pointer"
 						>
 							<div className="flex items-center gap-2">
@@ -56,8 +59,14 @@ const HeaderMenu = ({ spaceId, spaceName }: HeaderMenuProps) => {
 			<SpaceRenameDialog
 				spaceId={spaceId}
 				initialName={spaceName}
-				isOpen={isOpen}
-				onOpenChange={setIsOpen}
+				isOpen={isRenameOpen}
+				onOpenChange={setIsRenameOpen}
+			/>
+			<DeleteSpaceDialog
+				spaceId={spaceId}
+				setSpaces={setSpaces}
+				isOpen={isDeleteOpen}
+				onOpenChange={setIsDeleteOpen}
 			/>
 		</>
 	)
