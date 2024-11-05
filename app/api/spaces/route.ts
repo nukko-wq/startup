@@ -16,8 +16,29 @@ export async function POST(req: NextRequest) {
 		const json = await req.json()
 		const body = spaceCreateSchema.parse(json)
 
+		let workspace = await db.workspace.findFirst({
+			where: {
+				userId,
+				isDefault: true,
+			},
+		})
+
+		if (!workspace) {
+			workspace = await db.workspace.create({
+				data: {
+					name: 'Default Workspace',
+					order: 1,
+					isDefault: true,
+					userId,
+				},
+			})
+		}
+
 		const maxOrderSpace = await db.space.findFirst({
-			where: { userId },
+			where: {
+				userId,
+				workspaceId: workspace.id,
+			},
 			orderBy: { order: 'desc' },
 			select: { order: true },
 		})
@@ -29,18 +50,21 @@ export async function POST(req: NextRequest) {
 				name: body.name,
 				order: newOrder,
 				userId,
+				workspaceId: workspace.id,
 			},
 		})
 
 		return NextResponse.json(space)
 	} catch (error) {
 		console.error('Space creation error:', error)
+
 		if (error instanceof z.ZodError) {
 			return NextResponse.json(
 				{ error: 'バリデーションエラー', details: error.issues },
 				{ status: 422 },
 			)
 		}
+
 		return NextResponse.json(
 			{ error: 'スペースの作成に失敗しました' },
 			{ status: 500 },
