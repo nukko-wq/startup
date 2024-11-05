@@ -1,7 +1,7 @@
 'use client'
 
 import { useRouter, useSearchParams } from 'next/navigation'
-import { useEffect, useCallback } from 'react'
+import { useEffect, useCallback, useRef } from 'react'
 import SidebarMenu from '@/app/components/layouts/sidebar/SidebarMenu'
 import CreateSpaceButton from '@/app/components/layouts/sidebar/CreateSpaceButton'
 import SpaceButtonMenu from '@/app/components/layouts/sidebar/SpaceButtonMenu'
@@ -28,6 +28,8 @@ export default function Sidebar() {
 		setIsNavigating,
 	} = useSpaces()
 
+	const lastUpdateSource = useRef<string | null>(null)
+
 	const handleSpaceSelect = useCallback(async (spaceId: string) => {
 		try {
 			await fetch('/api/users/last-active-space', {
@@ -42,31 +44,35 @@ export default function Sidebar() {
 
 	const handleSpaceClick = useCallback(
 		async (spaceId: string) => {
-			if (spaceId === activeSpaceId) return
-
 			try {
 				setIsNavigating(true)
+				lastUpdateSource.current = 'click'
+
+				// 状態更新を同期的に行う
 				setActiveSpaceId(spaceId)
 
-				// 状態更新を待ってからナビゲーション
+				// 少し待ってからナビゲーションを実行
 				await new Promise((resolve) => setTimeout(resolve, 50))
-				await router.push(`/?spaceId=${spaceId}`, { scroll: false })
-				await handleSpaceSelect(spaceId)
+
+				await Promise.all([
+					router.push(`/?spaceId=${spaceId}`, { scroll: false }),
+					handleSpaceSelect(spaceId),
+				])
 			} catch (error) {
 				console.error('Error switching space:', error)
 				setActiveSpaceId(activeSpaceId)
 			} finally {
 				setTimeout(() => {
 					setIsNavigating(false)
-				}, 100)
+				}, 500) // タイマーを500msに延長
 			}
 		},
 		[
 			router,
 			handleSpaceSelect,
-			activeSpaceId,
 			setActiveSpaceId,
 			setIsNavigating,
+			activeSpaceId,
 		],
 	)
 
@@ -164,6 +170,7 @@ export default function Sidebar() {
 					dragAndDropHooks={dragAndDropHooks}
 					selectionMode="single"
 					selectedKeys={activeSpaceId ? new Set([activeSpaceId]) : new Set()}
+					disallowEmptySelection
 					onSelectionChange={(keys) => {
 						const selectedKey = Array.from(keys)[0] as string
 						if (selectedKey) {
@@ -176,9 +183,10 @@ export default function Sidebar() {
 						<GridListItem
 							key={space.id}
 							textValue={space.name}
-							className={({ isSelected }) => `
+							className={({ isSelected, isFocusVisible }) => `
 								flex items-center justify-between outline-none cursor-pointer
-								${isSelected ? 'bg-gray-700' : 'bg-transparent'}
+								${isSelected ? 'bg-gray-700' : ''}
+								${isFocusVisible ? 'ring-2 ring-blue-500' : ''}
 							`}
 						>
 							<div className="flex items-center w-full group">
