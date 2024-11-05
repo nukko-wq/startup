@@ -100,7 +100,7 @@ model Workspace {
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
 
-  @@unique([userId, isDefault])
+  @@unique([userId, order])
   @@index([order])
 }
 
