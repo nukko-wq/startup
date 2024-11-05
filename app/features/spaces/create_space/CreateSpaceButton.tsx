@@ -36,9 +36,10 @@ export default function CreateSpaceButton({
 	}
 
 	return (
+		// TODO: スペースの作成ダイアログを表示してスペースの作成をできるようにする
 		<Button
 			onPress={handleCreateSpace}
-			className="flex items-center gap-1 px-3 py-2 rounded hover:bg-gray-700 w-full outline-none group"
+			className="flex items-center gap-1 px-3 py-2 rounded hover:bg-gray-700 hover:bg-opacity-75 w-full outline-none group"
 		>
 			<Plus className="w-6 h-6 p-1 text-zinc-50 bg-gray-700 rounded-full group-hover:bg-gray-600" />
 			<span className="text-zinc-50">New Space</span>
