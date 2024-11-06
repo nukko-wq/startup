@@ -12,12 +12,17 @@ import { useRouter } from 'next/navigation'
 import { useState } from 'react'
 import { useWorkspaces } from '@/app/features/workspaces/contexts/WorkspaceContext'
 import DeleteWorkspaceDialog from '@/app/features/workspaces/delete_workspace/DeleteWorkspaceDialog'
+import WorkspaceRenameDialog from '@/app/features/workspaces/rename_workspace/WorkspaceRenameDialog'
 
 interface WorkspaceButtonMenuProps {
 	workspaceId: string
+	workspaceName: string
 }
 
-const WorkspaceButtonMenu = ({ workspaceId }: WorkspaceButtonMenuProps) => {
+const WorkspaceButtonMenu = ({
+	workspaceId,
+	workspaceName,
+}: WorkspaceButtonMenuProps) => {
 	const router = useRouter()
 	const { setWorkspaces } = useWorkspaces()
 	const [isRenameOpen, setIsRenameOpen] = useState(false)
@@ -56,6 +61,12 @@ const WorkspaceButtonMenu = ({ workspaceId }: WorkspaceButtonMenuProps) => {
 				</Popover>
 			</MenuTrigger>
 
+			<WorkspaceRenameDialog
+				workspaceId={workspaceId}
+				initialName={workspaceName}
+				isOpen={isRenameOpen}
+				onOpenChange={setIsRenameOpen}
+			/>
 			<DeleteWorkspaceDialog
 				workspaceId={workspaceId}
 				setWorkspaces={setWorkspaces}

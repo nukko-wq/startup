@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server'
 import { auth } from '@/lib/auth'
 import { db } from '@/lib/db'
+import { workspaceUpdateSchema } from '@/lib/validations/workspace'
+import { z } from 'zod'
 
 export async function DELETE(request: Request) {
 	try {
@@ -82,6 +84,54 @@ export async function DELETE(request: Request) {
 		console.error('Workspace delete error:', error)
 		return NextResponse.json(
 			{ error: 'Failed to delete workspace' },
+			{ status: 500 },
+		)
+	}
+}
+
+export async function PATCH(request: Request) {
+	try {
+		const session = await auth()
+		const userId = session?.user?.id
+
+		if (!userId) {
+			return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+		}
+
+		const url = new URL(request.url)
+		const workspaceId = url.pathname.split('/').pop()
+
+		if (!workspaceId) {
+			return NextResponse.json(
+				{ error: 'Workspace ID is required' },
+				{ status: 400 },
+			)
+		}
+
+		const json = await request.json()
+		const body = workspaceUpdateSchema.parse(json)
+
+		const workspace = await db.workspace.update({
+			where: {
+				id: workspaceId,
+				userId,
+			},
+			data: {
+				name: body.name,
+			},
+		})
+
+		return NextResponse.json(workspace)
+	} catch (error) {
+		console.error('Workspace update error:', error)
+		if (error instanceof z.ZodError) {
+			return NextResponse.json(
+				{ error: 'バリデーションエラー', details: error.issues },
+				{ status: 422 },
+			)
+		}
+		return NextResponse.json(
+			{ error: 'ワークスペースの更新に失敗しました' },
 			{ status: 500 },
 		)
 	}

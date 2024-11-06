@@ -286,7 +286,10 @@ export default function Sidebar() {
 									</div>
 									{/* TODO: ワークスペースメニュー */}
 									<div className="text-zinc-50">
-										<WorkspaceButtonMenu workspaceId={workspace.id} />
+										<WorkspaceButtonMenu
+											workspaceId={workspace.id}
+											workspaceName={workspace.name}
+										/>
 									</div>
 								</div>
 								{/* ワークスペース内のスペース一覧 */}
