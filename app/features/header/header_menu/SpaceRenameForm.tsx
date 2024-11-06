@@ -3,10 +3,11 @@
 import { useForm, Controller } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { Button, Form, Input, Label, TextField } from 'react-aria-components'
-import { spaceCreateSchema } from '@/lib/validations/space'
+import { spaceUpdateSchema } from '@/lib/validations/space'
 import type { z } from 'zod'
+import { useSpaces } from '@/app/features/spaces/contexts/SpaceContext'
 
-type FormData = z.infer<typeof spaceCreateSchema>
+type FormData = z.infer<typeof spaceUpdateSchema>
 
 interface SpaceRenameFormProps {
 	spaceId: string
@@ -19,8 +20,9 @@ const SpaceRenameForm = ({
 	initialName,
 	onClose,
 }: SpaceRenameFormProps) => {
+	const { spaces, setSpaces } = useSpaces()
 	const { control, handleSubmit } = useForm<FormData>({
-		resolver: zodResolver(spaceCreateSchema),
+		resolver: zodResolver(spaceUpdateSchema),
 		defaultValues: {
 			name: initialName,
 		},
@@ -28,8 +30,6 @@ const SpaceRenameForm = ({
 
 	const onSubmit = async (data: FormData) => {
 		try {
-			console.log('Submitting form with spaceId:', spaceId, 'and data:', data)
-
 			const response = await fetch(`/api/spaces/${spaceId}`, {
 				method: 'PATCH',
 				headers: { 'Content-Type': 'application/json' },
@@ -40,8 +40,13 @@ const SpaceRenameForm = ({
 				throw new Error('Failed to update space')
 			}
 
+			const updatedSpace = await response.json()
+			setSpaces(
+				spaces.map((space) =>
+					space.id === spaceId ? { ...space, name: updatedSpace.name } : space,
+				),
+			)
 			onClose()
-			window.location.reload()
 		} catch (error) {
 			console.error('Space update error:', error)
 			alert('スペース名の更新に失敗しました')

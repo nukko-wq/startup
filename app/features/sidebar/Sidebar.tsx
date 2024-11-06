@@ -11,11 +11,22 @@ import {
 	GridListItem,
 	useDragAndDrop,
 	DropIndicator,
+	Dialog,
+	DialogTrigger,
+	Modal,
+	ModalOverlay,
 } from 'react-aria-components'
 import { useSpaces } from '@/app/features/spaces/contexts/SpaceContext'
-import { GripVertical, Layers3 } from 'lucide-react'
+import {
+	CircleChevronRight,
+	GripVertical,
+	Layers,
+	Layers3,
+	Plus,
+} from 'lucide-react'
 import SpacesMenu from '@/app/features/sidebar/SpacesMenu'
 import { useWorkspaces } from '@/app/features/workspaces/contexts/WorkspaceContext'
+import CreateSpaceForm from '@/app/features/spaces/create_space/CreateSpaceForm'
 
 export default function Sidebar() {
 	const router = useRouter()
@@ -161,17 +172,44 @@ export default function Sidebar() {
 	}
 		*/
 
+	const handleCreateSpace = async (
+		data: { name: string },
+		workspaceId: string,
+	) => {
+		try {
+			const response = await fetch('/api/spaces', {
+				method: 'POST',
+				headers: {
+					'Content-Type': 'application/json',
+				},
+				body: JSON.stringify({
+					name: data.name,
+					workspaceId: workspaceId,
+				}),
+			})
+
+			if (!response.ok) {
+				throw new Error('スペースの作成に失敗しました')
+			}
+
+			const newSpace = await response.json()
+			setSpaces((prev) => [...prev, newSpace])
+		} catch (error) {
+			console.error('Error creating space:', error)
+		}
+	}
+
 	return (
-		<div className="w-64 bg-gray-800 h-screen flex flex-col">
+		<div className="w-[320px] bg-gray-800 h-screen flex flex-col">
 			<div className="flex items-center justify-between p-4">
 				<div className="text-zinc-50 text-2xl font-semibold">Startup</div>
 				<SidebarMenu />
 			</div>
-			<div className="p-4">
-				<div className="flex items-center justify-between mb-4">
+			<div className="">
+				<div className="flex items-center justify-between pl-4 pr-2 mb-4">
 					<div className="flex items-center">
-						<Layers3 className="w-6 h-6 text-zinc-50 mr-2" />
-						<h1 className="text-lg font-semibold text-zinc-50">Spaces</h1>
+						<Layers3 className="w-5 h-5 text-zinc-50 mr-2" />
+						<h1 className="font-semibold text-zinc-50">Spaces</h1>
 					</div>
 					<SpacesMenu />
 				</div>
@@ -188,7 +226,7 @@ export default function Sidebar() {
 							handleSpaceClick(selectedKey)
 						}
 					}}
-					className="flex flex-col pt-2"
+					className="flex flex-col"
 				>
 					{/* Default Workspaceのスペースのリストを表示 */}
 					{(space) => (
@@ -209,13 +247,13 @@ export default function Sidebar() {
 									<Button
 										slot="drag"
 										aria-label="ドラッグハンドル"
-										className="cursor-grab p-2"
+										className="cursor-grab pl-4"
 									>
-										<GripVertical className="w-4 h-4 text-zinc-500" />
+										<GripVertical className="w-5 h-5 text-zinc-500" />
 									</Button>
 								</div>
 								<Button
-									className="px-2 py-2 rounded cursor-pointer block w-full text-left text-zinc-50 outline-none"
+									className="pl-2 rounded cursor-pointer block w-full text-left text-zinc-50 outline-none"
 									onPress={() => handleSpaceClick(space.id)}
 								>
 									{space.name}
@@ -230,32 +268,76 @@ export default function Sidebar() {
 					)}
 				</GridList>
 				<div className="mt-4">
-					<div className="px-4 py-2 text-sm font-semibold text-zinc-400">
-						Workspaces
+					<div className="flex items-center px-4">
+						<Layers className="w-5 h-5 text-zinc-50 mr-2" />
+						<div className="font-semibold text-zinc-50">Workspaces</div>
 					</div>
-					{/* WorkspaceとSpaceのリストを表示 */}
 					<ul className="space-y-1">
 						{workspaces.map((workspace) => (
-							<li
-								key={workspace.id}
-								className="px-4 py-2 text-sm text-zinc-300"
-							>
-								<div className="font-medium mb-2">{workspace.name}</div>
-								<div className="pl-4">
+							<li key={workspace.id} className="py-2 text-zinc-300">
+								{/* ワークスペース名 */}
+								<div className="flex items-center pl-3">
+									<CircleChevronRight className="w-5 h-5 text-gray-500 mr-2" />
+									<div className="font-medium text-zinc-50 hover:border-b-2 hover:border-blue-500">
+										{workspace.name}
+									</div>
+								</div>
+								{/* ワークスペース内のスペース一覧 */}
+								<div className="">
 									{spaces
 										.filter((space) => space.workspaceId === workspace.id)
 										.map((space) => (
-											<Button
+											<div
 												key={space.id}
-												className="w-full text-left px-2 py-1 rounded hover:bg-zinc-800"
-												onPress={() => handleSpaceClick(space.id)}
+												className="flex items-center justify-between hover:bg-gray-700 hover:bg-opacity-75"
 											>
-												{space.name}
-											</Button>
+												<Button
+													className="w-full text-sm text-left py-1 rounded text-zinc-50 group"
+													onPress={() => handleSpaceClick(space.id)}
+												>
+													{space.name}
+												</Button>
+												<SpaceButtonMenu
+													spaceId={space.id}
+													spaceName={space.name}
+													setSpaces={setSpaces}
+												/>
+											</div>
 										))}
-									{/* 所属しているWorkspaceのSpaceがなければ、Space作成用のボタンを表示 */}
 									{spaces.filter((space) => space.workspaceId === workspace.id)
-										.length === 0 && <div>Create Space</div>}
+										.length === 0 && (
+										<div className="text-zinc-500">
+											<DialogTrigger>
+												<div className="flex items-center justify-center pt-3">
+													<Button className="text-gray-500 hover:text-gray-400 outline-none font-semibold group-hover:text-gray-400">
+														<div className="flex items-center border border-gray-500 rounded-sm p-3 mx-auto hover:bg-gray-700 hover:bg-opacity-75 group">
+															<Plus className="w-4 h-4 text-gray-500 group-hover:text-gray-400" />
+															<div className="pl-2">Add Space to Workspace</div>
+														</div>
+													</Button>
+												</div>
+												<ModalOverlay className="fixed inset-0 z-10 overflow-y-auto bg-black/25 flex min-h-full items-center justify-center p-4 text-center backdrop-blur">
+													<Modal className="w-full max-w-md overflow-hidden rounded-2xl bg-white p-6 text-left align-middle shadow-xl">
+														<Dialog className="outline-none">
+															{({ close }) => (
+																<div>
+																	<h2 className="text-lg font-semibold mb-4">
+																		新しいスペースを作成
+																	</h2>
+																	<CreateSpaceForm
+																		onClose={close}
+																		onSubmit={(data) =>
+																			handleCreateSpace(data, workspace.id)
+																		}
+																	/>
+																</div>
+															)}
+														</Dialog>
+													</Modal>
+												</ModalOverlay>
+											</DialogTrigger>
+										</div>
+									)}
 								</div>
 							</li>
 						))}
