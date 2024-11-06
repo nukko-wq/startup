@@ -2,7 +2,8 @@ import type { NextRequest } from 'next/server'
 import { auth } from '@/lib/auth'
 import { db } from '@/lib/db'
 import { NextResponse } from 'next/server'
-import { spaceCreateSchema } from '@/lib/validations/space'
+import { spaceCreateSchema, spaceUpdateSchema } from '@/lib/validations/space'
+import { z } from 'zod'
 
 export async function DELETE(request: NextRequest) {
 	try {
@@ -64,37 +65,42 @@ export async function DELETE(request: NextRequest) {
 	}
 }
 
-export async function PATCH(request: Request) {
+export async function PATCH(
+	request: NextRequest,
+	{ params }: { params: { spaceId: string } },
+) {
 	try {
 		const session = await auth()
-		if (!session) {
-			return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+		const userId = session?.user?.id
+
+		if (!userId) {
+			return NextResponse.json({ error: '認証が必要です' }, { status: 401 })
 		}
 
-		const url = new URL(request.url)
-		const spaceId = url.pathname.split('/').pop()
 		const json = await request.json()
-		const validatedData = spaceCreateSchema.parse(json)
+		const body = spaceUpdateSchema.parse(json)
 
 		const space = await db.space.update({
 			where: {
-				id: spaceId,
-				userId: session.user.id,
+				id: params.spaceId,
+				userId,
 			},
 			data: {
-				name: validatedData.name,
+				name: body.name,
 			},
 		})
 
-		return NextResponse.json({
-			success: true,
-			message: 'Space updated successfully',
-			space,
-		})
+		return NextResponse.json(space)
 	} catch (error) {
 		console.error('Space update error:', error)
+		if (error instanceof z.ZodError) {
+			return NextResponse.json(
+				{ error: 'バリデーションエラー', details: error.issues },
+				{ status: 422 },
+			)
+		}
 		return NextResponse.json(
-			{ error: 'Failed to update space' },
+			{ error: 'スペースの更新に失敗しました' },
 			{ status: 500 },
 		)
 	}
