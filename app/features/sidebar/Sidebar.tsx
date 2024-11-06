@@ -17,7 +17,13 @@ import {
 	ModalOverlay,
 } from 'react-aria-components'
 import { useSpaces } from '@/app/features/spaces/contexts/SpaceContext'
-import { CircleChevronRight, GripVertical, Layers, Layers3 } from 'lucide-react'
+import {
+	CircleChevronRight,
+	GripVertical,
+	Layers,
+	Layers3,
+	Plus,
+} from 'lucide-react'
 import SpacesMenu from '@/app/features/sidebar/SpacesMenu'
 import { useWorkspaces } from '@/app/features/workspaces/contexts/WorkspaceContext'
 import CreateSpaceForm from '@/app/features/spaces/create_space/CreateSpaceForm'
@@ -194,7 +200,7 @@ export default function Sidebar() {
 	}
 
 	return (
-		<div className="w-64 bg-gray-800 h-screen flex flex-col">
+		<div className="w-[320px] bg-gray-800 h-screen flex flex-col">
 			<div className="flex items-center justify-between p-4">
 				<div className="text-zinc-50 text-2xl font-semibold">Startup</div>
 				<SidebarMenu />
@@ -302,9 +308,12 @@ export default function Sidebar() {
 										.length === 0 && (
 										<div className="text-zinc-500">
 											<DialogTrigger>
-												<div className="flex items-center justify-center pt-2">
-													<Button className="text-gray-500 text-lg hover:text-gray-400 outline-none border border-gray-500 rounded-md px-2 py-1 font-semibold">
-														Add Space to Workspace
+												<div className="flex items-center justify-center pt-3">
+													<Button className="text-gray-500 hover:text-gray-400 outline-none font-semibold group-hover:text-gray-400">
+														<div className="flex items-center border border-gray-500 rounded-sm p-3 mx-auto hover:bg-gray-700 hover:bg-opacity-75 group">
+															<Plus className="w-4 h-4 text-gray-500 group-hover:text-gray-400" />
+															<div className="pl-2">Add Space to Workspace</div>
+														</div>
 													</Button>
 												</div>
 												<ModalOverlay className="fixed inset-0 z-10 overflow-y-auto bg-black/25 flex min-h-full items-center justify-center p-4 text-center backdrop-blur">
