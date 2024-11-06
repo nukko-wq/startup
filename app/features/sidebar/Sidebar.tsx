@@ -16,12 +16,10 @@ import { useSpaces } from '@/app/features/spaces/contexts/SpaceContext'
 import { GripVertical, Layers3 } from 'lucide-react'
 import SpacesMenu from '@/app/features/sidebar/SpacesMenu'
 import type { Workspace } from '@/app/types/workspace'
+import CreateSpaceInWorkspace from '@/app/features/workspaces/create_space/CreateSpaceInWorkspace'
+import { useWorkspaces } from '@/app/features/workspaces/contexts/WorkspaceContext'
 
-interface SidebarProps {
-	workspaces: Workspace[]
-}
-
-export default function Sidebar({ workspaces }: SidebarProps) {
+export default function Sidebar() {
 	const router = useRouter()
 	const searchParams = useSearchParams()
 	const {
@@ -32,6 +30,7 @@ export default function Sidebar({ workspaces }: SidebarProps) {
 		setActiveSpaceId,
 		setIsNavigating,
 	} = useSpaces()
+	const { workspaces, setWorkspaces } = useWorkspaces()
 
 	const lastUpdateSource = useRef<string | null>(null)
 
@@ -81,22 +80,10 @@ export default function Sidebar({ workspaces }: SidebarProps) {
 		],
 	)
 
-	const handleSpaceCreated = async (newSpace: Space) => {
-		try {
-			setIsNavigating(true)
-			setSpaces((prevSpaces) => [...prevSpaces, newSpace])
-			setActiveSpaceId(newSpace.id)
-
-			await new Promise((resolve) => setTimeout(resolve, 50))
-			await router.push(`/?spaceId=${newSpace.id}`, { scroll: false })
-			await handleSpaceSelect(newSpace.id)
-		} catch (error) {
-			console.error('Error handling new space:', error)
-		} finally {
-			setTimeout(() => {
-				setIsNavigating(false)
-			}, 500)
-		}
+	const handleSpaceCreated = (space: Space) => {
+		setSpaces((prevSpaces) => [...prevSpaces, space])
+		// 新しいスペースを作成したら、そのスペースに移動
+		handleSpaceClick(space.id)
 	}
 
 	useEffect(() => {
@@ -168,6 +155,11 @@ export default function Sidebar({ workspaces }: SidebarProps) {
 		console.log('Component rendered with activeSpaceId:', activeSpaceId)
 	}, [])
 
+	const handleWorkspaceCreated = (workspace: Workspace) => {
+		// ワークスペースリストを更新
+		setWorkspaces((prevWorkspaces) => [...prevWorkspaces, workspace])
+	}
+
 	return (
 		<div className="hidden md:flex w-[320px] bg-gray-800">
 			<div className="flex-grow text-zinc-50">
@@ -180,7 +172,7 @@ export default function Sidebar({ workspaces }: SidebarProps) {
 						<Layers3 className="w-5 h-5 text-gray-400" />
 						<div className="text-gray-400 font-semibold text-lg">Spaces</div>
 					</div>
-					<SpacesMenu onSpaceCreated={handleSpaceCreated} />
+					<SpacesMenu />
 				</div>
 				<GridList
 					aria-label="Spaces"
@@ -243,9 +235,30 @@ export default function Sidebar({ workspaces }: SidebarProps) {
 						{workspaces.map((workspace) => (
 							<li
 								key={workspace.id}
-								className="px-4 py-2 text-sm text-zinc-300 hover:bg-zinc-800"
+								className="px-4 py-2 text-sm text-zinc-300"
 							>
-								{workspace.name}
+								<div className="font-medium mb-2">{workspace.name}</div>
+								<div className="pl-4">
+									{spaces
+										.filter((space) => space.workspaceId === workspace.id)
+										.map((space) => (
+											<Button
+												key={space.id}
+												className="w-full text-left px-2 py-1 rounded hover:bg-zinc-800"
+												onPress={() => handleSpaceClick(space.id)}
+											>
+												{space.name}
+											</Button>
+										))}
+									{/* 所属しているWorkspaceのSpaceがなければ、Space作成用のボタンを表示 */}
+									{spaces.filter((space) => space.workspaceId === workspace.id)
+										.length === 0 && (
+										<CreateSpaceInWorkspace
+											workspaceId={workspace.id}
+											onSpaceCreated={(space) => handleSpaceCreated(space)}
+										/>
+									)}
+								</div>
 							</li>
 						))}
 					</ul>

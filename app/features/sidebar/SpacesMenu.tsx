@@ -15,14 +15,14 @@ import {
 } from 'react-aria-components'
 import CreateSpaceForm from '@/app/features/spaces/create_space/CreateSpaceForm'
 import type { Space } from '@/app/types/space'
+import { useWorkspaces } from '@/app/features/workspaces/contexts/WorkspaceContext'
+import { useSpaces } from '@/app/features/spaces/contexts/SpaceContext'
 
-interface SpacesMenuProps {
-	onSpaceCreated: (space: Space) => void
-}
-
-const SpacesMenu = ({ onSpaceCreated }: SpacesMenuProps) => {
+export default function SpacesMenu() {
 	const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false)
 	const [isCreatingWorkspace, setIsCreatingWorkspace] = useState(false)
+	const { workspaces, setWorkspaces } = useWorkspaces()
+	const { setSpaces } = useSpaces()
 
 	const handleCreateSpace = async (data: { name: string }) => {
 		try {
@@ -33,7 +33,7 @@ const SpacesMenu = ({ onSpaceCreated }: SpacesMenuProps) => {
 				},
 				body: JSON.stringify({
 					name: data.name,
-					workspaceId: 'default',
+					workspaceId: workspaces[0]?.id,
 				}),
 			})
 
@@ -42,7 +42,7 @@ const SpacesMenu = ({ onSpaceCreated }: SpacesMenuProps) => {
 			}
 
 			const space = await response.json()
-			onSpaceCreated(space)
+			setSpaces((prev) => [...prev, space])
 			setIsCreateDialogOpen(false)
 		} catch (error) {
 			console.error('Error creating space:', error)
@@ -51,70 +51,62 @@ const SpacesMenu = ({ onSpaceCreated }: SpacesMenuProps) => {
 
 	const handleCreateWorkspace = async (data: { name: string }) => {
 		try {
-			const workspaceData = {
-				name: data.name || 'New Workspace',
-			}
-
 			const response = await fetch('/api/workspaces', {
 				method: 'POST',
 				headers: {
 					'Content-Type': 'application/json',
 				},
-				body: JSON.stringify(workspaceData),
+				body: JSON.stringify(data),
 			})
 
 			if (!response.ok) {
-				const errorData = await response.json()
-				throw new Error(errorData.error || 'ワークスペースの作成に失敗しました')
+				throw new Error('ワークスペースの作成に失敗しました')
 			}
 
 			const workspace = await response.json()
+			setWorkspaces((prev) => [...prev, workspace])
 			setIsCreateDialogOpen(false)
-			return workspace
 		} catch (error) {
 			console.error('Error creating workspace:', error)
-			throw error
 		}
 	}
 
 	return (
-		<>
-			<MenuTrigger>
-				<Button
-					aria-label="Menu"
-					className="outline-none p-2 hover:bg-gray-700 transition-colors duration-200 rounded-full"
-				>
-					<EllipsisVertical className="w-5 h-5 text-zinc-50" />
-				</Button>
-				<Popover>
-					<Menu className="bg-zinc-50 outline-none border shadow-md min-w-[200px] rounded-sm">
-						<MenuItem
-							onAction={() => {
-								setIsCreatingWorkspace(false)
-								setIsCreateDialogOpen(true)
-							}}
-							className="p-2 outline-none hover:bg-zinc-200 cursor-pointer"
-						>
-							<div className="flex items-center gap-2">
-								<SquarePlus className="w-4 h-4" />
-								New Space
-							</div>
-						</MenuItem>
-						<MenuItem
-							onAction={() => {
-								setIsCreatingWorkspace(true)
-								setIsCreateDialogOpen(true)
-							}}
-							className="p-2 outline-none hover:bg-zinc-200 cursor-pointer"
-						>
-							<div className="flex items-center gap-2">
-								<SquarePlus className="w-4 h-4" />
-								New Workspace
-							</div>
-						</MenuItem>
-					</Menu>
-				</Popover>
-			</MenuTrigger>
+		<MenuTrigger>
+			<Button
+				aria-label="Menu"
+				className="outline-none p-2 hover:bg-gray-700 transition-colors duration-200 rounded-full"
+			>
+				<EllipsisVertical className="w-5 h-5 text-zinc-50" />
+			</Button>
+			<Popover>
+				<Menu className="bg-zinc-50 outline-none border shadow-md min-w-[200px] rounded-sm">
+					<MenuItem
+						onAction={() => {
+							setIsCreatingWorkspace(false)
+							setIsCreateDialogOpen(true)
+						}}
+						className="p-2 outline-none hover:bg-zinc-200 cursor-pointer"
+					>
+						<div className="flex items-center gap-2">
+							<SquarePlus className="w-4 h-4" />
+							New Space
+						</div>
+					</MenuItem>
+					<MenuItem
+						onAction={() => {
+							setIsCreatingWorkspace(true)
+							setIsCreateDialogOpen(true)
+						}}
+						className="p-2 outline-none hover:bg-zinc-200 cursor-pointer"
+					>
+						<div className="flex items-center gap-2">
+							<SquarePlus className="w-4 h-4" />
+							New Workspace
+						</div>
+					</MenuItem>
+				</Menu>
+			</Popover>
 
 			<DialogTrigger
 				isOpen={isCreateDialogOpen}
@@ -145,8 +137,6 @@ const SpacesMenu = ({ onSpaceCreated }: SpacesMenuProps) => {
 					</Modal>
 				</ModalOverlay>
 			</DialogTrigger>
-		</>
+		</MenuTrigger>
 	)
 }
-
-export default SpacesMenu

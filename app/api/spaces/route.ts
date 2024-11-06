@@ -16,22 +16,18 @@ export async function POST(req: NextRequest) {
 		const json = await req.json()
 		const body = spaceCreateSchema.parse(json)
 
-		let workspace = await db.workspace.findFirst({
+		const workspace = await db.workspace.findFirst({
 			where: {
+				id: body.workspaceId,
 				userId,
-				isDefault: true,
 			},
 		})
 
 		if (!workspace) {
-			workspace = await db.workspace.create({
-				data: {
-					name: 'Default Workspace',
-					order: 0,
-					isDefault: true,
-					userId,
-				},
-			})
+			return NextResponse.json(
+				{ error: 'ワークスペースが見つかりません' },
+				{ status: 404 },
+			)
 		}
 
 		const maxOrderSpace = await db.space.findFirst({
