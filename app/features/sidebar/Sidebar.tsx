@@ -247,6 +247,7 @@ export default function Sidebar() {
 	const handleCreateSpace = async (
 		data: { name: string },
 		workspaceId: string,
+		close: () => void,
 	) => {
 		try {
 			const response = await fetch('/api/spaces', {
@@ -266,6 +267,8 @@ export default function Sidebar() {
 
 			const newSpace = await response.json()
 			setSpaces((prev) => [...prev, newSpace])
+			handleSpaceClick(newSpace.id)
+			close() // モーダルを閉じる
 		} catch (error) {
 			console.error('Error creating space:', error)
 		}
@@ -417,7 +420,11 @@ export default function Sidebar() {
 																	<CreateSpaceForm
 																		onClose={close}
 																		onSubmit={(data) =>
-																			handleCreateSpace(data, workspace.id)
+																			handleCreateSpace(
+																				data,
+																				workspace.id,
+																				close,
+																			)
 																		}
 																	/>
 																</div>

@@ -14,7 +14,7 @@ type FormData = z.infer<typeof createFormSchema>
 
 interface CreateSpaceFormProps {
 	onClose: () => void
-	onSubmit: (data: { name: string }) => Promise<void>
+	onSubmit: (data: { name: string }, close: () => void) => Promise<void>
 }
 
 export default function CreateSpaceForm({
@@ -28,8 +28,12 @@ export default function CreateSpaceForm({
 		},
 	})
 
+	const handleFormSubmit = async (data: FormData) => {
+		await onSubmit(data, onClose)
+	}
+
 	return (
-		<Form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+		<Form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-4">
 			<Controller
 				name="name"
 				control={control}
