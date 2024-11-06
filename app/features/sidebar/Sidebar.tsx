@@ -15,8 +15,6 @@ import {
 import { useSpaces } from '@/app/features/spaces/contexts/SpaceContext'
 import { GripVertical, Layers3 } from 'lucide-react'
 import SpacesMenu from '@/app/features/sidebar/SpacesMenu'
-import type { Workspace } from '@/app/types/workspace'
-import CreateSpaceInWorkspace from '@/app/features/workspaces/create_space/CreateSpaceInWorkspace'
 import { useWorkspaces } from '@/app/features/workspaces/contexts/WorkspaceContext'
 
 export default function Sidebar() {
@@ -30,7 +28,12 @@ export default function Sidebar() {
 		setActiveSpaceId,
 		setIsNavigating,
 	} = useSpaces()
-	const { workspaces, setWorkspaces } = useWorkspaces()
+	const { workspaces, defaultWorkspace } = useWorkspaces()
+
+	// デフォルトワークスペースに属するスペースのみをフィルタリング
+	const defaultWorkspaceSpaces = spaces.filter(
+		(space) => space.workspaceId === defaultWorkspace?.id,
+	)
 
 	const lastUpdateSource = useRef<string | null>(null)
 
@@ -87,24 +90,46 @@ export default function Sidebar() {
 	}
 
 	useEffect(() => {
-		if (spaces.length > 0 && !activeSpaceId) {
-			const defaultSpace = spaces[0]
+		if (defaultWorkspaceSpaces.length > 0 && !activeSpaceId) {
+			const defaultSpace = defaultWorkspaceSpaces[0]
 			handleSpaceClick(defaultSpace.id)
 		}
-	}, [spaces, activeSpaceId, handleSpaceClick])
+	}, [defaultWorkspaceSpaces, activeSpaceId, handleSpaceClick])
 
 	const { dragAndDropHooks } = useDragAndDrop({
 		getItems(keys) {
-			const space = spaces.find((s) => s.id === Array.from(keys)[0])
+			const space = defaultWorkspaceSpaces.find(
+				(s) => s.id === Array.from(keys)[0],
+			)
 			return [
 				{
-					'space-item': JSON.stringify(space),
 					'text/plain': space?.name || '',
+					'space-item': JSON.stringify(space),
 				},
 			]
 		},
-		acceptedDragTypes: ['space-item'],
-		getDropOperation: () => 'move',
+		onReorder(e) {
+			const { target, keys } = e
+			const draggedId = Array.from(keys)[0] as string
+			const targetId = target.key as string
+
+			const newSpaces = [...defaultWorkspaceSpaces]
+			const draggedIndex = newSpaces.findIndex(
+				(space) => space.id === draggedId,
+			)
+			const targetIndex = newSpaces.findIndex((space) => space.id === targetId)
+
+			const [draggedSpace] = newSpaces.splice(draggedIndex, 1)
+			newSpaces.splice(targetIndex, 0, draggedSpace)
+
+			// orderを更新
+			const updatedSpaces = newSpaces.map((space, index) => ({
+				...space,
+				order: index,
+			}))
+
+			reorderSpaces(updatedSpaces)
+		},
 		renderDropIndicator(target) {
 			return (
 				<DropIndicator
@@ -114,32 +139,6 @@ export default function Sidebar() {
 					}
 				/>
 			)
-		},
-
-		onReorder: async (e) => {
-			try {
-				const items = [...spaces]
-				const draggedIndex = items.findIndex(
-					(item) => item.id === Array.from(e.keys)[0],
-				)
-				const targetIndex = items.findIndex((item) => item.id === e.target.key)
-				const draggedItem = items[draggedIndex]
-
-				const newIndex =
-					e.target.dropPosition === 'before' ? targetIndex : targetIndex + 1
-
-				items.splice(draggedIndex, 1)
-				items.splice(
-					newIndex > draggedIndex ? newIndex - 1 : newIndex,
-					0,
-					draggedItem,
-				)
-
-				await reorderSpaces(items)
-			} catch (error) {
-				console.error('Failed to reorder spaces:', error)
-				alert('スペースの並び順の更新に失敗しました')
-			}
 		},
 	})
 
@@ -155,31 +154,33 @@ export default function Sidebar() {
 		console.log('Component rendered with activeSpaceId:', activeSpaceId)
 	}, [])
 
+	/*
 	const handleWorkspaceCreated = (workspace: Workspace) => {
 		// ワークスペースリストを更新
 		setWorkspaces((prevWorkspaces) => [...prevWorkspaces, workspace])
 	}
+		*/
 
 	return (
-		<div className="hidden md:flex w-[320px] bg-gray-800">
-			<div className="flex-grow text-zinc-50">
-				<div className="flex items-center justify-between p-4">
-					<div className="text-2xl font-bold text-zinc-50">StartUp</div>
-					<SidebarMenu />
-				</div>
-				<div className="flex justify-between items-center pl-3 pr-2">
-					<div className="flex items-center gap-2">
-						<Layers3 className="w-5 h-5 text-gray-400" />
-						<div className="text-gray-400 font-semibold text-lg">Spaces</div>
+		<div className="w-64 bg-gray-800 h-screen flex flex-col">
+			<div className="flex items-center justify-between p-4">
+				<div className="text-zinc-50 text-2xl font-semibold">Startup</div>
+				<SidebarMenu />
+			</div>
+			<div className="p-4">
+				<div className="flex items-center justify-between mb-4">
+					<div className="flex items-center">
+						<Layers3 className="w-6 h-6 text-zinc-50 mr-2" />
+						<h1 className="text-lg font-semibold text-zinc-50">Spaces</h1>
 					</div>
 					<SpacesMenu />
 				</div>
 				<GridList
-					aria-label="Spaces"
-					items={spaces}
+					items={defaultWorkspaceSpaces}
 					dragAndDropHooks={dragAndDropHooks}
+					aria-label="スペース一覧"
 					selectionMode="single"
-					selectedKeys={activeSpaceId ? new Set([activeSpaceId]) : new Set()}
+					selectedKeys={activeSpaceId ? [activeSpaceId] : []}
 					disallowEmptySelection
 					onSelectionChange={(keys) => {
 						const selectedKey = Array.from(keys)[0] as string
@@ -254,12 +255,7 @@ export default function Sidebar() {
 										))}
 									{/* 所属しているWorkspaceのSpaceがなければ、Space作成用のボタンを表示 */}
 									{spaces.filter((space) => space.workspaceId === workspace.id)
-										.length === 0 && (
-										<CreateSpaceInWorkspace
-											workspaceId={workspace.id}
-											onSpaceCreated={(space) => handleSpaceCreated(space)}
-										/>
-									)}
+										.length === 0 && <div>Create Space</div>}
 								</div>
 							</li>
 						))}
