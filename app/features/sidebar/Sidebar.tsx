@@ -40,7 +40,8 @@ export default function Sidebar() {
 		setActiveSpaceId,
 		setIsNavigating,
 	} = useSpaces()
-	const { workspaces, defaultWorkspace } = useWorkspaces()
+	const { workspaces, setWorkspaces, reorderWorkspaces, defaultWorkspace } =
+		useWorkspaces()
 
 	// デフォルトワークスペースに属するスペースのみをフィルタリング
 	const defaultWorkspaceSpaces = spaces.filter(
@@ -96,8 +97,14 @@ export default function Sidebar() {
 	)
 
 	const handleSpaceCreated = (space: Space) => {
-		setSpaces((prevSpaces) => [...prevSpaces, space])
-		// 新しいスペースを作成したら、そのスペースに移動
+		// スペースを追加する前に、既存のスペースをフィルタリング
+		const updatedSpaces = spaces.filter(
+			(s) => s.workspaceId === space.workspaceId,
+		)
+		// 新しいスペースを追加
+		const newSpaces = [...updatedSpaces, space]
+		setSpaces(newSpaces)
+		// 新しいスペースに移動
 		handleSpaceClick(space.id)
 	}
 
@@ -108,7 +115,7 @@ export default function Sidebar() {
 		}
 	}, [defaultWorkspaceSpaces, activeSpaceId, handleSpaceClick])
 
-	const { dragAndDropHooks } = useDragAndDrop({
+	const { dragAndDropHooks: spaceDragAndDropHooks } = useDragAndDrop({
 		getItems(keys) {
 			const space = defaultWorkspaceSpaces.find(
 				(s) => s.id === Array.from(keys)[0],
@@ -148,6 +155,70 @@ export default function Sidebar() {
 					target={target}
 					className={({ isDropTarget }) =>
 						`sidebar-drop-indicator ${isDropTarget ? 'active' : ''}`
+					}
+				/>
+			)
+		},
+	})
+
+	const { dragAndDropHooks: workspaceDragAndDropHooks } = useDragAndDrop({
+		getItems(keys) {
+			const workspace = workspaces.find((w) => w.id === Array.from(keys)[0])
+			return [
+				{
+					'workspace-item': JSON.stringify(workspace),
+					'text/plain': workspace?.name || '',
+				},
+			]
+		},
+		onReorder: async (e) => {
+			// デフォルトワークスペースを除外
+			const nonDefaultWorkspaces = workspaces.filter((w) => !w.isDefault)
+			const draggedId = Array.from(e.keys)[0] as string
+			const targetId = e.target.key as string
+
+			// ドラッグされたアイテムがデフォルトワークスペースの場合は処理を中止
+			if (workspaces.find((w) => w.id === draggedId)?.isDefault) {
+				return
+			}
+
+			const draggedIndex = nonDefaultWorkspaces.findIndex(
+				(w) => w.id === draggedId,
+			)
+			const targetIndex = nonDefaultWorkspaces.findIndex(
+				(w) => w.id === targetId,
+			)
+
+			if (draggedIndex === -1 || targetIndex === -1) return
+
+			const updatedWorkspaces = [...nonDefaultWorkspaces]
+			const [draggedItem] = updatedWorkspaces.splice(draggedIndex, 1)
+			const newIndex =
+				e.target.dropPosition === 'before' ? targetIndex : targetIndex + 1
+			updatedWorkspaces.splice(newIndex, 0, draggedItem)
+
+			// orderを1から振り直し
+			const reorderedWorkspaces = updatedWorkspaces.map((workspace, index) => ({
+				...workspace,
+				order: index + 1,
+			}))
+
+			// デフォルトワークスペースを先頭に追加
+			const defaultWorkspace = workspaces.find((w) => w.isDefault)
+			if (defaultWorkspace) {
+				try {
+					await reorderWorkspaces([defaultWorkspace, ...reorderedWorkspaces])
+				} catch (error) {
+					console.error('Failed to reorder workspaces:', error)
+				}
+			}
+		},
+		renderDropIndicator(target) {
+			return (
+				<DropIndicator
+					target={target}
+					className={({ isDropTarget }) =>
+						`workspace-drop-indicator ${isDropTarget ? 'active' : ''}`
 					}
 				/>
 			)
@@ -216,7 +287,7 @@ export default function Sidebar() {
 				</div>
 				<GridList
 					items={defaultWorkspaceSpaces}
-					dragAndDropHooks={dragAndDropHooks}
+					dragAndDropHooks={spaceDragAndDropHooks}
 					aria-label="スペース一覧"
 					selectionMode="single"
 					selectedKeys={activeSpaceId ? [activeSpaceId] : []}
@@ -273,24 +344,33 @@ export default function Sidebar() {
 						<Layers className="w-5 h-5 text-zinc-50 mr-2" />
 						<div className="font-semibold text-zinc-50">Workspaces</div>
 					</div>
-					<ul className="space-y-1">
-						{workspaces.map((workspace) => (
-							<li key={workspace.id} className="py-2 text-zinc-300">
-								{/* ワークスペース名 */}
-								<div className="flex justify-between pl-3">
+					<GridList
+						aria-label="Draggable workspaces"
+						items={workspaces}
+						dragAndDropHooks={workspaceDragAndDropHooks}
+						className="outline-none"
+						renderEmptyState={() => <div>No workspaces</div>}
+					>
+						{(workspace) => (
+							<GridListItem
+								key={workspace.id}
+								id={workspace.id}
+								textValue={workspace.name}
+								className={`outline-none ${workspace.isDefault ? 'cursor-not-allowed' : 'cursor-grab'}`}
+							>
+								<div className="flex items-center justify-between px-4 py-2 hover:bg-zinc-700 cursor-pointer">
 									<div className="flex items-center">
-										<CircleChevronRight className="w-5 h-5 text-gray-500 mr-2" />
-										<div className="font-medium text-zinc-50 hover:border-b-2 hover:border-blue-500">
+										<Button className="outline-none" slot="drag">
+											<CircleChevronRight className="w-5 h-5 text-gray-500 mr-2" />
+										</Button>
+										<Button className="font-medium text-zinc-50 hover:border-b-2 hover:border-blue-500">
 											{workspace.name}
-										</div>
+										</Button>
 									</div>
-									{/* TODO: ワークスペースメニュー */}
-									<div className="text-zinc-50">
-										<WorkspaceButtonMenu
-											workspaceId={workspace.id}
-											workspaceName={workspace.name}
-										/>
-									</div>
+									<WorkspaceButtonMenu
+										workspaceId={workspace.id}
+										workspaceName={workspace.name}
+									/>
 								</div>
 								{/* ワークスペース内のスペース一覧 */}
 								<div className="">
@@ -349,9 +429,9 @@ export default function Sidebar() {
 										</div>
 									)}
 								</div>
-							</li>
-						))}
-					</ul>
+							</GridListItem>
+						)}
+					</GridList>
 				</div>
 			</div>
 		</div>
