@@ -11,11 +11,16 @@ import {
 	GridListItem,
 	useDragAndDrop,
 	DropIndicator,
+	Dialog,
+	DialogTrigger,
+	Modal,
+	ModalOverlay,
 } from 'react-aria-components'
 import { useSpaces } from '@/app/features/spaces/contexts/SpaceContext'
 import { CircleChevronRight, GripVertical, Layers, Layers3 } from 'lucide-react'
 import SpacesMenu from '@/app/features/sidebar/SpacesMenu'
 import { useWorkspaces } from '@/app/features/workspaces/contexts/WorkspaceContext'
+import CreateSpaceForm from '@/app/features/spaces/create_space/CreateSpaceForm'
 
 export default function Sidebar() {
 	const router = useRouter()
@@ -161,6 +166,33 @@ export default function Sidebar() {
 	}
 		*/
 
+	const handleCreateSpace = async (
+		data: { name: string },
+		workspaceId: string,
+	) => {
+		try {
+			const response = await fetch('/api/spaces', {
+				method: 'POST',
+				headers: {
+					'Content-Type': 'application/json',
+				},
+				body: JSON.stringify({
+					name: data.name,
+					workspaceId: workspaceId,
+				}),
+			})
+
+			if (!response.ok) {
+				throw new Error('スペースの作成に失敗しました')
+			}
+
+			const newSpace = await response.json()
+			setSpaces((prev) => [...prev, newSpace])
+		} catch (error) {
+			console.error('Error creating space:', error)
+		}
+	}
+
 	return (
 		<div className="w-64 bg-gray-800 h-screen flex flex-col">
 			<div className="flex items-center justify-between p-4">
@@ -268,12 +300,33 @@ export default function Sidebar() {
 										))}
 									{spaces.filter((space) => space.workspaceId === workspace.id)
 										.length === 0 && (
-										// ワークスペース内にスペースがない場合は、「Create Space」を表示
-										// Create Spaceで対応したWorkspaceのspaceを作成する
 										<div className="text-zinc-500">
-											<Button className="text-zinc-500">
-												Add Space to Workspace
-											</Button>
+											<DialogTrigger>
+												<div className="flex items-center justify-center pt-2">
+													<Button className="text-gray-500 text-lg hover:text-gray-400 outline-none border border-gray-500 rounded-md px-2 py-1 font-semibold">
+														Add Space to Workspace
+													</Button>
+												</div>
+												<ModalOverlay className="fixed inset-0 z-10 overflow-y-auto bg-black/25 flex min-h-full items-center justify-center p-4 text-center backdrop-blur">
+													<Modal className="w-full max-w-md overflow-hidden rounded-2xl bg-white p-6 text-left align-middle shadow-xl">
+														<Dialog className="outline-none">
+															{({ close }) => (
+																<div>
+																	<h2 className="text-lg font-semibold mb-4">
+																		新しいスペースを作成
+																	</h2>
+																	<CreateSpaceForm
+																		onClose={close}
+																		onSubmit={(data) =>
+																			handleCreateSpace(data, workspace.id)
+																		}
+																	/>
+																</div>
+															)}
+														</Dialog>
+													</Modal>
+												</ModalOverlay>
+											</DialogTrigger>
 										</div>
 									)}
 								</div>
