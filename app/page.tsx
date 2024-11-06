@@ -9,6 +9,8 @@ import type { Section } from '@/app/types/section'
 import { prisma } from '@/lib/prisma'
 import Header from '@/app/features/header/Header'
 import { SpaceProvider } from '@/app/features/spaces/contexts/SpaceContext'
+import { getWorkspaces } from '@/app/features/workspaces/utils/getWorkspaces'
+import { WorkspaceProvider } from '@/app/features/workspaces/contexts/WorkspaceContext'
 
 // ページコンポーネントをキャッシュ化
 export const revalidate = 0
@@ -36,9 +38,10 @@ export default async function Index({ searchParams }: PageProps) {
 				? params.spaceId
 				: user?.lastActiveSpaceId || undefined
 
-		const [initialData, spaces] = await Promise.all([
+		const [initialData, spaces, workspaces] = await Promise.all([
 			getInitialSections(session.user.id, spaceId),
 			getSpaces(session.user.id),
+			getWorkspaces(session.user.id),
 		])
 		const sections = initialData.sections
 		const activeSpace = spaces.find((space) => space.id === spaceId)
@@ -47,29 +50,31 @@ export default async function Index({ searchParams }: PageProps) {
 			<div className="flex flex-col min-h-screen">
 				<div className="flex bg-slate-50 flex-grow">
 					<SpaceProvider initialSpaces={spaces} initialActiveSpaceId={spaceId}>
-						<Sidebar />
-						<main className="flex flex-col flex-grow items-center">
-							<Header
-								spaceName={activeSpace?.name ?? ''}
-								spaceId={spaceId ?? ''}
-							/>
-							{activeSpace ? (
-								<Resources
-									initialData={{
-										sections,
-										userId: session.user.id,
-										spaceId: spaceId ?? '',
-									}}
+						<WorkspaceProvider initialWorkspaces={workspaces}>
+							<Sidebar />
+							<main className="flex flex-col flex-grow items-center">
+								<Header
+									spaceName={activeSpace?.name ?? ''}
 									spaceId={spaceId ?? ''}
 								/>
-							) : (
-								<div className="flex flex-col items-center justify-center flex-grow">
-									<div className="text-2xl font-semibold text-gray-500">
-										Open a space to get started
+								{activeSpace ? (
+									<Resources
+										initialData={{
+											sections,
+											userId: session.user.id,
+											spaceId: spaceId ?? '',
+										}}
+										spaceId={spaceId ?? ''}
+									/>
+								) : (
+									<div className="flex flex-col items-center justify-center flex-grow">
+										<div className="text-2xl font-semibold text-gray-500">
+											Open a space to get started
+										</div>
 									</div>
-								</div>
-							)}
-						</main>
+								)}
+							</main>
+						</WorkspaceProvider>
 					</SpaceProvider>
 				</div>
 			</div>

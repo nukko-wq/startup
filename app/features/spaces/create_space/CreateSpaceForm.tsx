@@ -3,14 +3,18 @@
 import { useForm, Controller } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { Button, Form, Input, Label, TextField } from 'react-aria-components'
-import { spaceCreateSchema } from '@/lib/validations/space'
-import type { z } from 'zod'
+import { z } from 'zod'
 
-type FormData = z.infer<typeof spaceCreateSchema>
+// 新しいスキーマを作成
+const createFormSchema = z.object({
+	name: z.string().min(1, '名前を入力してください'),
+})
+
+type FormData = z.infer<typeof createFormSchema>
 
 interface CreateSpaceFormProps {
 	onClose: () => void
-	onSubmit: (data: FormData) => Promise<void>
+	onSubmit: (data: { name: string }) => Promise<void>
 }
 
 export default function CreateSpaceForm({
@@ -18,7 +22,7 @@ export default function CreateSpaceForm({
 	onSubmit,
 }: CreateSpaceFormProps) {
 	const { control, handleSubmit } = useForm<FormData>({
-		resolver: zodResolver(spaceCreateSchema),
+		resolver: zodResolver(createFormSchema),
 		defaultValues: {
 			name: '',
 		},

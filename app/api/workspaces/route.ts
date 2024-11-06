@@ -1,7 +1,7 @@
 import { NextResponse, type NextRequest } from 'next/server'
 import { auth } from '@/lib/auth'
 import { db } from '@/lib/db'
-import { spaceCreateSchema } from '@/lib/validations/space'
+import { workspaceCreateSchema } from '@/lib/validations/workspace'
 import { z } from 'zod'
 
 export async function POST(req: NextRequest) {
@@ -14,55 +14,60 @@ export async function POST(req: NextRequest) {
 		}
 
 		const json = await req.json()
-		const body = spaceCreateSchema.parse(json)
 
-		const workspace = await db.workspace.findFirst({
+		if (!json || typeof json !== 'object') {
+			return NextResponse.json(
+				{ error: '無効なリクエストデータです' },
+				{ status: 400 },
+			)
+		}
+
+		const body = workspaceCreateSchema.parse(json)
+
+		const workspaceCount = await db.workspace.count({
 			where: {
-				id: body.workspaceId,
 				userId,
 			},
 		})
 
-		if (!workspace) {
+		if (workspaceCount >= 10) {
 			return NextResponse.json(
-				{ error: 'ワークスペースが見つかりません' },
-				{ status: 404 },
+				{ error: 'ワークスペースの最大数に達しました' },
+				{ status: 400 },
 			)
 		}
 
-		const maxOrderSpace = await db.space.findFirst({
+		const maxOrderWorkspace = await db.workspace.findFirst({
 			where: {
 				userId,
-				workspaceId: workspace.id,
+				isDefault: false,
 			},
 			orderBy: { order: 'desc' },
 			select: { order: true },
 		})
 
-		const newOrder = maxOrderSpace ? maxOrderSpace.order + 1 : 1
+		const newOrder = maxOrderWorkspace ? maxOrderWorkspace.order + 1 : 1
 
-		const space = await db.space.create({
+		const workspace = await db.workspace.create({
 			data: {
 				name: body.name,
 				order: newOrder,
+				isDefault: false,
 				userId,
-				workspaceId: workspace.id,
 			},
 		})
 
-		return NextResponse.json(space)
+		return NextResponse.json(workspace)
 	} catch (error) {
-		console.error('Space creation error:', error)
-
+		console.error('Workspace creation error:', error)
 		if (error instanceof z.ZodError) {
 			return NextResponse.json(
 				{ error: 'バリデーションエラー', details: error.issues },
 				{ status: 422 },
 			)
 		}
-
 		return NextResponse.json(
-			{ error: 'スペースの作成に失敗しました' },
+			{ error: 'ワークスペースの作成に失敗しました' },
 			{ status: 500 },
 		)
 	}
