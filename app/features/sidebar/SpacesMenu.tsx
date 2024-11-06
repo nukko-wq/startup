@@ -14,7 +14,6 @@ import {
 	ModalOverlay,
 } from 'react-aria-components'
 import CreateSpaceForm from '@/app/features/spaces/create_space/CreateSpaceForm'
-import type { Space } from '@/app/types/space'
 import { useWorkspaces } from '@/app/features/workspaces/contexts/WorkspaceContext'
 import { useSpaces } from '@/app/features/spaces/contexts/SpaceContext'
 
@@ -22,10 +21,13 @@ export default function SpacesMenu() {
 	const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false)
 	const [isCreatingWorkspace, setIsCreatingWorkspace] = useState(false)
 	const { workspaces, setWorkspaces } = useWorkspaces()
-	const { setSpaces } = useSpaces()
+	const { spaces, setSpaces } = useSpaces()
 
 	const handleCreateSpace = async (data: { name: string }) => {
 		try {
+			const defaultWorkspaceResponse = await fetch('/api/workspaces/default')
+			const defaultWorkspace = await defaultWorkspaceResponse.json()
+
 			const response = await fetch('/api/spaces', {
 				method: 'POST',
 				headers: {
@@ -33,7 +35,7 @@ export default function SpacesMenu() {
 				},
 				body: JSON.stringify({
 					name: data.name,
-					workspaceId: workspaces[0]?.id,
+					workspaceId: defaultWorkspace.id,
 				}),
 			})
 
@@ -41,8 +43,8 @@ export default function SpacesMenu() {
 				throw new Error('スペースの作成に失敗しました')
 			}
 
-			const space = await response.json()
-			setSpaces((prev) => [...prev, space])
+			const newSpace = await response.json()
+			setSpaces((prev) => [...prev, newSpace])
 			setIsCreateDialogOpen(false)
 		} catch (error) {
 			console.error('Error creating space:', error)
@@ -63,8 +65,8 @@ export default function SpacesMenu() {
 				throw new Error('ワークスペースの作成に失敗しました')
 			}
 
-			const workspace = await response.json()
-			setWorkspaces((prev) => [...prev, workspace])
+			const newWorkspace = await response.json()
+			setWorkspaces((prev) => [...prev, newWorkspace])
 			setIsCreateDialogOpen(false)
 		} catch (error) {
 			console.error('Error creating workspace:', error)

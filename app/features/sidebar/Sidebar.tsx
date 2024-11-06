@@ -189,6 +189,7 @@ export default function Sidebar() {
 					}}
 					className="flex flex-col pt-2"
 				>
+					{/* Default Workspaceのスペースのリストを表示 */}
 					{(space) => (
 						<GridListItem
 							key={space.id}
@@ -231,6 +232,7 @@ export default function Sidebar() {
 					<div className="px-4 py-2 text-sm font-semibold text-zinc-400">
 						Workspaces
 					</div>
+					{/* WorkspaceとSpaceのリストを表示 */}
 					<ul className="space-y-1">
 						{workspaces.map((workspace) => (
 							<li
