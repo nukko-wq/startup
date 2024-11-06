@@ -65,10 +65,7 @@ export async function DELETE(request: NextRequest) {
 	}
 }
 
-export async function PATCH(
-	request: NextRequest,
-	{ params }: { params: { spaceId: string } },
-) {
+export async function PATCH(request: NextRequest) {
 	try {
 		const session = await auth()
 		const userId = session?.user?.id
@@ -77,12 +74,22 @@ export async function PATCH(
 			return NextResponse.json({ error: '認証が必要です' }, { status: 401 })
 		}
 
+		const url = new URL(request.url)
+		const spaceId = url.pathname.split('/').pop()
+
+		if (!spaceId) {
+			return NextResponse.json(
+				{ error: 'Space ID is required' },
+				{ status: 400 },
+			)
+		}
+
 		const json = await request.json()
 		const body = spaceUpdateSchema.parse(json)
 
 		const space = await db.space.update({
 			where: {
-				id: params.spaceId,
+				id: spaceId,
 				userId,
 			},
 			data: {

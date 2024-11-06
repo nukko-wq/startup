@@ -27,6 +27,7 @@ import {
 import SpacesMenu from '@/app/features/sidebar/SpacesMenu'
 import { useWorkspaces } from '@/app/features/workspaces/contexts/WorkspaceContext'
 import CreateSpaceForm from '@/app/features/spaces/create_space/CreateSpaceForm'
+import WorkspaceButtonMenu from './WorkspaceButtonMenu'
 
 export default function Sidebar() {
 	const router = useRouter()
@@ -276,10 +277,16 @@ export default function Sidebar() {
 						{workspaces.map((workspace) => (
 							<li key={workspace.id} className="py-2 text-zinc-300">
 								{/* ワークスペース名 */}
-								<div className="flex items-center pl-3">
-									<CircleChevronRight className="w-5 h-5 text-gray-500 mr-2" />
-									<div className="font-medium text-zinc-50 hover:border-b-2 hover:border-blue-500">
-										{workspace.name}
+								<div className="flex justify-between pl-3">
+									<div className="flex items-center">
+										<CircleChevronRight className="w-5 h-5 text-gray-500 mr-2" />
+										<div className="font-medium text-zinc-50 hover:border-b-2 hover:border-blue-500">
+											{workspace.name}
+										</div>
+									</div>
+									{/* TODO: ワークスペースメニュー */}
+									<div className="text-zinc-50">
+										<WorkspaceButtonMenu />
 									</div>
 								</div>
 								{/* ワークスペース内のスペース一覧 */}
