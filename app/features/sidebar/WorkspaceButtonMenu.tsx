@@ -10,9 +10,21 @@ import {
 } from 'react-aria-components'
 import { useRouter } from 'next/navigation'
 import { useState } from 'react'
+import { useWorkspaces } from '@/app/features/workspaces/contexts/WorkspaceContext'
+import DeleteWorkspaceDialog from '@/app/features/workspaces/delete_workspace/DeleteWorkspaceDialog'
+import WorkspaceRenameDialog from '@/app/features/workspaces/rename_workspace/WorkspaceRenameDialog'
 
-const WorkspaceButtonMenu = () => {
+interface WorkspaceButtonMenuProps {
+	workspaceId: string
+	workspaceName: string
+}
+
+const WorkspaceButtonMenu = ({
+	workspaceId,
+	workspaceName,
+}: WorkspaceButtonMenuProps) => {
 	const router = useRouter()
+	const { setWorkspaces } = useWorkspaces()
 	const [isRenameOpen, setIsRenameOpen] = useState(false)
 	const [isDeleteOpen, setIsDeleteOpen] = useState(false)
 
@@ -48,6 +60,19 @@ const WorkspaceButtonMenu = () => {
 					</Menu>
 				</Popover>
 			</MenuTrigger>
+
+			<WorkspaceRenameDialog
+				workspaceId={workspaceId}
+				initialName={workspaceName}
+				isOpen={isRenameOpen}
+				onOpenChange={setIsRenameOpen}
+			/>
+			<DeleteWorkspaceDialog
+				workspaceId={workspaceId}
+				setWorkspaces={setWorkspaces}
+				isOpen={isDeleteOpen}
+				onOpenChange={setIsDeleteOpen}
+			/>
 		</>
 	)
 }
