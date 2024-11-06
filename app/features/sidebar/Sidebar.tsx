@@ -233,7 +233,6 @@ export default function Sidebar() {
 					<div className="px-4 py-2 text-sm font-semibold text-zinc-400">
 						Workspaces
 					</div>
-					{/* WorkspaceとSpaceのリストを表示 */}
 					<ul className="space-y-1">
 						{workspaces.map((workspace) => (
 							<li
@@ -245,15 +244,23 @@ export default function Sidebar() {
 									{spaces
 										.filter((space) => space.workspaceId === workspace.id)
 										.map((space) => (
-											<Button
+											<div
 												key={space.id}
-												className="w-full text-left px-2 py-1 rounded hover:bg-zinc-800"
-												onPress={() => handleSpaceClick(space.id)}
+												className="flex items-center justify-between group"
 											>
-												{space.name}
-											</Button>
+												<Button
+													className="w-full text-left px-2 py-1 rounded hover:bg-zinc-800"
+													onPress={() => handleSpaceClick(space.id)}
+												>
+													{space.name}
+												</Button>
+												<SpaceButtonMenu
+													spaceId={space.id}
+													spaceName={space.name}
+													setSpaces={setSpaces}
+												/>
+											</div>
 										))}
-									{/* 所属しているWorkspaceのSpaceがなければ、Space作成用のボタンを表示 */}
 									{spaces.filter((space) => space.workspaceId === workspace.id)
 										.length === 0 && <div>Create Space</div>}
 								</div>
