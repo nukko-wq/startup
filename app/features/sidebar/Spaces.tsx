@@ -1,7 +1,7 @@
 'use client'
 
 import { useSpaces } from '@/app/features/spaces/contexts/SpaceContext'
-import { Space } from '@/app/types/space'
+import type { Space } from '@/app/types/space'
 import { GripVertical } from 'lucide-react'
 import {
 	Button,
@@ -41,44 +41,11 @@ const Spaces = ({ workspaceId }: SpacesProps) => {
 			return (
 				<DropIndicator
 					target={target}
-					className={({ isDropTarget }) =>
-						`drop-indicator ${isDropTarget ? 'active' : ''}`
-					}
+					className="drop-indicator h-0.5 bg-zinc-700 rounded"
 				/>
 			)
 		},
-		async onInsert(e) {
-			try {
-				const items = await Promise.all(
-					e.items
-						.filter(isTextDropItem)
-						.map(async (item) => JSON.parse(await item.getText('space-item'))),
-				)
-
-				const targetIndex = workspaceSpaces.findIndex(
-					(s) => s.id === e.target.key,
-				)
-				const newOrder =
-					e.target.dropPosition === 'before'
-						? workspaceSpaces[targetIndex]?.order
-						: workspaceSpaces[targetIndex]?.order + 1
-
-				const updatedSpaces = spaces.map((space) => {
-					if (items.some((item) => item.id === space.id)) {
-						return { ...space, workspaceId, order: newOrder }
-					}
-					if (space.workspaceId === workspaceId && space.order >= newOrder) {
-						return { ...space, order: space.order + 1 }
-					}
-					return space
-				})
-
-				await reorderSpaces(updatedSpaces)
-			} catch (error) {
-				console.error('Failed to insert spaces:', error)
-			}
-		},
-		onReorder: async (e) => {
+		async onReorder(e) {
 			try {
 				const draggedSpace = spaces.find((s) => s.id === Array.from(e.keys)[0])
 				if (!draggedSpace) return
@@ -86,11 +53,10 @@ const Spaces = ({ workspaceId }: SpacesProps) => {
 				const targetIndex = workspaceSpaces.findIndex(
 					(s) => s.id === e.target.key,
 				)
-
 				const newOrder =
 					e.target.dropPosition === 'before'
-						? workspaceSpaces[targetIndex]?.order
-						: workspaceSpaces[targetIndex]?.order + 1
+						? workspaceSpaces[targetIndex].order
+						: workspaceSpaces[targetIndex].order + 1
 
 				const updatedSpaces = spaces
 					.map((space) => {
@@ -105,7 +71,51 @@ const Spaces = ({ workspaceId }: SpacesProps) => {
 					.sort((a, b) => a.order - b.order)
 
 				setSpaces(updatedSpaces)
-				reorderSpaces(updatedSpaces)
+				await reorderSpaces(updatedSpaces)
+			} catch (error) {
+				console.error('Failed to reorder spaces:', error)
+				setSpaces(spaces)
+			}
+		},
+		async onInsert(e) {
+			try {
+				const items = await Promise.all(
+					e.items
+						.filter(isTextDropItem)
+						.map(async (item) => JSON.parse(await item.getText('space-item'))),
+				)
+
+				const draggedSpace = items[0] as Space
+				let newOrder = 1
+
+				if (workspaceSpaces.length > 0) {
+					if (e.target.key) {
+						const targetIndex = workspaceSpaces.findIndex(
+							(s) => s.id === e.target.key,
+						)
+						newOrder =
+							e.target.dropPosition === 'before'
+								? workspaceSpaces[targetIndex].order
+								: workspaceSpaces[targetIndex].order + 1
+					} else {
+						newOrder = Math.max(...workspaceSpaces.map((s) => s.order)) + 1
+					}
+				}
+
+				const updatedSpaces = spaces
+					.map((space) => {
+						if (space.id === draggedSpace.id) {
+							return { ...space, order: newOrder, workspaceId }
+						}
+						if (space.workspaceId === workspaceId && space.order >= newOrder) {
+							return { ...space, order: space.order + 1 }
+						}
+						return space
+					})
+					.sort((a, b) => a.order - b.order)
+
+				setSpaces(updatedSpaces)
+				await reorderSpaces(updatedSpaces)
 			} catch (error) {
 				console.error('Failed to reorder spaces:', error)
 				setSpaces(spaces)
@@ -118,9 +128,11 @@ const Spaces = ({ workspaceId }: SpacesProps) => {
 			aria-label="Spaces in workspace"
 			items={workspaceSpaces}
 			dragAndDropHooks={dragAndDropHooks}
-			className="flex flex-col space-y-1 outline-none min-h-[30px]"
+			className="flex flex-col space-y-1 outline-none min-h-[30px] border-2 border-transparent data-[drop-target]:border-zinc-700 rounded"
 			renderEmptyState={() => (
-				<div className="p-2 text-center text-gray-500">No spaces yet</div>
+				<div className="p-2 text-center text-gray-500 min-h-[30px]">
+					スペースをドロップしてください
+				</div>
 			)}
 		>
 			{(space) => (
@@ -142,13 +154,13 @@ const Spaces = ({ workspaceId }: SpacesProps) => {
 							<Button
 								onPress={() => handleSpaceClick(space.id)}
 								className={`
-									flex-grow text-left
-									${
-										activeSpaceId === space.id
-											? 'text-zinc-50 font-medium'
-											: 'text-zinc-400 hover:text-zinc-50'
-									}
-								`}
+										flex-grow text-left
+										${
+											activeSpaceId === space.id
+												? 'text-zinc-50 font-medium'
+												: 'text-zinc-400 hover:text-zinc-50'
+										}
+									`}
 							>
 								{space.name}
 							</Button>
