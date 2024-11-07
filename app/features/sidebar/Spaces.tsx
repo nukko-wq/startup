@@ -101,9 +101,26 @@ const Spaces = ({ workspaceId }: SpacesProps) => {
 					return space
 				})
 
-				reorderSpaces(updatedSpaces)
+				setSpaces(updatedSpaces)
+
+				const payload = {
+					items: updatedSpaces.map((space) => ({
+						id: space.id,
+						order: space.order,
+					})),
+				}
+
+				fetch('/api/spaces/reorder', {
+					method: 'PUT',
+					headers: { 'Content-Type': 'application/json' },
+					body: JSON.stringify(payload),
+				}).catch((error) => {
+					console.error('Failed to reorder spaces:', error)
+					setSpaces(spaces)
+				})
 			} catch (error) {
 				console.error('Failed to reorder spaces:', error)
+				setSpaces(spaces)
 			}
 		},
 	})
