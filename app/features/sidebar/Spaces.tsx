@@ -78,7 +78,7 @@ const Spaces = ({ workspaceId }: SpacesProps) => {
 				console.error('Failed to insert spaces:', error)
 			}
 		},
-		onReorder(e) {
+		onReorder: async (e) => {
 			try {
 				const draggedSpace = spaces.find((s) => s.id === Array.from(e.keys)[0])
 				if (!draggedSpace) return
@@ -86,38 +86,26 @@ const Spaces = ({ workspaceId }: SpacesProps) => {
 				const targetIndex = workspaceSpaces.findIndex(
 					(s) => s.id === e.target.key,
 				)
+
 				const newOrder =
 					e.target.dropPosition === 'before'
 						? workspaceSpaces[targetIndex]?.order
 						: workspaceSpaces[targetIndex]?.order + 1
 
-				const updatedSpaces = spaces.map((space) => {
-					if (space.id === draggedSpace.id) {
-						return { ...space, order: newOrder }
-					}
-					if (space.workspaceId === workspaceId && space.order >= newOrder) {
-						return { ...space, order: space.order + 1 }
-					}
-					return space
-				})
+				const updatedSpaces = spaces
+					.map((space) => {
+						if (space.id === draggedSpace.id) {
+							return { ...space, order: newOrder }
+						}
+						if (space.workspaceId === workspaceId && space.order >= newOrder) {
+							return { ...space, order: space.order + 1 }
+						}
+						return space
+					})
+					.sort((a, b) => a.order - b.order)
 
 				setSpaces(updatedSpaces)
-
-				const payload = {
-					items: updatedSpaces.map((space) => ({
-						id: space.id,
-						order: space.order,
-					})),
-				}
-
-				fetch('/api/spaces/reorder', {
-					method: 'PUT',
-					headers: { 'Content-Type': 'application/json' },
-					body: JSON.stringify(payload),
-				}).catch((error) => {
-					console.error('Failed to reorder spaces:', error)
-					setSpaces(spaces)
-				})
+				reorderSpaces(updatedSpaces)
 			} catch (error) {
 				console.error('Failed to reorder spaces:', error)
 				setSpaces(spaces)

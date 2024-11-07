@@ -85,12 +85,13 @@ export function SpaceProvider({
 		const previousSpaces = [...spaces]
 
 		try {
+			// フロントエンドの状態を即座に更新
 			setSpaces(newSpaces)
 
 			const payload = {
-				items: newSpaces.map((space, index) => ({
+				items: newSpaces.map((space) => ({
 					id: space.id,
-					order: index,
+					order: space.order,
 				})),
 			}
 
@@ -101,10 +102,12 @@ export function SpaceProvider({
 			})
 
 			if (!response.ok) {
-				throw new Error('Failed to reorder spaces')
+				const data = await response.json()
+				throw new Error(data.error || 'Failed to reorder spaces')
 			}
 		} catch (error) {
 			console.error('Reorder error:', error)
+			// エラー時は元の状態に戻す
 			setSpaces(previousSpaces)
 			throw error
 		}
