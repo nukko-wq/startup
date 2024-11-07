@@ -93,7 +93,8 @@ export async function PATCH(request: NextRequest) {
 				userId,
 			},
 			data: {
-				name: body.name,
+				...(body.name && { name: body.name }),
+				...(body.workspaceId && { workspaceId: body.workspaceId }),
 			},
 		})
 

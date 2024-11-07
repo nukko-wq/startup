@@ -98,10 +98,13 @@ a {
 	height: 2px;
 	background: transparent;
 	position: relative;
+	margin: 2px 0;
+	transition: background 0.2s;
 }
 
 .drop-indicator.active {
 	background: #3b82f6;
+	height: 2px;
 }
 
 .sidebar-drop-indicator {
@@ -111,5 +114,16 @@ a {
 }
 
 .sidebar-drop-indicator.active {
+	background: #3b82f6;
+}
+
+/* ワークスペースのドラッグアンドドロップ */
+.workspace-drop-indicator {
+	height: 2px;
+	background: transparent;
+	transition: background 0.2s;
+}
+
+.workspace-drop-indicator.active {
 	background: #3b82f6;
 }

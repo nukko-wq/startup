@@ -3,18 +3,29 @@
 import { createContext, useContext, useState, useEffect, useRef } from 'react'
 import type { Space } from '@/app/types/space'
 import { useSearchParams } from 'next/navigation'
+import { useRouter } from 'next/navigation'
 
-type SpaceContextType = {
+interface SpaceContextType {
 	spaces: Space[]
 	setSpaces: React.Dispatch<React.SetStateAction<Space[]>>
 	reorderSpaces: (newSpaces: Space[]) => Promise<void>
-	activeSpaceId?: string
-	setActiveSpaceId: React.Dispatch<React.SetStateAction<string | undefined>>
+	activeSpaceId: string | null
+	setActiveSpaceId: React.Dispatch<React.SetStateAction<string | null>>
 	isNavigating: boolean
 	setIsNavigating: React.Dispatch<React.SetStateAction<boolean>>
+	handleSpaceClick: (spaceId: string) => Promise<void>
 }
 
-const SpaceContext = createContext<SpaceContextType | undefined>(undefined)
+export const SpaceContext = createContext<SpaceContextType>({
+	spaces: [],
+	setSpaces: () => {},
+	reorderSpaces: async () => {},
+	activeSpaceId: null,
+	setActiveSpaceId: () => {},
+	isNavigating: false,
+	setIsNavigating: () => {},
+	handleSpaceClick: async () => {},
+})
 
 export function SpaceProvider({
 	children,
@@ -26,9 +37,12 @@ export function SpaceProvider({
 	initialActiveSpaceId?: string
 }) {
 	const [spaces, setSpaces] = useState(initialSpaces)
-	const [activeSpaceId, setActiveSpaceId] = useState(initialActiveSpaceId)
+	const [activeSpaceId, setActiveSpaceId] = useState<string | null>(
+		initialActiveSpaceId ?? null,
+	)
 	const searchParams = useSearchParams()
 	const [isNavigating, setIsNavigating] = useState(false)
+	const router = useRouter()
 	const lastUpdateSource = useRef<'url' | 'click' | null>(null)
 	const pendingUpdate = useRef<string | null>(null)
 
@@ -71,12 +85,13 @@ export function SpaceProvider({
 		const previousSpaces = [...spaces]
 
 		try {
+			// フロントエンドの状態を即座に更新
 			setSpaces(newSpaces)
 
 			const payload = {
-				items: newSpaces.map((item, index) => ({
-					id: item.id,
-					order: index,
+				items: newSpaces.map((space) => ({
+					id: space.id,
+					order: space.order,
 				})),
 			}
 
@@ -87,12 +102,49 @@ export function SpaceProvider({
 			})
 
 			if (!response.ok) {
-				throw new Error('Failed to reorder spaces')
+				const data = await response.json()
+				throw new Error(data.error || 'Failed to reorder spaces')
 			}
 		} catch (error) {
 			console.error('Reorder error:', error)
+			// エラー時は元の状態に戻す
 			setSpaces(previousSpaces)
 			throw error
+		}
+	}
+
+	const handleSpaceSelect = async (spaceId: string) => {
+		try {
+			await fetch('/api/users/last-active-space', {
+				method: 'PUT',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({ spaceId }),
+			})
+		} catch (error) {
+			console.error('Error updating last active space:', error)
+		}
+	}
+
+	const handleSpaceClick = async (spaceId: string) => {
+		try {
+			setIsNavigating(true)
+			lastUpdateSource.current = 'click'
+
+			setActiveSpaceId(spaceId)
+
+			await new Promise((resolve) => setTimeout(resolve, 50))
+
+			await Promise.all([
+				router.push(`/?spaceId=${spaceId}`, { scroll: false }),
+				handleSpaceSelect(spaceId),
+			])
+		} catch (error) {
+			console.error('Error switching space:', error)
+			setActiveSpaceId(activeSpaceId)
+		} finally {
+			setTimeout(() => {
+				setIsNavigating(false)
+			}, 500)
 		}
 	}
 
@@ -104,6 +156,7 @@ export function SpaceProvider({
 		setActiveSpaceId,
 		isNavigating,
 		setIsNavigating,
+		handleSpaceClick,
 	}
 
 	return <SpaceContext.Provider value={value}>{children}</SpaceContext.Provider>

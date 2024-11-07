@@ -23,7 +23,10 @@ export default function CreateSpaceInWorkspace({
 }: CreateSpaceInWorkspaceProps) {
 	const [isOpen, setIsOpen] = useState(false)
 
-	const handleCreateSpace = async (data: { name: string }) => {
+	const handleCreateSpace = async (
+		data: { name: string },
+		close: () => void,
+	) => {
 		try {
 			const response = await fetch('/api/spaces', {
 				method: 'POST',
@@ -42,7 +45,7 @@ export default function CreateSpaceInWorkspace({
 
 			const space = await response.json()
 			onSpaceCreated(space)
-			setIsOpen(false)
+			close()
 		} catch (error) {
 			console.error('Error creating space:', error)
 		}
@@ -63,7 +66,10 @@ export default function CreateSpaceInWorkspace({
 								<h2 className="text-lg font-semibold mb-4">
 									新しいスペースを作成
 								</h2>
-								<CreateSpaceForm onClose={close} onSubmit={handleCreateSpace} />
+								<CreateSpaceForm
+									onClose={close}
+									onSubmit={(data) => handleCreateSpace(data, close)}
+								/>
 							</div>
 						)}
 					</Dialog>

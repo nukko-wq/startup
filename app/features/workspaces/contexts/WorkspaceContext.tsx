@@ -7,6 +7,7 @@ type WorkspaceContextType = {
 	workspaces: Workspace[]
 	setWorkspaces: React.Dispatch<React.SetStateAction<Workspace[]>>
 	defaultWorkspace: Workspace | null
+	reorderWorkspaces: (newWorkspaces: Workspace[]) => Promise<void>
 }
 
 const WorkspaceContext = createContext<WorkspaceContextType | undefined>(
@@ -25,6 +26,41 @@ export function WorkspaceProvider({
 		null,
 	)
 
+	const reorderWorkspaces = async (newWorkspaces: Workspace[]) => {
+		const previousWorkspaces = [...workspaces]
+
+		try {
+			const nonDefaultWorkspaces = newWorkspaces.filter((w) => !w.isDefault)
+
+			const payload = {
+				items: nonDefaultWorkspaces.map((workspace, index) => ({
+					id: workspace.id,
+					order: index + 1,
+				})),
+			}
+
+			const response = await fetch('/api/workspaces/reorder', {
+				method: 'PUT',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify(payload),
+			})
+
+			const data = await response.json()
+
+			if (!response.ok || !data.success) {
+				throw new Error(
+					data.error || 'ワークスペースの並び順の更新に失敗しました',
+				)
+			}
+
+			setWorkspaces(newWorkspaces)
+		} catch (error) {
+			console.error('Failed to reorder workspaces:', error)
+			setWorkspaces(previousWorkspaces)
+			throw error
+		}
+	}
+
 	useEffect(() => {
 		const fetchDefaultWorkspace = async () => {
 			try {
@@ -42,7 +78,7 @@ export function WorkspaceProvider({
 
 	return (
 		<WorkspaceContext.Provider
-			value={{ workspaces, setWorkspaces, defaultWorkspace }}
+			value={{ workspaces, setWorkspaces, defaultWorkspace, reorderWorkspaces }}
 		>
 			{children}
 		</WorkspaceContext.Provider>

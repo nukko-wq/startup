@@ -1,6 +1,6 @@
 'use client'
 
-import { EllipsisVertical, SquarePlus } from 'lucide-react'
+import { CirclePlus, SquarePlus } from 'lucide-react'
 import { useState } from 'react'
 import {
 	Button,
@@ -79,7 +79,7 @@ export default function SpacesMenu() {
 				aria-label="Menu"
 				className="outline-none p-2 hover:bg-gray-700 transition-colors duration-200 rounded-full"
 			>
-				<EllipsisVertical className="w-5 h-5 text-zinc-50" />
+				<CirclePlus className="w-5 h-5 text-zinc-50" />
 			</Button>
 			<Popover>
 				<Menu className="bg-zinc-50 outline-none border shadow-md min-w-[200px] rounded-sm">
