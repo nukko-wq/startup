@@ -60,43 +60,31 @@ const Spaces = ({ workspaceId }: SpacesProps) => {
 				)
 
 				const targetSpace = workspaceSpaces[targetIndex]
-				let newOrder: number
+				const newOrder =
+					e.target.dropPosition === 'before'
+						? targetSpace.order
+						: targetSpace.order + 1
 
-				if (e.target.dropPosition === 'before') {
-					newOrder = targetSpace.order
-					const updatedSpaces = spaces.map((space) => {
-						if (
-							space.workspaceId === workspaceId &&
-							space.order >= newOrder &&
-							space.id !== draggedSpace.id
-						) {
-							return { ...space, order: space.order + 1 }
-						}
+				const updatedSpaces = spaces.map((space) => {
+					if (space.workspaceId === workspaceId) {
 						if (space.id === draggedSpace.id) {
 							return { ...space, order: newOrder, workspaceId }
 						}
-						return space
-					})
-					setSpaces(updatedSpaces.sort((a, b) => a.order - b.order))
-					await reorderSpaces(updatedSpaces)
-				} else {
-					newOrder = targetSpace.order + 1
-					const updatedSpaces = spaces.map((space) => {
-						if (
-							space.workspaceId === workspaceId &&
-							space.order > targetSpace.order &&
-							space.id !== draggedSpace.id
-						) {
-							return { ...space, order: space.order + 1 }
+						if (e.target.dropPosition === 'before') {
+							if (space.order >= newOrder) {
+								return { ...space, order: space.order + 1 }
+							}
+						} else {
+							if (space.order > targetSpace.order) {
+								return { ...space, order: space.order + 1 }
+							}
 						}
-						if (space.id === draggedSpace.id) {
-							return { ...space, order: newOrder, workspaceId }
-						}
-						return space
-					})
-					setSpaces(updatedSpaces.sort((a, b) => a.order - b.order))
-					await reorderSpaces(updatedSpaces)
-				}
+					}
+					return space
+				})
+
+				setSpaces(updatedSpaces.sort((a, b) => a.order - b.order))
+				await reorderSpaces(updatedSpaces)
 
 				if (draggedSpace.workspaceId !== workspaceId) {
 					await fetch(`/api/spaces/${draggedSpace.id}`, {
@@ -113,7 +101,7 @@ const Spaces = ({ workspaceId }: SpacesProps) => {
 				setSpaces(spaces)
 			}
 		},
-		onInsert: async (e) => {
+		async onInsert(e) {
 			try {
 				const items = await Promise.all(
 					e.items.filter(isTextDropItem).map(async (item) => {
@@ -125,13 +113,13 @@ const Spaces = ({ workspaceId }: SpacesProps) => {
 				const draggedSpace = items[0]
 				if (!draggedSpace) return
 
-				const newOrder =
-					workspaceSpaces.length === 0
-						? 1
-						: Math.max(...workspaceSpaces.map((s) => s.order)) + 1
+				const newOrder = workspaceSpaces.length === 0 ? 1 : 1
 
 				const updatedSpaces = spaces
 					.map((space) => {
+						if (space.workspaceId === workspaceId) {
+							return { ...space, order: space.order + 1 }
+						}
 						if (space.id === draggedSpace.id) {
 							return { ...space, order: newOrder, workspaceId }
 						}
