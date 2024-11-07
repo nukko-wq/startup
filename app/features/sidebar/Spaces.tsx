@@ -264,7 +264,7 @@ const Spaces = ({ workspaceId }: SpacesProps) => {
 			}}
 			renderEmptyState={() => (
 				<div className="p-2 text-center text-gray-500 min-h-[30px] border-2 border-dashed border-zinc-700 rounded">
-					スペースをドロップしてください
+					Add Space to Workspace
 				</div>
 			)}
 		>
