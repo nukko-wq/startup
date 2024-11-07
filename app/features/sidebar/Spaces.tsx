@@ -101,15 +101,28 @@ const Spaces = ({ workspaceId }: SpacesProps) => {
 				const draggedSpace = items[0]
 				if (!draggedSpace) return
 
-				const newOrder =
-					workspaceSpaces.length === 0
-						? 1
-						: Math.max(...workspaceSpaces.map((s) => s.order)) + 1
+				let newOrder = 1
+				if (workspaceSpaces.length > 0) {
+					if (e.target.key) {
+						const targetSpace = workspaceSpaces.find(
+							(s) => s.id === e.target.key,
+						)
+						newOrder =
+							e.target.dropPosition === 'before'
+								? (targetSpace?.order ?? 0)
+								: (targetSpace?.order ?? 0) + 1
+					} else {
+						newOrder = Math.max(...workspaceSpaces.map((s) => s.order)) + 1
+					}
+				}
 
 				const updatedSpaces = spaces
 					.map((space) => {
 						if (space.id === draggedSpace.id) {
 							return { ...space, order: newOrder, workspaceId }
+						}
+						if (space.workspaceId === workspaceId && space.order >= newOrder) {
+							return { ...space, order: space.order + 1 }
 						}
 						return space
 					})
@@ -122,7 +135,7 @@ const Spaces = ({ workspaceId }: SpacesProps) => {
 						method: 'PATCH',
 						headers: { 'Content-Type': 'application/json' },
 						body: JSON.stringify({
-							workspaceId: workspaceId,
+							workspaceId,
 							order: newOrder,
 						}),
 					}),
