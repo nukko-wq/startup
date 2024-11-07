@@ -272,10 +272,10 @@ const Spaces = ({ workspaceId }: SpacesProps) => {
 				<GridListItem
 					textValue={space.name}
 					className={({ isSelected, isFocusVisible }) => `
-						flex flex-grow items-center justify-between pl-4 outline-none cursor-pointer hover:bg-gray-700 hover:bg-opacity-75 group
+						flex flex-grow items-center justify-between outline-none cursor-pointer hover:bg-gray-700 hover:bg-opacity-75 group
 						${isSelected ? 'bg-gray-700' : ''}
 						${isFocusVisible ? 'ring-2 ring-blue-500' : ''}
-						${activeSpaceId === space.id ? 'border-l-4 border-blue-500' : ''}
+						${activeSpaceId === space.id ? 'border-l-4 border-blue-500 pl-3' : 'pl-4'}
 					`}
 				>
 					<div className="flex flex-grow items-center justify-between group">
