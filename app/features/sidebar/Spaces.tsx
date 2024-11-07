@@ -45,6 +45,11 @@ const Spaces = ({ workspaceId }: SpacesProps) => {
 				/>
 			)
 		},
+		onDragEnd: (e) => {
+			if (e.dropOperation === 'cancel') {
+				setSpaces(spaces)
+			}
+		},
 		async onReorder(e) {
 			try {
 				const draggedSpace = spaces.find((s) => s.id === Array.from(e.keys)[0])
@@ -161,7 +166,7 @@ const Spaces = ({ workspaceId }: SpacesProps) => {
 			dragAndDropHooks={dragAndDropHooks}
 			className="flex flex-col space-y-1 outline-none min-h-[30px] border-2 border-transparent data-[drop-target]:border-zinc-700 rounded"
 			renderEmptyState={() => (
-				<div className="p-2 text-center text-gray-500 min-h-[30px]">
+				<div className="p-2 text-center text-gray-500 min-h-[30px] border-2 border-dashed border-zinc-700 rounded">
 					スペースをドロップしてください
 				</div>
 			)}
