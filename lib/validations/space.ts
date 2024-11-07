@@ -6,7 +6,8 @@ export const spaceCreateSchema = z.object({
 })
 
 export const spaceUpdateSchema = z.object({
-	name: z.string().min(1, '名前を入力してください'),
+	name: z.string().min(1, '名前を入力してください').optional(),
+	workspaceId: z.string().optional(),
 })
 
 export type SpaceSchema = z.infer<typeof spaceCreateSchema>
