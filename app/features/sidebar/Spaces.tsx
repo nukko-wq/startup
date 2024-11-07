@@ -96,7 +96,10 @@ const Spaces = ({ workspaceId }: SpacesProps) => {
 			return (
 				<DropIndicator
 					target={target}
-					className="drop-indicator h-0.5 bg-zinc-700 rounded"
+					className={({ isDropTarget }) => `
+						drop-indicator
+						${isDropTarget ? 'active' : ''}
+					`}
 				/>
 			)
 		},
@@ -269,12 +272,13 @@ const Spaces = ({ workspaceId }: SpacesProps) => {
 				<GridListItem
 					textValue={space.name}
 					className={({ isSelected, isFocusVisible }) => `
-						flex flex-grow items-center justify-between outline-none cursor-pointer hover:bg-gray-700 hover:bg-opacity-75 group
+						flex flex-grow items-center justify-between pl-4 outline-none cursor-pointer hover:bg-gray-700 hover:bg-opacity-75 group
 						${isSelected ? 'bg-gray-700' : ''}
 						${isFocusVisible ? 'ring-2 ring-blue-500' : ''}
+						${activeSpaceId === space.id ? 'border-l-4 border-blue-500' : ''}
 					`}
 				>
-					<div className="flex flex-grow items-center justify-between hover:bg-zinc-800 group rounded">
+					<div className="flex flex-grow items-center justify-between group">
 						<div className="flex items-center flex-grow gap-2">
 							<div className="text-zinc-500">
 								<Button
