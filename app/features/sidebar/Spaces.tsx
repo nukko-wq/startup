@@ -8,6 +8,7 @@ import {
 	GridList,
 	GridListItem,
 	useDragAndDrop,
+	DropIndicator,
 } from 'react-aria-components'
 import SpaceButtonMenu from './SpaceButtonMenu'
 
@@ -35,7 +36,16 @@ const Spaces = ({ workspaceId }: SpacesProps) => {
 		},
 		acceptedDragTypes: ['space-item'],
 		getDropOperation: () => 'move',
-
+		renderDropIndicator(target) {
+			return (
+				<DropIndicator
+					target={target}
+					className={({ isDropTarget }) =>
+						`drop-indicator ${isDropTarget ? 'active' : ''}`
+					}
+				/>
+			)
+		},
 		onReorder: async (e) => {
 			try {
 				const items = [...workspaceSpaces]
@@ -75,15 +85,17 @@ const Spaces = ({ workspaceId }: SpacesProps) => {
 				aria-label="Draggable spaces"
 				items={workspaceSpaces}
 				dragAndDropHooks={dragAndDropHooks}
-				className="space-y-1 outline-none flex flex-col flex-grow"
+				className="space-y-1 outline-none flex flex-col flex-grow cursor-pointer"
 			>
 				{(space) => (
 					<GridListItem
-						key={space.id}
 						textValue={space.name}
 						className="flex items-center justify-between outline-none hover:bg-gray-700 hover:bg-opacity-50 group"
 					>
-						<GripVertical className="w-5 h-5 text-gray-500 mr-2 opacity-0 group-hover:opacity-100" />
+						<Button slot="drag" className="">
+							<GripVertical className="w-5 h-5 text-gray-500 mr-2 cursor-grab" />
+						</Button>
+
 						<Button
 							onPress={() => handleSpaceClick(space.id)}
 							className={`
