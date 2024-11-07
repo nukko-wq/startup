@@ -253,7 +253,7 @@ const Spaces = ({ workspaceId }: SpacesProps) => {
 			aria-label="Spaces in workspace"
 			items={workspaceSpaces}
 			dragAndDropHooks={dragAndDropHooks}
-			className="flex flex-col"
+			className="flex flex-col outline-none"
 			selectionMode="single"
 			selectedKeys={activeSpaceId ? [activeSpaceId] : []}
 			onSelectionChange={(keys) => {
@@ -272,9 +272,9 @@ const Spaces = ({ workspaceId }: SpacesProps) => {
 				<GridListItem
 					textValue={space.name}
 					className={({ isSelected, isFocusVisible }) => `
-						flex flex-grow items-center justify-between outline-none cursor-pointer hover:bg-gray-700 hover:bg-opacity-75 group
+						flex flex-grow items-center justify-between outline-none cursor-pointer hover:bg-gray-700 hover:bg-opacity-75 group transition duration-200
 						${isSelected ? 'bg-gray-700' : ''}
-						${isFocusVisible ? 'ring-2 ring-blue-500' : ''}
+						${isFocusVisible ? '' : ''}
 						${activeSpaceId === space.id ? 'border-l-4 border-blue-500 pl-3' : 'pl-4'}
 					`}
 				>
@@ -295,8 +295,8 @@ const Spaces = ({ workspaceId }: SpacesProps) => {
 										flex-grow text-left outline-none
 										${
 											activeSpaceId === space.id
-												? 'text-zinc-50 font-medium'
-												: 'text-gray-400 hover:text-zinc-50'
+												? 'text-zinc-200 font-medium hover:text-zinc-50 transition-colors duration-200'
+												: 'text-gray-400 hover:text-zinc-50 transition-colors duration-200'
 										}
 									`}
 							>
