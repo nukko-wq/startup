@@ -113,11 +113,9 @@ const Spaces = ({ workspaceId }: SpacesProps) => {
 				const draggedSpace = spaces.find((s) => s.id === Array.from(e.keys)[0])
 				if (!draggedSpace) return
 
-				const targetIndex = workspaceSpaces.findIndex(
-					(s) => s.id === e.target.key,
-				)
+				const targetSpace = workspaceSpaces.find((s) => s.id === e.target.key)
+				if (!targetSpace) return
 
-				const targetSpace = workspaceSpaces[targetIndex]
 				const newOrder =
 					e.target.dropPosition === 'before'
 						? targetSpace.order
@@ -125,18 +123,27 @@ const Spaces = ({ workspaceId }: SpacesProps) => {
 
 				const updatedSpaces = spaces.map((space) => {
 					if (space.workspaceId === workspaceId) {
-						if (space.id === draggedSpace.id) {
-							return { ...space, order: newOrder, workspaceId }
-						}
-						if (e.target.dropPosition === 'before') {
+						if (draggedSpace.workspaceId !== workspaceId) {
 							if (space.order >= newOrder) {
 								return { ...space, order: space.order + 1 }
 							}
 						} else {
-							if (space.order > targetSpace.order) {
+							if (space.id === draggedSpace.id) {
+								return { ...space, order: newOrder }
+							}
+							if (draggedSpace.order < space.order && space.order <= newOrder) {
+								return { ...space, order: space.order - 1 }
+							}
+							if (draggedSpace.order > space.order && space.order >= newOrder) {
 								return { ...space, order: space.order + 1 }
 							}
 						}
+					} else if (space.workspaceId === draggedSpace.workspaceId) {
+						if (space.order > draggedSpace.order) {
+							return { ...space, order: space.order - 1 }
+						}
+					} else if (space.id === draggedSpace.id) {
+						return { ...space, order: newOrder, workspaceId }
 					}
 					return space
 				})
@@ -162,45 +169,71 @@ const Spaces = ({ workspaceId }: SpacesProps) => {
 		async onInsert(e) {
 			try {
 				const items = await Promise.all(
-					e.items.filter(isTextDropItem).map(async (item) => {
-						const data = JSON.parse(await item.getText('space-item'))
-						return data
-					}),
+					e.items
+						.filter(isTextDropItem)
+						.map(async (item) => JSON.parse(await item.getText('space-item'))),
 				)
 
-				const draggedSpace = items[0]
-				if (!draggedSpace) return
+				const insertedSpace = items[0]
+				if (!insertedSpace) return
 
-				const newOrder = workspaceSpaces.length === 0 ? 1 : 1
+				// 現在のワークスペース内のスペースを取得
+				const currentWorkspaceSpaces = spaces.filter(
+					(s) => s.workspaceId === workspaceId,
+				)
 
-				const updatedSpaces = spaces
-					.map((space) => {
-						if (space.workspaceId === workspaceId) {
-							return { ...space, order: space.order + 1 }
+				// ターゲットのスペースとその位置を取得
+				const targetSpace = currentWorkspaceSpaces.find(
+					(s) => s.id === e.target.key,
+				)
+				let newOrder: number
+
+				if (currentWorkspaceSpaces.length === 0) {
+					// スペースが存在しない場合は1を設定
+					newOrder = 1
+				} else if (!targetSpace) {
+					// ターゲットが見つからない場合は最後に追加
+					const maxOrder = Math.max(
+						...currentWorkspaceSpaces.map((s) => s.order),
+					)
+					newOrder = maxOrder + 1
+				} else {
+					// ドロップ位置に基づいて新しい順序を計算
+					newOrder =
+						e.target.dropPosition === 'before'
+							? targetSpace.order
+							: targetSpace.order + 1
+
+					// 既存のスペースの順序を更新
+					for (const space of currentWorkspaceSpaces) {
+						if (space.order >= newOrder) {
+							space.order += 1
 						}
-						if (space.id === draggedSpace.id) {
-							return { ...space, order: newOrder, workspaceId }
-						}
-						return space
-					})
-					.sort((a, b) => a.order - b.order)
+					}
+				}
 
-				setSpaces(updatedSpaces)
+				// 移動するスペースの更新
+				const updatedSpaces = spaces.map((space) => {
+					if (space.id === insertedSpace.id) {
+						return { ...space, workspaceId, order: newOrder }
+					}
+					return space
+				})
 
-				await Promise.all([
-					fetch(`/api/spaces/${draggedSpace.id}`, {
-						method: 'PATCH',
-						headers: { 'Content-Type': 'application/json' },
-						body: JSON.stringify({
-							workspaceId,
-							order: newOrder,
-						}),
+				setSpaces(updatedSpaces.sort((a, b) => a.order - b.order))
+
+				// ワークスペースの更新をAPIに送信
+				await fetch(`/api/spaces/${insertedSpace.id}`, {
+					method: 'PATCH',
+					headers: { 'Content-Type': 'application/json' },
+					body: JSON.stringify({
+						workspaceId,
+						order: newOrder,
 					}),
-					reorderSpaces(updatedSpaces),
-				])
+				})
 			} catch (error) {
 				console.error('Failed to insert space:', error)
-				setSpaces(spaces)
+				throw error
 			}
 		},
 		async onRootDrop(e) {
