@@ -12,6 +12,7 @@ import {
 import { CircleChevronRight, GripVertical, Layers } from 'lucide-react'
 import WorkspaceButtonMenu from './WorkspaceButtonMenu'
 import Spaces from '@/app/features/sidebar/Spaces'
+import SpacesMenu from '@/app/features/sidebar/SpacesMenu'
 
 const WorkspaceInSidebar = () => {
 	const { workspaces, defaultWorkspace, reorderWorkspaces } = useWorkspaces()
@@ -87,6 +88,7 @@ const WorkspaceInSidebar = () => {
 			<div className="flex items-center px-4">
 				<Layers className="w-5 h-5 text-zinc-50 mr-2" />
 				<div className="font-semibold text-zinc-50">Workspaces</div>
+				<SpacesMenu />
 			</div>
 			<GridList
 				items={allWorkspaces}
