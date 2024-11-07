@@ -88,8 +88,8 @@ export function SpaceProvider({
 			setSpaces(newSpaces)
 
 			const payload = {
-				items: newSpaces.map((item, index) => ({
-					id: item.id,
+				items: newSpaces.map((space, index) => ({
+					id: space.id,
 					order: index,
 				})),
 			}

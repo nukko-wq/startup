@@ -9,6 +9,7 @@ import {
 	GridListItem,
 	useDragAndDrop,
 	DropIndicator,
+	isTextDropItem,
 } from 'react-aria-components'
 import SpaceButtonMenu from './SpaceButtonMenu'
 
@@ -25,8 +26,8 @@ const Spaces = ({ workspaceId }: SpacesProps) => {
 	)
 
 	const { dragAndDropHooks } = useDragAndDrop({
-		getItems: (keys) => {
-			const space = workspaceSpaces.find((s) => s.id === Array.from(keys)[0])
+		getItems(keys) {
+			const space = spaces.find((s) => s.id === Array.from(keys)[0])
 			return [
 				{
 					'space-item': JSON.stringify(space),
@@ -46,78 +47,118 @@ const Spaces = ({ workspaceId }: SpacesProps) => {
 				/>
 			)
 		},
-		onReorder: async (e) => {
+		async onInsert(e) {
 			try {
-				const items = [...workspaceSpaces]
-				const draggedIndex = items.findIndex(
-					(item) => item.id === Array.from(e.keys)[0],
-				)
-				const targetIndex = items.findIndex((item) => item.id === e.target.key)
-				const draggedItem = items[draggedIndex]
-
-				items.splice(draggedIndex, 1)
-				items.splice(
-					e.target.dropPosition === 'before' ? targetIndex : targetIndex + 1,
-					0,
-					draggedItem,
+				const items = await Promise.all(
+					e.items
+						.filter(isTextDropItem)
+						.map(async (item) => JSON.parse(await item.getText('space-item'))),
 				)
 
-				// 全体のspacesを更新
+				const targetIndex = workspaceSpaces.findIndex(
+					(s) => s.id === e.target.key,
+				)
+				const newOrder =
+					e.target.dropPosition === 'before'
+						? workspaceSpaces[targetIndex]?.order
+						: workspaceSpaces[targetIndex]?.order + 1
+
 				const updatedSpaces = spaces.map((space) => {
-					const reorderedSpace = items.find((item) => item.id === space.id)
-					if (reorderedSpace) {
-						return { ...space, order: items.indexOf(reorderedSpace) }
+					if (items.some((item) => item.id === space.id)) {
+						return { ...space, workspaceId, order: newOrder }
+					}
+					if (space.workspaceId === workspaceId && space.order >= newOrder) {
+						return { ...space, order: space.order + 1 }
 					}
 					return space
 				})
 
 				await reorderSpaces(updatedSpaces)
 			} catch (error) {
-				console.error('Failed to update space order:', error)
-				alert('スペースの並び順の更新に失敗しました')
+				console.error('Failed to insert spaces:', error)
+			}
+		},
+		onReorder(e) {
+			try {
+				const draggedSpace = spaces.find((s) => s.id === Array.from(e.keys)[0])
+				if (!draggedSpace) return
+
+				const targetIndex = workspaceSpaces.findIndex(
+					(s) => s.id === e.target.key,
+				)
+				const newOrder =
+					e.target.dropPosition === 'before'
+						? workspaceSpaces[targetIndex]?.order
+						: workspaceSpaces[targetIndex]?.order + 1
+
+				const updatedSpaces = spaces.map((space) => {
+					if (space.id === draggedSpace.id) {
+						return { ...space, order: newOrder }
+					}
+					if (space.workspaceId === workspaceId && space.order >= newOrder) {
+						return { ...space, order: space.order + 1 }
+					}
+					return space
+				})
+
+				reorderSpaces(updatedSpaces)
+			} catch (error) {
+				console.error('Failed to reorder spaces:', error)
 			}
 		},
 	})
 
 	return (
-		<div className="flex flex-col">
-			<GridList
-				aria-label="Draggable spaces"
-				items={workspaceSpaces}
-				dragAndDropHooks={dragAndDropHooks}
-				className="space-y-1 outline-none flex flex-col flex-grow cursor-pointer"
-			>
-				{(space) => (
-					<GridListItem
-						textValue={space.name}
-						className="flex items-center justify-between outline-none hover:bg-gray-700 hover:bg-opacity-50 group"
-					>
-						<Button slot="drag" className="">
-							<GripVertical className="w-5 h-5 text-gray-500 mr-2 cursor-grab" />
-						</Button>
-
-						<Button
-							onPress={() => handleSpaceClick(space.id)}
-							className={`
-							cursor-pointer transition-colors flex flex-grow outline-none
-							${
-								activeSpaceId === space.id
-									? 'text-zinc-50 font-medium'
-									: 'text-zinc-400 hover:text-zinc-50'
-							}
-						`}
-						>
-							{space.name}
-						</Button>
-						<SpaceButtonMenu
-							spaceId={space.id}
-							spaceName={space.name}
-							setSpaces={setSpaces}
-						/>
-					</GridListItem>
-				)}
-			</GridList>
-		</div>
+		<GridList
+			aria-label="Spaces in workspace"
+			items={workspaceSpaces}
+			dragAndDropHooks={dragAndDropHooks}
+			className="flex flex-col space-y-1 outline-none min-h-[30px]"
+			renderEmptyState={() => (
+				<div className="p-2 text-center text-gray-500">No spaces yet</div>
+			)}
+		>
+			{(space) => (
+				<GridListItem
+					textValue={space.name}
+					className="outline-none cursor-pointer"
+				>
+					<div className="flex items-center justify-between p-1 hover:bg-zinc-800 group rounded">
+						<div className="flex items-center flex-grow gap-2">
+							<div className="opacity-0 group-hover:opacity-100">
+								<Button
+									slot="drag"
+									className="cursor-grab"
+									aria-label="ドラッグハンドル"
+								>
+									<GripVertical className="w-4 h-4 text-zinc-500" />
+								</Button>
+							</div>
+							<Button
+								onPress={() => handleSpaceClick(space.id)}
+								className={`
+									flex-grow text-left
+									${
+										activeSpaceId === space.id
+											? 'text-zinc-50 font-medium'
+											: 'text-zinc-400 hover:text-zinc-50'
+									}
+								`}
+							>
+								{space.name}
+							</Button>
+						</div>
+						<div className="opacity-0 group-hover:opacity-100">
+							<SpaceButtonMenu
+								spaceId={space.id}
+								spaceName={space.name}
+								setSpaces={setSpaces}
+							/>
+						</div>
+					</div>
+				</GridListItem>
+			)}
+		</GridList>
 	)
 }
 
