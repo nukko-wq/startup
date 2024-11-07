@@ -207,37 +207,43 @@ const Spaces = ({ workspaceId }: SpacesProps) => {
 							: targetSpace.order + 1
 				}
 
-				const updatedSpaces = spaces.map((space) => {
-					// 移動先のワークスペース内のスペースを更新
-					if (space.workspaceId === workspaceId) {
-						if (space.order >= newOrder) {
-							return { ...space, order: space.order + 1 }
+				const updatedSpaces = spaces
+					.map((space) => {
+						// 移動先のワークスペース内のスペースを更新
+						if (space.workspaceId === workspaceId) {
+							if (space.order >= newOrder) {
+								return { ...space, order: space.order + 1 }
+							}
 						}
-					}
-					// 移動元のワークスペース内のスペースを更新
-					else if (space.workspaceId === insertedSpace.workspaceId) {
-						if (space.order > insertedSpace.order) {
-							return { ...space, order: space.order - 1 }
+						// 移動元のワークスペース内のスペースを更新
+						else if (space.workspaceId === insertedSpace.workspaceId) {
+							if (space.order > insertedSpace.order) {
+								return { ...space, order: space.order - 1 }
+							}
 						}
-					}
-					// 移動するスペース自体を更新
-					else if (space.id === insertedSpace.id) {
-						return { ...space, workspaceId, order: newOrder }
-					}
-					return space
-				})
+						// 移動するスペース自体を更新
+						if (space.id === insertedSpace.id) {
+							return { ...space, workspaceId, order: newOrder }
+						}
+						return space
+					})
+					.sort((a, b) => a.order - b.order)
 
-				setSpaces(updatedSpaces.sort((a, b) => a.order - b.order))
-				await reorderSpaces(updatedSpaces)
+				// 状態を即時更新
+				setSpaces(updatedSpaces)
 
-				await fetch(`/api/spaces/${insertedSpace.id}`, {
-					method: 'PATCH',
-					headers: { 'Content-Type': 'application/json' },
-					body: JSON.stringify({
-						workspaceId,
-						order: newOrder,
+				// APIリクエストを実行
+				await Promise.all([
+					reorderSpaces(updatedSpaces),
+					fetch(`/api/spaces/${insertedSpace.id}`, {
+						method: 'PATCH',
+						headers: { 'Content-Type': 'application/json' },
+						body: JSON.stringify({
+							workspaceId,
+							order: newOrder,
+						}),
 					}),
-				})
+				])
 			} catch (error) {
 				console.error('Failed to insert space:', error)
 				throw error
