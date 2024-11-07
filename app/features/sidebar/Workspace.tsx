@@ -9,7 +9,12 @@ import {
 	useDragAndDrop,
 	DropIndicator,
 } from 'react-aria-components'
-import { CircleChevronRight, GripVertical, Layers } from 'lucide-react'
+import {
+	ChevronRight,
+	CircleChevronRight,
+	GripVertical,
+	Layers,
+} from 'lucide-react'
 import WorkspaceButtonMenu from './WorkspaceButtonMenu'
 import Spaces from '@/app/features/sidebar/Spaces'
 import SpacesMenu from '@/app/features/sidebar/SpacesMenu'
@@ -106,12 +111,15 @@ const WorkspaceInSidebar = () => {
 					>
 						<div className="flex items-center">
 							<div className="flex flex-col flex-grow justify-between">
-								<div className="flex items-center justify-between">
+								<div className="flex items-center justify-between group">
 									{/* ワークスペース名(Default Workspaceの場合は非表示) */}
 									{!workspace.isDefault && (
-										<div className="flex items-center px-4">
-											<Button slot="drag">
-												<CircleChevronRight className="w-5 h-5 text-gray-500 mr-2" />
+										<div className="flex items-center">
+											<Button
+												slot="drag"
+												className=" rounded-full py-1 pl-1 pr-2 ml-2"
+											>
+												<ChevronRight className="w-6 h-6 text-gray-500" />
 											</Button>
 											<span className="font-medium text-zinc-50">
 												{workspace.name}

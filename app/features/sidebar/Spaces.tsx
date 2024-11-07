@@ -278,12 +278,12 @@ const Spaces = ({ workspaceId }: SpacesProps) => {
 						${activeSpaceId === space.id ? 'border-l-4 border-blue-500 pl-3' : 'pl-4'}
 					`}
 				>
-					<div className="flex flex-grow items-center justify-between group">
-						<div className="flex items-center flex-grow gap-2">
-							<div className="text-zinc-500">
+					<div className="flex flex-grow items-center justify-between group py-1">
+						<div className="flex items-center flex-grow">
+							<div className="flex items-center cursor-grab">
 								<Button
 									slot="drag"
-									className="cursor-grab flex items-center"
+									className="cursor-grab flex items-center pr-3"
 									aria-label="ドラッグハンドル"
 								>
 									<GripVertical className="w-4 h-4 text-zinc-500" />

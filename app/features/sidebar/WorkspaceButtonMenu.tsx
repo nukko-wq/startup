@@ -33,9 +33,9 @@ const WorkspaceButtonMenu = ({
 			<MenuTrigger>
 				<Button
 					aria-label="Menu"
-					className="outline-none p-2 mr-2 hover:bg-gray-600 transition-colors duration-200 rounded-full opacity-0 group-hover:opacity-100"
+					className="outline-none p-2 mr-2 group-hover:bg-gray-600 transition duration-200 rounded-full opacity-0 group-hover:opacity-100"
 				>
-					<EllipsisVertical className="w-5 h-5 text-zinc-700" />
+					<EllipsisVertical className="w-4 h-4 text-zinc-50" />
 				</Button>
 				<Popover>
 					<Menu className="bg-zinc-50 outline-none border rounded-lg shadow-md">
