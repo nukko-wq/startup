@@ -28,6 +28,7 @@ import SpacesMenu from '@/app/features/sidebar/SpacesMenu'
 import { useWorkspaces } from '@/app/features/workspaces/contexts/WorkspaceContext'
 import CreateSpaceForm from '@/app/features/spaces/create_space/CreateSpaceForm'
 import WorkspaceButtonMenu from './WorkspaceButtonMenu'
+import Workspace from '@/app/features/sidebar/Workspace'
 
 export default function Sidebar() {
 	const router = useRouter()
@@ -164,23 +165,21 @@ export default function Sidebar() {
 	const { dragAndDropHooks: workspaceDragAndDropHooks } = useDragAndDrop({
 		getItems(keys) {
 			const workspace = workspaces.find((w) => w.id === Array.from(keys)[0])
+			if (!workspace || workspace.isDefault) return []
 			return [
 				{
+					'text/plain': workspace.name,
 					'workspace-item': JSON.stringify(workspace),
-					'text/plain': workspace?.name || '',
 				},
 			]
 		},
-		onReorder: async (e) => {
-			// デフォルトワークスペースを除外
-			const nonDefaultWorkspaces = workspaces.filter((w) => !w.isDefault)
-			const draggedId = Array.from(e.keys)[0] as string
-			const targetId = e.target.key as string
+		onReorder(e) {
+			const { target, keys } = e
+			const draggedId = Array.from(keys)[0] as string
+			const targetId = target.key as string
 
-			// ドラッグされたアイテムがデフォルトワークスペースの場合は処理を中止
-			if (workspaces.find((w) => w.id === draggedId)?.isDefault) {
-				return
-			}
+			// デフォルトワークスペースを除外した配列を作成
+			const nonDefaultWorkspaces = workspaces.filter((w) => !w.isDefault)
 
 			const draggedIndex = nonDefaultWorkspaces.findIndex(
 				(w) => w.id === draggedId,
@@ -191,26 +190,19 @@ export default function Sidebar() {
 
 			if (draggedIndex === -1 || targetIndex === -1) return
 
-			const updatedWorkspaces = [...nonDefaultWorkspaces]
-			const [draggedItem] = updatedWorkspaces.splice(draggedIndex, 1)
-			const newIndex =
-				e.target.dropPosition === 'before' ? targetIndex : targetIndex + 1
-			updatedWorkspaces.splice(newIndex, 0, draggedItem)
+			const newWorkspaces = [...nonDefaultWorkspaces]
+			const [draggedWorkspace] = newWorkspaces.splice(draggedIndex, 1)
+			newWorkspaces.splice(targetIndex, 0, draggedWorkspace)
 
 			// orderを1から振り直し
-			const reorderedWorkspaces = updatedWorkspaces.map((workspace, index) => ({
+			const reorderedWorkspaces = newWorkspaces.map((workspace, index) => ({
 				...workspace,
 				order: index + 1,
 			}))
 
-			// デフォルトワークスペースを先頭に追加
-			const defaultWorkspace = workspaces.find((w) => w.isDefault)
+			// デフォルトワークスペースは常に先頭（order: 0）
 			if (defaultWorkspace) {
-				try {
-					await reorderWorkspaces([defaultWorkspace, ...reorderedWorkspaces])
-				} catch (error) {
-					console.error('Failed to reorder workspaces:', error)
-				}
+				reorderWorkspaces([defaultWorkspace, ...reorderedWorkspaces])
 			}
 		},
 		renderDropIndicator(target) {
@@ -280,6 +272,10 @@ export default function Sidebar() {
 				<div className="text-zinc-50 text-2xl font-semibold">Startup</div>
 				<SidebarMenu />
 			</div>
+
+			<Workspace />
+
+			<h2 className="text-zinc-50 text-lg font-semibold pl-4">old Sidebar</h2>
 			<div className="">
 				<div className="flex items-center justify-between pl-4 pr-2 mb-4">
 					<div className="flex items-center">
@@ -347,94 +343,106 @@ export default function Sidebar() {
 						<Layers className="w-5 h-5 text-zinc-50 mr-2" />
 						<div className="font-semibold text-zinc-50">Workspaces</div>
 					</div>
+					{/* Default Workspaceを除くワークスペース一覧 */}
 					<GridList
-						aria-label="Draggable workspaces"
 						items={workspaces}
 						dragAndDropHooks={workspaceDragAndDropHooks}
 						className="outline-none"
-						renderEmptyState={() => <div>No workspaces</div>}
 					>
 						{(workspace) => (
 							<GridListItem
 								key={workspace.id}
 								id={workspace.id}
 								textValue={workspace.name}
-								className={`outline-none ${workspace.isDefault ? 'cursor-not-allowed' : 'cursor-grab'}`}
+								className="outline-none"
 							>
-								<div className="flex items-center justify-between px-4 py-2 hover:bg-zinc-700 cursor-pointer">
-									<div className="flex items-center">
-										<Button className="outline-none" slot="drag">
-											<CircleChevronRight className="w-5 h-5 text-gray-500 mr-2" />
+								<div className="flex items-center group">
+									{!workspace.isDefault && (
+										<Button
+											aria-label="Drag handle"
+											className="p-2 opacity-0 group-hover:opacity-100 cursor-grab active:cursor-grabbing"
+										>
+											<GripVertical className="w-4 h-4 text-zinc-400" />
 										</Button>
-										<Button className="font-medium text-zinc-50 hover:border-b-2 hover:border-blue-500">
-											{workspace.name}
-										</Button>
-									</div>
-									<WorkspaceButtonMenu
-										workspaceId={workspace.id}
-										workspaceName={workspace.name}
-									/>
-								</div>
-								{/* ワークスペース内のスペース一覧 */}
-								<div className="">
-									{spaces
-										.filter((space) => space.workspaceId === workspace.id)
-										.map((space) => (
-											<div
-												key={space.id}
-												className="flex items-center justify-between hover:bg-gray-700 hover:bg-opacity-75"
-											>
-												<Button
-													className="w-full text-sm text-left py-1 rounded text-zinc-50 group"
-													onPress={() => handleSpaceClick(space.id)}
-												>
-													{space.name}
-												</Button>
-												<SpaceButtonMenu
-													spaceId={space.id}
-													spaceName={space.name}
-													setSpaces={setSpaces}
-												/>
-											</div>
-										))}
-									{spaces.filter((space) => space.workspaceId === workspace.id)
-										.length === 0 && (
-										<div className="text-zinc-500">
-											<DialogTrigger>
-												<div className="flex items-center justify-center pt-3">
-													<Button className="text-gray-500 hover:text-gray-400 outline-none font-semibold group-hover:text-gray-400">
-														<div className="flex items-center border border-gray-500 rounded-sm p-3 mx-auto hover:bg-gray-700 hover:bg-opacity-75 group">
-															<Plus className="w-4 h-4 text-gray-500 group-hover:text-gray-400" />
-															<div className="pl-2">Add Space to Workspace</div>
-														</div>
-													</Button>
-												</div>
-												<ModalOverlay className="fixed inset-0 z-10 overflow-y-auto bg-black/25 flex min-h-full items-center justify-center p-4 text-center backdrop-blur">
-													<Modal className="w-full max-w-md overflow-hidden rounded-2xl bg-white p-6 text-left align-middle shadow-xl">
-														<Dialog className="outline-none">
-															{({ close }) => (
-																<div>
-																	<h2 className="text-lg font-semibold mb-4">
-																		新しいスペースを作成
-																	</h2>
-																	<CreateSpaceForm
-																		onClose={close}
-																		onSubmit={(data) =>
-																			handleCreateSpace(
-																				data,
-																				workspace.id,
-																				close,
-																			)
-																		}
-																	/>
-																</div>
-															)}
-														</Dialog>
-													</Modal>
-												</ModalOverlay>
-											</DialogTrigger>
-										</div>
 									)}
+									<div className="flex items-center justify-between px-4 py-2 hover:bg-zinc-700 cursor-pointer">
+										<div className="flex items-center">
+											<Button className="outline-none" slot="drag">
+												<CircleChevronRight className="w-5 h-5 text-gray-500 mr-2" />
+											</Button>
+											<Button className="font-medium text-zinc-50 hover:border-b-2 hover:border-blue-500">
+												{workspace.name}
+											</Button>
+										</div>
+										<WorkspaceButtonMenu
+											workspaceId={workspace.id}
+											workspaceName={workspace.name}
+										/>
+									</div>
+									{/* ワークスペース内のスペース一覧 */}
+									<div className="">
+										{spaces
+											.filter((space) => space.workspaceId === workspace.id)
+											.map((space) => (
+												<div
+													key={space.id}
+													className="flex items-center justify-between hover:bg-gray-700 hover:bg-opacity-75"
+												>
+													<Button
+														className="w-full text-sm text-left py-1 rounded text-zinc-50 group"
+														onPress={() => handleSpaceClick(space.id)}
+													>
+														{space.name}
+													</Button>
+													<SpaceButtonMenu
+														spaceId={space.id}
+														spaceName={space.name}
+														setSpaces={setSpaces}
+													/>
+												</div>
+											))}
+										{spaces.filter(
+											(space) => space.workspaceId === workspace.id,
+										).length === 0 && (
+											<div className="text-zinc-500">
+												<DialogTrigger>
+													<div className="flex items-center justify-center pt-3">
+														<Button className="text-gray-500 hover:text-gray-400 outline-none font-semibold group-hover:text-gray-400">
+															<div className="flex items-center border border-gray-500 rounded-sm p-3 mx-auto hover:bg-gray-700 hover:bg-opacity-75 group">
+																<Plus className="w-4 h-4 text-gray-500 group-hover:text-gray-400" />
+																<div className="pl-2">
+																	Add Space to Workspace
+																</div>
+															</div>
+														</Button>
+													</div>
+													<ModalOverlay className="fixed inset-0 z-10 overflow-y-auto bg-black/25 flex min-h-full items-center justify-center p-4 text-center backdrop-blur">
+														<Modal className="w-full max-w-md overflow-hidden rounded-2xl bg-white p-6 text-left align-middle shadow-xl">
+															<Dialog className="outline-none">
+																{({ close }) => (
+																	<div>
+																		<h2 className="text-lg font-semibold mb-4">
+																			新しいスペースを作成
+																		</h2>
+																		<CreateSpaceForm
+																			onClose={close}
+																			onSubmit={(data) =>
+																				handleCreateSpace(
+																					data,
+																					workspace.id,
+																					close,
+																				)
+																			}
+																		/>
+																	</div>
+																)}
+															</Dialog>
+														</Modal>
+													</ModalOverlay>
+												</DialogTrigger>
+											</div>
+										)}
+									</div>
 								</div>
 							</GridListItem>
 						)}

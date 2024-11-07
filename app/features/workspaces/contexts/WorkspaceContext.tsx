@@ -27,27 +27,36 @@ export function WorkspaceProvider({
 	)
 
 	const reorderWorkspaces = async (newWorkspaces: Workspace[]) => {
+		const previousWorkspaces = [...workspaces]
+
 		try {
-			const items = newWorkspaces.map((workspace) => ({
-				id: workspace.id,
-				order: workspace.order,
-			}))
+			const nonDefaultWorkspaces = newWorkspaces.filter((w) => !w.isDefault)
+
+			const payload = {
+				items: nonDefaultWorkspaces.map((workspace, index) => ({
+					id: workspace.id,
+					order: index + 1,
+				})),
+			}
 
 			const response = await fetch('/api/workspaces/reorder', {
 				method: 'PUT',
-				headers: {
-					'Content-Type': 'application/json',
-				},
-				body: JSON.stringify({ items }),
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify(payload),
 			})
 
-			if (!response.ok) {
-				throw new Error('Failed to reorder workspaces')
+			const data = await response.json()
+
+			if (!response.ok || !data.success) {
+				throw new Error(
+					data.error || 'ワークスペースの並び順の更新に失敗しました',
+				)
 			}
 
 			setWorkspaces(newWorkspaces)
 		} catch (error) {
-			console.error('Reorder error:', error)
+			console.error('Failed to reorder workspaces:', error)
+			setWorkspaces(previousWorkspaces)
 			throw error
 		}
 	}

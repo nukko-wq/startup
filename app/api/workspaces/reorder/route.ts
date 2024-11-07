@@ -6,10 +6,22 @@ export async function PUT(req: Request) {
 	try {
 		const user = await getCurrentUser()
 		if (!user) {
-			return NextResponse.json({ error: '認証が必要です' }, { status: 401 })
+			return NextResponse.json(
+				{ success: false, error: '認証が必要です' },
+				{ status: 401 },
+			)
 		}
 
-		const { items } = await req.json()
+		const body = await req.json()
+
+		if (!body || !body.items || !Array.isArray(body.items)) {
+			return NextResponse.json(
+				{ success: false, error: '無効なリクエストデータです' },
+				{ status: 400 },
+			)
+		}
+
+		const { items } = body
 
 		await db.$transaction(
 			items.map((item: { id: string; order: number }) =>
@@ -25,14 +37,11 @@ export async function PUT(req: Request) {
 			),
 		)
 
-		return NextResponse.json({
-			success: true,
-			message: 'Workspaces reordered successfully',
-		})
+		return NextResponse.json({ success: true, message: '並び順を更新しました' })
 	} catch (error) {
 		console.error('Error reordering workspaces:', error)
 		return NextResponse.json(
-			{ error: 'Failed to reorder workspaces' },
+			{ success: false, error: 'ワークスペースの並び順の更新に失敗しました' },
 			{ status: 500 },
 		)
 	}
