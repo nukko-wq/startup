@@ -9,13 +9,15 @@ import {
 	GridListItem,
 	useDragAndDrop,
 } from 'react-aria-components'
+import SpaceButtonMenu from './SpaceButtonMenu'
 
 interface SpacesProps {
 	workspaceId: string
 }
 
 const Spaces = ({ workspaceId }: SpacesProps) => {
-	const { spaces, activeSpaceId, handleSpaceClick, reorderSpaces } = useSpaces()
+	const { spaces, activeSpaceId, handleSpaceClick, reorderSpaces, setSpaces } =
+		useSpaces()
 
 	const workspaceSpaces = spaces.filter(
 		(space) => space.workspaceId === workspaceId,
@@ -79,13 +81,13 @@ const Spaces = ({ workspaceId }: SpacesProps) => {
 					<GridListItem
 						key={space.id}
 						textValue={space.name}
-						className="flex items-center justify-between outline-none hover:bg-gray-700 hover:bg-opacity-50"
+						className="flex items-center justify-between outline-none hover:bg-gray-700 hover:bg-opacity-50 group"
 					>
-						<GripVertical className="w-5 h-5 text-gray-500 mr-2" />
+						<GripVertical className="w-5 h-5 text-gray-500 mr-2 opacity-0 group-hover:opacity-100" />
 						<Button
 							onPress={() => handleSpaceClick(space.id)}
 							className={`
-							cursor-pointer transition-colors flex flex-grow
+							cursor-pointer transition-colors flex flex-grow outline-none
 							${
 								activeSpaceId === space.id
 									? 'text-zinc-50 font-medium'
@@ -95,6 +97,11 @@ const Spaces = ({ workspaceId }: SpacesProps) => {
 						>
 							{space.name}
 						</Button>
+						<SpaceButtonMenu
+							spaceId={space.id}
+							spaceName={space.name}
+							setSpaces={setSpaces}
+						/>
 					</GridListItem>
 				)}
 			</GridList>

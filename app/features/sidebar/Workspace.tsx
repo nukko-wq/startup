@@ -100,7 +100,7 @@ const WorkspaceInSidebar = () => {
 						textValue={workspace.name}
 						className="outline-none"
 					>
-						<div className="flex items-center group">
+						<div className="flex items-center">
 							<div className="flex flex-col flex-grow justify-between px-4 py-2">
 								<div className="flex items-center justify-between">
 									<div className="flex items-center">
