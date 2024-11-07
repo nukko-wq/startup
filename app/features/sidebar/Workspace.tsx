@@ -20,13 +20,14 @@ import Spaces from '@/app/features/sidebar/Spaces'
 import SpacesMenu from '@/app/features/sidebar/SpacesMenu'
 
 const WorkspaceInSidebar = () => {
-	const { workspaces, defaultWorkspace, reorderWorkspaces } = useWorkspaces()
+	const { workspaces, defaultWorkspace, reorderWorkspaces, setWorkspaces } =
+		useWorkspaces()
 
 	// デフォルトワークスペース以外のワークスペースのみを対象とする
 	const nonDefaultWorkspaces = workspaces.filter((w) => !w.isDefault)
 
 	const { dragAndDropHooks } = useDragAndDrop({
-		getItems: (keys) => {
+		getItems(keys) {
 			const workspace = nonDefaultWorkspaces.find(
 				(w) => w.id === Array.from(keys)[0],
 			)
@@ -39,45 +40,105 @@ const WorkspaceInSidebar = () => {
 		},
 		acceptedDragTypes: ['workspace-item'],
 		getDropOperation: () => 'move',
-
-		onReorder: async (e) => {
+		async onReorder(e) {
 			try {
-				const items = [...nonDefaultWorkspaces]
-				const draggedIndex = items.findIndex(
-					(item) => item.id === Array.from(e.keys)[0],
+				const draggedWorkspace = nonDefaultWorkspaces.find(
+					(w) => w.id === Array.from(e.keys)[0],
 				)
-				const targetIndex = items.findIndex((item) => item.id === e.target.key)
-				const draggedItem = items[draggedIndex]
+				if (!draggedWorkspace) return
 
-				items.splice(draggedIndex, 1)
-				items.splice(
-					e.target.dropPosition === 'before' ? targetIndex : targetIndex + 1,
-					0,
-					draggedItem,
+				const targetWorkspace = nonDefaultWorkspaces.find(
+					(w) => w.id === e.target.key,
+				)
+				if (!targetWorkspace) return
+
+				// 新しい順序を計算
+				const sortedWorkspaces = [...nonDefaultWorkspaces].sort(
+					(a, b) => a.order - b.order,
 				)
 
-				const updatedWorkspaces = items.map((item, index) => ({
-					...item,
-					order: index + 1,
-				}))
+				// ドラッグされたアイテムの新しい位置を決定
+				const draggedIndex = sortedWorkspaces.findIndex(
+					(w) => w.id === draggedWorkspace.id,
+				)
+				const targetIndex = sortedWorkspaces.findIndex(
+					(w) => w.id === targetWorkspace.id,
+				)
 
-				const completeWorkspaces = defaultWorkspace
-					? [defaultWorkspace, ...updatedWorkspaces]
-					: updatedWorkspaces
+				// アイテムを移動
+				if (e.target.dropPosition === 'before') {
+					sortedWorkspaces.splice(draggedIndex, 1)
+					const newIndex =
+						targetIndex > draggedIndex ? targetIndex - 1 : targetIndex
+					sortedWorkspaces.splice(newIndex, 0, draggedWorkspace)
+				} else {
+					sortedWorkspaces.splice(draggedIndex, 1)
+					const newIndex =
+						targetIndex > draggedIndex ? targetIndex : targetIndex + 1
+					sortedWorkspaces.splice(newIndex, 0, draggedWorkspace)
+				}
 
-				await reorderWorkspaces(completeWorkspaces)
+				// orderを更新
+				const reorderedWorkspaces = sortedWorkspaces.map(
+					(workspace, index) => ({
+						...workspace,
+						order: index + 1,
+					}),
+				)
+
+				// 一時的に状態を更新
+				const updatedWorkspaces = defaultWorkspace
+					? [defaultWorkspace, ...reorderedWorkspaces]
+					: reorderedWorkspaces
+				setWorkspaces(updatedWorkspaces)
+
+				// APIリクエストを実行
+				const payload = {
+					items: reorderedWorkspaces.map((w) => ({
+						id: w.id,
+						order: w.order,
+					})),
+				}
+
+				if (!payload.items || payload.items.length === 0) {
+					throw new Error('Payload is empty')
+				}
+
+				const response = await fetch('/api/workspaces/reorder', {
+					method: 'PUT',
+					headers: {
+						'Content-Type': 'application/json',
+					},
+					body: JSON.stringify(payload),
+				})
+
+				if (!response.ok) {
+					throw new Error('Failed to reorder workspaces')
+				}
+
+				const data = await response.json()
+				if (!data.success) {
+					throw new Error(data.error || 'Failed to reorder workspaces')
+				}
 			} catch (error) {
-				console.error('Failed to update workspace order:', error)
-				alert('ワークスペースの並び順の更新に失敗しました')
+				console.error('Failed to reorder workspaces:', error)
+				// エラー時は元の状態に戻す
+				setWorkspaces(workspaces)
+			}
+		},
+		onDragEnd: (e) => {
+			if (e.dropOperation === 'cancel') {
+				setWorkspaces(workspaces)
 			}
 		},
 		renderDropIndicator(target) {
 			return (
 				<DropIndicator
 					target={target}
-					className={({ isDropTarget }) =>
-						`workspace-drop-indicator ${isDropTarget ? 'active' : ''}`
-					}
+					className={({ isDropTarget }) => `
+						drop-indicator
+						${isDropTarget ? 'active' : ''}
+					`}
 				/>
 			)
 		},
@@ -102,6 +163,7 @@ const WorkspaceInSidebar = () => {
 				dragAndDropHooks={dragAndDropHooks}
 				className="outline-none"
 				selectionMode="single"
+				aria-label="ワークスペース一覧"
 			>
 				{(workspace) => (
 					<GridListItem
@@ -114,7 +176,7 @@ const WorkspaceInSidebar = () => {
 								<div className="flex items-center justify-between group">
 									{/* ワークスペース名(Default Workspaceの場合は非表示) */}
 									{!workspace.isDefault && (
-										<div className="flex items-center">
+										<div className="flex items-center cursor-grab">
 											<Button
 												slot="drag"
 												className=" rounded-full py-1 pl-1 pr-2 ml-2"

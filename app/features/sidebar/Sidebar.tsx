@@ -202,7 +202,9 @@ export default function Sidebar() {
 
 			// デフォルトワークスペースは常に先頭（order: 0）
 			if (defaultWorkspace) {
-				reorderWorkspaces([defaultWorkspace, ...reorderedWorkspaces])
+				reorderWorkspaces({
+					items: [defaultWorkspace, ...reorderedWorkspaces],
+				})
 			}
 		},
 		renderDropIndicator(target) {

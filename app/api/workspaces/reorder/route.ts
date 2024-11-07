@@ -13,6 +13,7 @@ export async function PUT(req: Request) {
 		}
 
 		const body = await req.json()
+		console.log('Received payload:', body)
 
 		if (!body || !body.items || !Array.isArray(body.items)) {
 			return NextResponse.json(
@@ -37,7 +38,21 @@ export async function PUT(req: Request) {
 			),
 		)
 
-		return NextResponse.json({ success: true, message: '並び順を更新しました' })
+		// 更新後のワークスペースを取得
+		const updatedWorkspaces = await db.workspace.findMany({
+			where: {
+				userId: user.id,
+			},
+			orderBy: {
+				order: 'asc',
+			},
+		})
+
+		return NextResponse.json({
+			success: true,
+			message: '並び順を更新しました',
+			data: updatedWorkspaces, // 更新後のデータを含める
+		})
 	} catch (error) {
 		console.error('Error reordering workspaces:', error)
 		return NextResponse.json(
