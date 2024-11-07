@@ -20,88 +20,87 @@ import Spaces from '@/app/features/sidebar/Spaces'
 import SpacesMenu from '@/app/features/sidebar/SpacesMenu'
 
 const WorkspaceInSidebar = () => {
-	const { workspaces, defaultWorkspace, reorderWorkspaces } = useWorkspaces()
+	const { workspaces, defaultWorkspace, reorderWorkspaces, setWorkspaces } =
+		useWorkspaces()
 
-	// デフォルトワークスペース以外のワークスペースのみを対象とする
+	// デフォルトワークスペース以外のワークスペースを取得
 	const nonDefaultWorkspaces = workspaces.filter((w) => !w.isDefault)
 
 	const { dragAndDropHooks } = useDragAndDrop({
 		getItems: (keys) => {
-			const workspace = nonDefaultWorkspaces.find(
-				(w) => w.id === Array.from(keys)[0],
-			)
-			return [
-				{
-					'workspace-item': JSON.stringify(workspace),
-					'text/plain': workspace?.name || '',
-				},
-			]
+			return [...keys].map((key) => ({
+				'workspace-id': String(key),
+				'text/plain': String(key),
+			}))
 		},
-		acceptedDragTypes: ['workspace-item'],
-		getDropOperation: () => 'move',
-
-		onReorder: async (e) => {
+		async onReorder(e) {
 			try {
-				const items = [...nonDefaultWorkspaces]
-				const draggedIndex = items.findIndex(
-					(item) => item.id === Array.from(e.keys)[0],
+				const draggedId = Array.from(e.keys)[0] as string
+				const targetId = e.target.key as string
+
+				// 現在のワークスペースの配列をコピー
+				const currentWorkspaces = [...nonDefaultWorkspaces]
+
+				const draggedIndex = currentWorkspaces.findIndex(
+					(w) => w.id === draggedId,
 				)
-				const targetIndex = items.findIndex((item) => item.id === e.target.key)
-				const draggedItem = items[draggedIndex]
-
-				items.splice(draggedIndex, 1)
-				items.splice(
-					e.target.dropPosition === 'before' ? targetIndex : targetIndex + 1,
-					0,
-					draggedItem,
+				const targetIndex = currentWorkspaces.findIndex(
+					(w) => w.id === targetId,
 				)
 
-				const updatedWorkspaces = items.map((item, index) => ({
-					...item,
-					order: index + 1,
-				}))
+				if (draggedIndex === -1 || targetIndex === -1) {
+					console.log('Invalid indexes:', { draggedIndex, targetIndex })
+					return
+				}
 
-				const completeWorkspaces = defaultWorkspace
-					? [defaultWorkspace, ...updatedWorkspaces]
-					: updatedWorkspaces
+				// アイテムを移動
+				const [draggedItem] = currentWorkspaces.splice(draggedIndex, 1)
+				const insertIndex =
+					e.target.dropPosition === 'before' ? targetIndex : targetIndex + 1
+				currentWorkspaces.splice(insertIndex, 0, draggedItem)
 
-				await reorderWorkspaces(completeWorkspaces)
+				// 新しい順序を割り当て
+				const reorderedWorkspaces = currentWorkspaces.map(
+					(workspace, index) => ({
+						...workspace,
+						order: index + 1,
+					}),
+				)
+
+				// APIに送信するペイロードを作成
+				const requestPayload = {
+					items: reorderedWorkspaces.map((w) => ({
+						id: w.id,
+						order: w.order,
+					})),
+				}
+
+				console.log('Sending payload:', requestPayload)
+
+				// 一時的に状態を更新
+				setWorkspaces(
+					defaultWorkspace
+						? [defaultWorkspace, ...reorderedWorkspaces]
+						: reorderedWorkspaces,
+				)
+
+				// reorderWorkspaces関数を使用してAPIを呼び出す
+				await reorderWorkspaces(requestPayload)
 			} catch (error) {
-				console.error('Failed to update workspace order:', error)
-				alert('ワークスペースの並び順の更新に失敗しました')
+				console.error('Reorder error:', error)
+				// エラー時は元の状態に戻す
+				setWorkspaces(workspaces)
 			}
-		},
-		renderDropIndicator(target) {
-			return (
-				<DropIndicator
-					target={target}
-					className={({ isDropTarget }) =>
-						`workspace-drop-indicator ${isDropTarget ? 'active' : ''}`
-					}
-				/>
-			)
 		},
 	})
 
-	// デフォルトワークスペースを先頭に、その後に並び替え可能なワークスペースを配置
-	const allWorkspaces = defaultWorkspace
-		? [defaultWorkspace, ...nonDefaultWorkspaces]
-		: nonDefaultWorkspaces
-
 	return (
-		<div className="mt-4">
-			<div className="flex items-center justify-between px-4">
-				<div className="flex items-center">
-					<Layers className="w-5 h-5 text-zinc-50 mr-2" />
-					<div className="font-semibold text-zinc-50">Spaces</div>
-				</div>
-				<SpacesMenu />
-			</div>
+		<div className="space-y-1">
 			<GridList
-				items={allWorkspaces}
+				aria-label="Workspaces"
+				items={nonDefaultWorkspaces}
 				dragAndDropHooks={dragAndDropHooks}
-				className="outline-none"
-				selectionMode="single"
+				className="flex flex-col outline-none"
 			>
 				{(workspace) => (
 					<GridListItem
@@ -114,7 +113,7 @@ const WorkspaceInSidebar = () => {
 								<div className="flex items-center justify-between group">
 									{/* ワークスペース名(Default Workspaceの場合は非表示) */}
 									{!workspace.isDefault && (
-										<div className="flex items-center">
+										<div className="flex items-center cursor-grab">
 											<Button
 												slot="drag"
 												className=" rounded-full py-1 pl-1 pr-2 ml-2"

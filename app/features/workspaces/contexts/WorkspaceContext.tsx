@@ -3,11 +3,15 @@
 import { createContext, useContext, useState, useEffect } from 'react'
 import type { Workspace } from '@/app/types/workspace'
 
+type ReorderWorkspacesPayload = {
+	items: Array<{ id: string; order: number }>
+}
+
 type WorkspaceContextType = {
 	workspaces: Workspace[]
 	setWorkspaces: React.Dispatch<React.SetStateAction<Workspace[]>>
 	defaultWorkspace: Workspace | null
-	reorderWorkspaces: (newWorkspaces: Workspace[]) => Promise<void>
+	reorderWorkspaces: (payload: ReorderWorkspacesPayload) => Promise<void>
 }
 
 const WorkspaceContext = createContext<WorkspaceContextType | undefined>(
@@ -26,37 +30,34 @@ export function WorkspaceProvider({
 		null,
 	)
 
-	const reorderWorkspaces = async (newWorkspaces: Workspace[]) => {
-		const previousWorkspaces = [...workspaces]
-
+	const reorderWorkspaces = async (payload: ReorderWorkspacesPayload) => {
 		try {
-			const nonDefaultWorkspaces = newWorkspaces.filter((w) => !w.isDefault)
-
-			const payload = {
-				items: nonDefaultWorkspaces.map((workspace, index) => ({
-					id: workspace.id,
-					order: index + 1,
-				})),
-			}
-
 			const response = await fetch('/api/workspaces/reorder', {
 				method: 'PUT',
-				headers: { 'Content-Type': 'application/json' },
+				headers: {
+					'Content-Type': 'application/json',
+				},
 				body: JSON.stringify(payload),
 			})
 
 			const data = await response.json()
 
-			if (!response.ok || !data.success) {
-				throw new Error(
-					data.error || 'ワークスペースの並び順の更新に失敗しました',
-				)
+			if (!response.ok) {
+				throw new Error(data.error || 'ワークスペースの並び替えに失敗しました')
 			}
 
-			setWorkspaces(newWorkspaces)
+			if (!data.success) {
+				throw new Error(data.error || 'ワークスペースの並び替えに失敗しました')
+			}
+
+			// 更新されたワークスペースで状態を更新
+			if (data.data) {
+				setWorkspaces(data.data)
+			}
+
+			return data
 		} catch (error) {
-			console.error('Failed to reorder workspaces:', error)
-			setWorkspaces(previousWorkspaces)
+			console.error('ワークスペースの並び替えに失敗しました:', error)
 			throw error
 		}
 	}
@@ -70,7 +71,7 @@ export function WorkspaceProvider({
 				const data = await response.json()
 				setDefaultWorkspace(data)
 			} catch (error) {
-				console.error('Error fetching default workspace:', error)
+				console.error('デフォルトワークスペースの取得に失敗しました:', error)
 			}
 		}
 		fetchDefaultWorkspace()
