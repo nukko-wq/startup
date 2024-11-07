@@ -145,6 +145,49 @@ const Spaces = ({ workspaceId }: SpacesProps) => {
 				setSpaces(spaces)
 			}
 		},
+		async onRootDrop(e) {
+			try {
+				const items = await Promise.all(
+					e.items
+						.filter(isTextDropItem)
+						.map(async (item) => JSON.parse(await item.getText('space-item'))),
+				)
+
+				const draggedSpace = items[0]
+				if (!draggedSpace) return
+
+				const newOrder = 1
+
+				const updatedSpaces = spaces
+					.map((space) => {
+						if (space.workspaceId === workspaceId) {
+							return { ...space, order: space.order + 1 }
+						}
+						if (space.id === draggedSpace.id) {
+							return { ...space, order: newOrder, workspaceId }
+						}
+						return space
+					})
+					.sort((a, b) => a.order - b.order)
+
+				setSpaces(updatedSpaces)
+
+				await Promise.all([
+					fetch(`/api/spaces/${draggedSpace.id}`, {
+						method: 'PATCH',
+						headers: { 'Content-Type': 'application/json' },
+						body: JSON.stringify({
+							workspaceId,
+							order: newOrder,
+						}),
+					}),
+					reorderSpaces(updatedSpaces),
+				])
+			} catch (error) {
+				console.error('Failed to drop space:', error)
+				setSpaces(spaces)
+			}
+		},
 	})
 
 	return (
