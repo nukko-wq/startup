@@ -182,6 +182,11 @@ const Spaces = ({ workspaceId }: SpacesProps) => {
 					(s) => s.workspaceId === workspaceId,
 				)
 
+				// 移動元のワークスペースのスペースを取得
+				const sourceWorkspaceSpaces = spaces.filter(
+					(s) => s.workspaceId === insertedSpace.workspaceId,
+				)
+
 				// ターゲットのスペースとその位置を取得
 				const targetSpace = currentWorkspaceSpaces.find(
 					(s) => s.id === e.target.key,
@@ -189,40 +194,42 @@ const Spaces = ({ workspaceId }: SpacesProps) => {
 				let newOrder: number
 
 				if (currentWorkspaceSpaces.length === 0) {
-					// スペースが存在しない場合は1を設定
 					newOrder = 1
 				} else if (!targetSpace) {
-					// ターゲットが見つからない場合は最後に追加
 					const maxOrder = Math.max(
 						...currentWorkspaceSpaces.map((s) => s.order),
 					)
 					newOrder = maxOrder + 1
 				} else {
-					// ドロップ位置に基づいて新しい順序を計算
 					newOrder =
 						e.target.dropPosition === 'before'
 							? targetSpace.order
 							: targetSpace.order + 1
-
-					// 既存のスペースの順序を更新
-					for (const space of currentWorkspaceSpaces) {
-						if (space.order >= newOrder) {
-							space.order += 1
-						}
-					}
 				}
 
-				// 移動するスペースの更新
 				const updatedSpaces = spaces.map((space) => {
-					if (space.id === insertedSpace.id) {
+					// 移動先のワークスペース内のスペースを更新
+					if (space.workspaceId === workspaceId) {
+						if (space.order >= newOrder) {
+							return { ...space, order: space.order + 1 }
+						}
+					}
+					// 移動元のワークスペース内のスペースを更新
+					else if (space.workspaceId === insertedSpace.workspaceId) {
+						if (space.order > insertedSpace.order) {
+							return { ...space, order: space.order - 1 }
+						}
+					}
+					// 移動するスペース自体を更新
+					else if (space.id === insertedSpace.id) {
 						return { ...space, workspaceId, order: newOrder }
 					}
 					return space
 				})
 
 				setSpaces(updatedSpaces.sort((a, b) => a.order - b.order))
+				await reorderSpaces(updatedSpaces)
 
-				// ワークスペースの更新をAPIに送信
 				await fetch(`/api/spaces/${insertedSpace.id}`, {
 					method: 'PATCH',
 					headers: { 'Content-Type': 'application/json' },
