@@ -250,7 +250,7 @@ const Spaces = ({ workspaceId }: SpacesProps) => {
 			aria-label="Spaces in workspace"
 			items={workspaceSpaces}
 			dragAndDropHooks={dragAndDropHooks}
-			className="flex flex-col space-y-1 outline-none min-h-[30px] border-2 border-transparent data-[drop-target]:border-zinc-700 rounded"
+			className="flex flex-col"
 			selectionMode="single"
 			selectedKeys={activeSpaceId ? [activeSpaceId] : []}
 			onSelectionChange={(keys) => {
@@ -269,14 +269,14 @@ const Spaces = ({ workspaceId }: SpacesProps) => {
 				<GridListItem
 					textValue={space.name}
 					className={({ isSelected, isFocusVisible }) => `
-						flex items-center justify-between outline-none cursor-pointer hover:bg-gray-700 hover:bg-opacity-75 group py-1
+						flex flex-grow items-center justify-between outline-none cursor-pointer hover:bg-gray-700 hover:bg-opacity-75 group
 						${isSelected ? 'bg-gray-700' : ''}
 						${isFocusVisible ? 'ring-2 ring-blue-500' : ''}
 					`}
 				>
-					<div className="flex items-center justify-between p-1 hover:bg-zinc-800 group rounded">
+					<div className="flex flex-grow items-center justify-between hover:bg-zinc-800 group rounded">
 						<div className="flex items-center flex-grow gap-2">
-							<div className="opacity-0 group-hover:opacity-100">
+							<div className="text-zinc-500">
 								<Button
 									slot="drag"
 									className="cursor-grab"
