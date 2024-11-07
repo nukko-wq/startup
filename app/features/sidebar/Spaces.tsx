@@ -12,14 +12,69 @@ import {
 	isTextDropItem,
 } from 'react-aria-components'
 import SpaceButtonMenu from './SpaceButtonMenu'
+import { useRouter } from 'next/navigation'
+import { useRef, useCallback } from 'react'
 
 interface SpacesProps {
 	workspaceId: string
 }
 
 const Spaces = ({ workspaceId }: SpacesProps) => {
-	const { spaces, activeSpaceId, handleSpaceClick, reorderSpaces, setSpaces } =
-		useSpaces()
+	const {
+		spaces,
+		activeSpaceId,
+		setActiveSpaceId,
+		setIsNavigating,
+		reorderSpaces,
+		setSpaces,
+	} = useSpaces()
+	const router = useRouter()
+
+	const lastUpdateSource = useRef<string | null>(null)
+
+	const handleSpaceSelect = useCallback(async (spaceId: string) => {
+		try {
+			await fetch('/api/users/last-active-space', {
+				method: 'PUT',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({ spaceId }),
+			})
+		} catch (error) {
+			console.error('Error updating last active space:', error)
+		}
+	}, [])
+
+	const handleSpaceClick = useCallback(
+		async (spaceId: string) => {
+			try {
+				setIsNavigating(true)
+				lastUpdateSource.current = 'click'
+
+				setActiveSpaceId(spaceId)
+
+				await new Promise((resolve) => setTimeout(resolve, 50))
+
+				await Promise.all([
+					router.push(`/?spaceId=${spaceId}`, { scroll: false }),
+					handleSpaceSelect(spaceId),
+				])
+			} catch (error) {
+				console.error('Error switching space:', error)
+				setActiveSpaceId(activeSpaceId)
+			} finally {
+				setTimeout(() => {
+					setIsNavigating(false)
+				}, 500)
+			}
+		},
+		[
+			router,
+			handleSpaceSelect,
+			setActiveSpaceId,
+			setIsNavigating,
+			activeSpaceId,
+		],
+	)
 
 	const workspaceSpaces = spaces.filter(
 		(space) => space.workspaceId === workspaceId,
@@ -196,6 +251,14 @@ const Spaces = ({ workspaceId }: SpacesProps) => {
 			items={workspaceSpaces}
 			dragAndDropHooks={dragAndDropHooks}
 			className="flex flex-col space-y-1 outline-none min-h-[30px] border-2 border-transparent data-[drop-target]:border-zinc-700 rounded"
+			selectionMode="single"
+			selectedKeys={activeSpaceId ? [activeSpaceId] : []}
+			onSelectionChange={(keys) => {
+				const selectedKey = Array.from(keys)[0] as string
+				if (selectedKey) {
+					handleSpaceClick(selectedKey)
+				}
+			}}
 			renderEmptyState={() => (
 				<div className="p-2 text-center text-gray-500 min-h-[30px] border-2 border-dashed border-zinc-700 rounded">
 					スペースをドロップしてください
@@ -205,7 +268,11 @@ const Spaces = ({ workspaceId }: SpacesProps) => {
 			{(space) => (
 				<GridListItem
 					textValue={space.name}
-					className="outline-none cursor-pointer"
+					className={({ isSelected, isFocusVisible }) => `
+						flex items-center justify-between outline-none cursor-pointer hover:bg-gray-700 hover:bg-opacity-75 group py-1
+						${isSelected ? 'bg-gray-700' : ''}
+						${isFocusVisible ? 'ring-2 ring-blue-500' : ''}
+					`}
 				>
 					<div className="flex items-center justify-between p-1 hover:bg-zinc-800 group rounded">
 						<div className="flex items-center flex-grow gap-2">
@@ -221,7 +288,7 @@ const Spaces = ({ workspaceId }: SpacesProps) => {
 							<Button
 								onPress={() => handleSpaceClick(space.id)}
 								className={`
-										flex-grow text-left
+										flex-grow text-left outline-none
 										${
 											activeSpaceId === space.id
 												? 'text-zinc-50 font-medium'

@@ -275,6 +275,7 @@ export default function Sidebar() {
 
 			<Workspace />
 
+			{/* 旧Sidebar */}
 			<h2 className="text-zinc-50 text-lg font-semibold pl-4">old Sidebar</h2>
 			<div className="">
 				<div className="flex items-center justify-between pl-4 pr-2 mb-4">
