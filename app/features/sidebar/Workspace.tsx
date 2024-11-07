@@ -85,15 +85,17 @@ const WorkspaceInSidebar = () => {
 
 	return (
 		<div className="mt-4">
-			<div className="flex items-center px-4">
-				<Layers className="w-5 h-5 text-zinc-50 mr-2" />
-				<div className="font-semibold text-zinc-50">Workspaces</div>
+			<div className="flex items-center justify-between px-4">
+				<div className="flex items-center">
+					<Layers className="w-5 h-5 text-zinc-50 mr-2" />
+					<div className="font-semibold text-zinc-50">Spaces</div>
+				</div>
 				<SpacesMenu />
 			</div>
 			<GridList
 				items={allWorkspaces}
 				dragAndDropHooks={dragAndDropHooks}
-				className="outline-none mt-2"
+				className="outline-none"
 				selectionMode="single"
 			>
 				{(workspace) => (
@@ -103,16 +105,19 @@ const WorkspaceInSidebar = () => {
 						className="outline-none"
 					>
 						<div className="flex items-center">
-							<div className="flex flex-col flex-grow justify-between py-2">
+							<div className="flex flex-col flex-grow justify-between">
 								<div className="flex items-center justify-between">
-									<div className="flex items-center px-4">
-										<Button slot="drag">
-											<CircleChevronRight className="w-5 h-5 text-gray-500 mr-2" />
-										</Button>
-										<span className="font-medium text-zinc-50">
-											{workspace.name}
-										</span>
-									</div>
+									{/* ワークスペース名(Default Workspaceの場合は非表示) */}
+									{!workspace.isDefault && (
+										<div className="flex items-center px-4">
+											<Button slot="drag">
+												<CircleChevronRight className="w-5 h-5 text-gray-500 mr-2" />
+											</Button>
+											<span className="font-medium text-zinc-50">
+												{workspace.name}
+											</span>
+										</div>
+									)}
 									{!workspace.isDefault && (
 										<WorkspaceButtonMenu
 											workspaceId={workspace.id}

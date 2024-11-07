@@ -283,7 +283,7 @@ const Spaces = ({ workspaceId }: SpacesProps) => {
 							<div className="text-zinc-500">
 								<Button
 									slot="drag"
-									className="cursor-grab"
+									className="cursor-grab flex items-center"
 									aria-label="ドラッグハンドル"
 								>
 									<GripVertical className="w-4 h-4 text-zinc-500" />
@@ -296,7 +296,7 @@ const Spaces = ({ workspaceId }: SpacesProps) => {
 										${
 											activeSpaceId === space.id
 												? 'text-zinc-50 font-medium'
-												: 'text-zinc-400 hover:text-zinc-50'
+												: 'text-gray-400 hover:text-zinc-50'
 										}
 									`}
 							>
