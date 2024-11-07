@@ -23,147 +23,84 @@ const WorkspaceInSidebar = () => {
 	const { workspaces, defaultWorkspace, reorderWorkspaces, setWorkspaces } =
 		useWorkspaces()
 
-	// デフォルトワークスペース以外のワークスペースのみを対象とする
+	// デフォルトワークスペース以外のワークスペースを取得
 	const nonDefaultWorkspaces = workspaces.filter((w) => !w.isDefault)
 
 	const { dragAndDropHooks } = useDragAndDrop({
-		getItems(keys) {
-			const workspace = nonDefaultWorkspaces.find(
-				(w) => w.id === Array.from(keys)[0],
-			)
-			return [
-				{
-					'workspace-item': JSON.stringify(workspace),
-					'text/plain': workspace?.name || '',
-				},
-			]
+		getItems: (keys) => {
+			return [...keys].map((key) => ({
+				'workspace-id': String(key),
+				'text/plain': String(key),
+			}))
 		},
-		acceptedDragTypes: ['workspace-item'],
-		getDropOperation: () => 'move',
 		async onReorder(e) {
 			try {
-				const draggedWorkspace = nonDefaultWorkspaces.find(
-					(w) => w.id === Array.from(e.keys)[0],
-				)
-				if (!draggedWorkspace) return
+				const draggedId = Array.from(e.keys)[0] as string
+				const targetId = e.target.key as string
 
-				const targetWorkspace = nonDefaultWorkspaces.find(
-					(w) => w.id === e.target.key,
-				)
-				if (!targetWorkspace) return
+				// 現在のワークスペースの配列をコピー
+				const currentWorkspaces = [...nonDefaultWorkspaces]
 
-				// 新しい順序を計算
-				const sortedWorkspaces = [...nonDefaultWorkspaces].sort(
-					(a, b) => a.order - b.order,
+				const draggedIndex = currentWorkspaces.findIndex(
+					(w) => w.id === draggedId,
+				)
+				const targetIndex = currentWorkspaces.findIndex(
+					(w) => w.id === targetId,
 				)
 
-				// ドラッグされたアイテムの新しい位置を決定
-				const draggedIndex = sortedWorkspaces.findIndex(
-					(w) => w.id === draggedWorkspace.id,
-				)
-				const targetIndex = sortedWorkspaces.findIndex(
-					(w) => w.id === targetWorkspace.id,
-				)
-
-				// アイテムを移動
-				if (e.target.dropPosition === 'before') {
-					sortedWorkspaces.splice(draggedIndex, 1)
-					const newIndex =
-						targetIndex > draggedIndex ? targetIndex - 1 : targetIndex
-					sortedWorkspaces.splice(newIndex, 0, draggedWorkspace)
-				} else {
-					sortedWorkspaces.splice(draggedIndex, 1)
-					const newIndex =
-						targetIndex > draggedIndex ? targetIndex : targetIndex + 1
-					sortedWorkspaces.splice(newIndex, 0, draggedWorkspace)
+				if (draggedIndex === -1 || targetIndex === -1) {
+					console.log('Invalid indexes:', { draggedIndex, targetIndex })
+					return
 				}
 
-				// orderを更新
-				const reorderedWorkspaces = sortedWorkspaces.map(
+				// アイテムを移動
+				const [draggedItem] = currentWorkspaces.splice(draggedIndex, 1)
+				const insertIndex =
+					e.target.dropPosition === 'before' ? targetIndex : targetIndex + 1
+				currentWorkspaces.splice(insertIndex, 0, draggedItem)
+
+				// 新しい順序を割り当て
+				const reorderedWorkspaces = currentWorkspaces.map(
 					(workspace, index) => ({
 						...workspace,
 						order: index + 1,
 					}),
 				)
 
-				// 一時的に状態を更新
-				const updatedWorkspaces = defaultWorkspace
-					? [defaultWorkspace, ...reorderedWorkspaces]
-					: reorderedWorkspaces
-				setWorkspaces(updatedWorkspaces)
-
-				// APIリクエストを実行
-				const payload = {
+				// APIに送信するペイロードを作成
+				const requestPayload = {
 					items: reorderedWorkspaces.map((w) => ({
 						id: w.id,
 						order: w.order,
 					})),
 				}
 
-				if (!payload.items || payload.items.length === 0) {
-					throw new Error('Payload is empty')
-				}
+				console.log('Sending payload:', requestPayload)
 
-				const response = await fetch('/api/workspaces/reorder', {
-					method: 'PUT',
-					headers: {
-						'Content-Type': 'application/json',
-					},
-					body: JSON.stringify(payload),
-				})
+				// 一時的に状態を更新
+				setWorkspaces(
+					defaultWorkspace
+						? [defaultWorkspace, ...reorderedWorkspaces]
+						: reorderedWorkspaces,
+				)
 
-				if (!response.ok) {
-					throw new Error('Failed to reorder workspaces')
-				}
-
-				const data = await response.json()
-				if (!data.success) {
-					throw new Error(data.error || 'Failed to reorder workspaces')
-				}
+				// reorderWorkspaces関数を使用してAPIを呼び出す
+				await reorderWorkspaces(requestPayload)
 			} catch (error) {
-				console.error('Failed to reorder workspaces:', error)
+				console.error('Reorder error:', error)
 				// エラー時は元の状態に戻す
 				setWorkspaces(workspaces)
 			}
 		},
-		onDragEnd: (e) => {
-			if (e.dropOperation === 'cancel') {
-				setWorkspaces(workspaces)
-			}
-		},
-		renderDropIndicator(target) {
-			return (
-				<DropIndicator
-					target={target}
-					className={({ isDropTarget }) => `
-						drop-indicator
-						${isDropTarget ? 'active' : ''}
-					`}
-				/>
-			)
-		},
 	})
 
-	// デフォルトワークスペースを先頭に、その後に並び替え可能なワークスペースを配置
-	const allWorkspaces = defaultWorkspace
-		? [defaultWorkspace, ...nonDefaultWorkspaces]
-		: nonDefaultWorkspaces
-
 	return (
-		<div className="mt-4">
-			<div className="flex items-center justify-between px-4">
-				<div className="flex items-center">
-					<Layers className="w-5 h-5 text-zinc-50 mr-2" />
-					<div className="font-semibold text-zinc-50">Spaces</div>
-				</div>
-				<SpacesMenu />
-			</div>
+		<div className="space-y-1">
 			<GridList
-				items={allWorkspaces}
+				aria-label="Workspaces"
+				items={nonDefaultWorkspaces}
 				dragAndDropHooks={dragAndDropHooks}
-				className="outline-none"
-				selectionMode="single"
-				aria-label="ワークスペース一覧"
+				className="flex flex-col outline-none"
 			>
 				{(workspace) => (
 					<GridListItem

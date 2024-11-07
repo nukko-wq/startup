@@ -1,6 +1,17 @@
+import { NextResponse } from 'next/server'
 import { db } from '@/lib/db'
 import { getCurrentUser } from '@/lib/session'
-import { NextResponse } from 'next/server'
+import { z } from 'zod'
+
+// バリデーションスキーマの定義
+const reorderSchema = z.object({
+	items: z.array(
+		z.object({
+			id: z.string(),
+			order: z.number().int().positive(),
+		}),
+	),
+})
 
 export async function PUT(req: Request) {
 	try {
@@ -12,51 +23,66 @@ export async function PUT(req: Request) {
 			)
 		}
 
-		const body = await req.json()
-		console.log('Received payload:', body)
+		// リクエストボディの取得とバリデーション
+		const json = await req.json()
+		console.log('Received payload:', json)
 
-		if (!body || !body.items || !Array.isArray(body.items)) {
+		const validatedData = reorderSchema.safeParse(json)
+		if (!validatedData.success) {
 			return NextResponse.json(
-				{ success: false, error: '無効なリクエストデータです' },
+				{
+					success: false,
+					error: '無効なリクエストデータです',
+					details: validatedData.error.format(),
+				},
 				{ status: 400 },
 			)
 		}
 
-		const { items } = body
+		const { items } = validatedData.data
 
-		await db.$transaction(
-			items.map((item: { id: string; order: number }) =>
-				db.workspace.update({
+		// データベース更新
+		try {
+			const updatedWorkspaces = await db.$transaction(async (tx) => {
+				// 各ワークスペースの更新
+				await Promise.all(
+					items.map(({ id, order }) =>
+						tx.workspace.update({
+							where: {
+								id,
+								userId: user.id,
+							},
+							data: { order },
+						}),
+					),
+				)
+
+				// 更新後のワークスペースを取得
+				return await tx.workspace.findMany({
 					where: {
-						id: item.id,
 						userId: user.id,
 					},
-					data: {
-						order: item.order,
+					orderBy: {
+						order: 'asc',
 					},
-				}),
-			),
-		)
+				})
+			})
 
-		// 更新後のワークスペースを取得
-		const updatedWorkspaces = await db.workspace.findMany({
-			where: {
-				userId: user.id,
-			},
-			orderBy: {
-				order: 'asc',
-			},
-		})
-
-		return NextResponse.json({
-			success: true,
-			message: '並び順を更新しました',
-			data: updatedWorkspaces, // 更新後のデータを含める
-		})
+			return NextResponse.json({
+				success: true,
+				data: updatedWorkspaces,
+			})
+		} catch (dbError) {
+			console.error('Database error:', dbError)
+			return NextResponse.json(
+				{ success: false, error: 'データベースの更新に失敗しました' },
+				{ status: 500 },
+			)
+		}
 	} catch (error) {
-		console.error('Error reordering workspaces:', error)
+		console.error('Request error:', error)
 		return NextResponse.json(
-			{ success: false, error: 'ワークスペースの並び順の更新に失敗しました' },
+			{ success: false, error: 'サーバーエラーが発生しました' },
 			{ status: 500 },
 		)
 	}
