@@ -145,7 +145,7 @@ const WorkspaceInSidebar = () => {
 								<div className="flex items-center justify-between group">
 									{/* ワークスペース名(Default Workspaceの場合は非表示) */}
 									{!workspace.isDefault && (
-										<div className="flex items-center flex-grow">
+										<div className="flex items-center flex-grow mt-6">
 											<div className="flex items-center cursor-grab">
 												<Button
 													slot="drag"

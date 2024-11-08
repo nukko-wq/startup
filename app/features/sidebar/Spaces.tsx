@@ -340,10 +340,11 @@ const Spaces = ({ workspaceId }: SpacesProps) => {
 									<GripVertical className="w-4 h-4 text-zinc-500" />
 								</Button>
 							</div>
+							{/* スペース名 */}
 							<Button
 								onPress={() => handleSpaceClick(space.id)}
 								className={`
-										flex-grow text-left outline-none
+										flex-grow text-left outline-none text-sm
 										${
 											activeSpaceId === space.id
 												? 'text-zinc-200 font-medium hover:text-zinc-50 transition-colors duration-200'
