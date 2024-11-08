@@ -23,11 +23,16 @@ export async function PUT(req: Request) {
 			)
 		}
 
-		// リクエストボディの取得とバリデーション
-		const json = await req.json()
-		console.log('Received payload:', json)
+		const body = await req.json()
 
-		const validatedData = reorderSchema.safeParse(json)
+		if (!body || !body.items || !Array.isArray(body.items)) {
+			return NextResponse.json(
+				{ success: false, error: '無効なリクエストデータです' },
+				{ status: 400 },
+			)
+		}
+
+		const validatedData = reorderSchema.safeParse(body)
 		if (!validatedData.success) {
 			return NextResponse.json(
 				{
@@ -41,46 +46,36 @@ export async function PUT(req: Request) {
 
 		const { items } = validatedData.data
 
-		// データベース更新
-		try {
-			const updatedWorkspaces = await db.$transaction(async (tx) => {
-				// 各ワークスペースの更新
-				await Promise.all(
-					items.map(({ id, order }) =>
-						tx.workspace.update({
-							where: {
-								id,
-								userId: user.id,
-							},
-							data: { order },
-						}),
-					),
-				)
-
-				// 更新後のワークスペースを取得
-				return await tx.workspace.findMany({
-					where: {
-						userId: user.id,
-					},
-					orderBy: {
-						order: 'asc',
-					},
-				})
+		const updatedWorkspaces = await db.$transaction(async (tx) => {
+			// 更新対象のワークスペースを取得
+			const targetWorkspaces = await tx.workspace.findMany({
+				where: {
+					id: { in: items.map((item) => item.id) },
+					userId: user.id,
+					isDefault: false,
+				},
 			})
 
-			return NextResponse.json({
-				success: true,
-				data: updatedWorkspaces,
-			})
-		} catch (dbError) {
-			console.error('Database error:', dbError)
-			return NextResponse.json(
-				{ success: false, error: 'データベースの更新に失敗しました' },
-				{ status: 500 },
+			// 各ワークスペースの更新
+			await Promise.all(
+				items.map(({ id, order }) =>
+					tx.workspace.update({
+						where: { id, userId: user.id, isDefault: false },
+						data: { order },
+					}),
+				),
 			)
-		}
+
+			// 更新後のすべてのワークスペースを取得
+			return await tx.workspace.findMany({
+				where: { userId: user.id },
+				orderBy: [{ isDefault: 'desc' }, { order: 'asc' }],
+			})
+		})
+
+		return NextResponse.json({ success: true, data: updatedWorkspaces })
 	} catch (error) {
-		console.error('Request error:', error)
+		console.error('Server error:', error)
 		return NextResponse.json(
 			{ success: false, error: 'サーバーエラーが発生しました' },
 			{ status: 500 },

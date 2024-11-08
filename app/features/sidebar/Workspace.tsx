@@ -33,63 +33,60 @@ const WorkspaceInSidebar = () => {
 				'text/plain': String(key),
 			}))
 		},
+		acceptedDragTypes: ['workspace-id'],
+		getDropOperation: () => 'move',
 		async onReorder(e) {
 			try {
 				const draggedId = Array.from(e.keys)[0] as string
 				const targetId = e.target.key as string
 
-				// 現在のワークスペースの配列をコピー
-				const currentWorkspaces = [...nonDefaultWorkspaces]
+				// デフォルトワークスペースを除外
+				const reorderableWorkspaces = workspaces.filter((w) => !w.isDefault)
 
-				const draggedIndex = currentWorkspaces.findIndex(
+				const draggedIndex = reorderableWorkspaces.findIndex(
 					(w) => w.id === draggedId,
 				)
-				const targetIndex = currentWorkspaces.findIndex(
+				const targetIndex = reorderableWorkspaces.findIndex(
 					(w) => w.id === targetId,
 				)
 
-				if (draggedIndex === -1 || targetIndex === -1) {
-					console.log('Invalid indexes:', { draggedIndex, targetIndex })
-					return
-				}
+				if (draggedIndex === -1 || targetIndex === -1) return
 
-				// アイテムを移動
-				const [draggedItem] = currentWorkspaces.splice(draggedIndex, 1)
-				const insertIndex =
+				// 新しい順序を計算
+				const newWorkspaces = [...reorderableWorkspaces]
+				const [draggedItem] = newWorkspaces.splice(draggedIndex, 1)
+				const insertAt =
 					e.target.dropPosition === 'before' ? targetIndex : targetIndex + 1
-				currentWorkspaces.splice(insertIndex, 0, draggedItem)
+				newWorkspaces.splice(insertAt, 0, draggedItem)
 
-				// 新しい順序を割り当て
-				const reorderedWorkspaces = currentWorkspaces.map(
-					(workspace, index) => ({
-						...workspace,
-						order: index + 1,
-					}),
-				)
+				// orderを1から振り直し
+				const updatedWorkspaces = newWorkspaces.map((workspace, index) => ({
+					...workspace,
+					order: index + 1,
+				}))
 
-				// APIに送信するペイロードを作成
-				const requestPayload = {
-					items: reorderedWorkspaces.map((w) => ({
+				// APIリクエストのペイロード
+				const payload = {
+					items: updatedWorkspaces.map((w) => ({
 						id: w.id,
 						order: w.order,
 					})),
 				}
 
-				console.log('Sending payload:', requestPayload)
-
 				// 一時的に状態を更新
 				setWorkspaces(
-					defaultWorkspace
-						? [defaultWorkspace, ...reorderedWorkspaces]
-						: reorderedWorkspaces,
+					workspaces.map((w) => {
+						if (w.isDefault) return w
+						const updated = updatedWorkspaces.find((u) => u.id === w.id)
+						return updated || w
+					}),
 				)
 
-				// reorderWorkspaces関数を使用してAPIを呼び出す
-				await reorderWorkspaces(requestPayload)
+				// APIを呼び出し
+				await reorderWorkspaces(payload)
 			} catch (error) {
 				console.error('Reorder error:', error)
-				// エラー時は元の状態に戻す
-				setWorkspaces(workspaces)
+				setWorkspaces(workspaces) // エラー時は元の状態に戻す
 			}
 		},
 	})
