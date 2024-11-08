@@ -67,6 +67,7 @@ export default function CreateSpaceInWorkspace({
 									新しいスペースを作成
 								</h2>
 								<CreateSpaceForm
+									workspaceId={workspaceId}
 									onClose={close}
 									onSubmit={(data) => handleCreateSpace(data, close)}
 								/>
