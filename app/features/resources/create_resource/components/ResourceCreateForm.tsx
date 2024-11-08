@@ -156,6 +156,7 @@ const ResourceCreateForm = ({
 				sectionId,
 			}
 			await addResource(optimisticResource)
+			onClose()
 
 			// APリクエストを実行
 			const response = await fetch('/api/resources', {
@@ -182,7 +183,6 @@ const ResourceCreateForm = ({
 						: resource,
 				),
 			)
-			onClose()
 		} catch (err) {
 			console.error('Resource creation error:', error)
 			setError(err instanceof Error ? err.message : 'エラーが発生しました')
@@ -346,6 +346,9 @@ const ResourceCreateForm = ({
 									control={control}
 									render={({ field: { value, onChange, onBlur } }) => (
 										<Input
+											value={value}
+											onChange={onChange}
+											onBlur={onBlur}
 											type="text"
 											className="w-full p-2 border-gray-200 rounded border focus:outline-blue-500"
 											placeholder="Name"
