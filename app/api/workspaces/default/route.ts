@@ -8,7 +8,33 @@ export async function GET() {
 		const userId = session?.user?.id
 
 		if (!userId) {
-			return NextResponse.json({ error: '認証が必要です' }, { status: 401 })
+			return new NextResponse(
+				JSON.stringify({
+					success: false,
+					error: '認証が必要です',
+				}),
+				{
+					status: 401,
+					headers: { 'Content-Type': 'application/json' },
+				},
+			)
+		}
+
+		const user = await db.user.findUnique({
+			where: { id: userId },
+		})
+
+		if (!user) {
+			return new NextResponse(
+				JSON.stringify({
+					success: false,
+					error: 'ユーザーが見つかりません',
+				}),
+				{
+					status: 404,
+					headers: { 'Content-Type': 'application/json' },
+				},
+			)
 		}
 
 		let workspace = await db.workspace.findFirst({
@@ -16,26 +42,56 @@ export async function GET() {
 				userId,
 				isDefault: true,
 			},
+			select: {
+				id: true,
+				name: true,
+				order: true,
+				userId: true,
+				isDefault: true,
+			},
 		})
 
 		if (!workspace) {
-			// デフォルトワークスペースが存在しない場合は作成
-			workspace = await db.workspace.create({
-				data: {
-					name: 'Default Workspace',
-					order: 0,
-					isDefault: true,
-					userId,
-				},
+			workspace = await db.$transaction(async (tx) => {
+				return tx.workspace.create({
+					data: {
+						name: 'Default Workspace',
+						order: 0,
+						isDefault: true,
+						userId,
+					},
+					select: {
+						id: true,
+						name: true,
+						order: true,
+						userId: true,
+						isDefault: true,
+					},
+				})
 			})
 		}
 
-		return NextResponse.json(workspace)
+		return new NextResponse(
+			JSON.stringify({
+				success: true,
+				data: workspace,
+			}),
+			{
+				status: 200,
+				headers: { 'Content-Type': 'application/json' },
+			},
+		)
 	} catch (error) {
 		console.error('Default workspace fetch error:', error)
-		return NextResponse.json(
-			{ error: 'デフォルトワークスペースの取得に失敗しました' },
-			{ status: 500 },
+		return new NextResponse(
+			JSON.stringify({
+				success: false,
+				error: 'デフォルトワークスペースの取得に失敗しました',
+			}),
+			{
+				status: 500,
+				headers: { 'Content-Type': 'application/json' },
+			},
 		)
 	}
 }
