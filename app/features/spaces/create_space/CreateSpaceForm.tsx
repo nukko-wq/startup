@@ -14,12 +14,17 @@ type FormData = z.infer<typeof createFormSchema>
 
 interface CreateSpaceFormProps {
 	onClose: () => void
-	onSubmit: (data: { name: string }, close: () => void) => Promise<void>
+	onSubmit: (
+		data: { name: string; workspaceId: string },
+		close: () => void,
+	) => Promise<void>
+	workspaceId: string
 }
 
 export default function CreateSpaceForm({
 	onClose,
 	onSubmit,
+	workspaceId,
 }: CreateSpaceFormProps) {
 	const { control, handleSubmit } = useForm<FormData>({
 		resolver: zodResolver(createFormSchema),
@@ -29,7 +34,7 @@ export default function CreateSpaceForm({
 	})
 
 	const handleFormSubmit = async (data: FormData) => {
-		await onSubmit(data, onClose)
+		await onSubmit({ ...data, workspaceId }, onClose)
 	}
 
 	return (

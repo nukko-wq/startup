@@ -1,7 +1,7 @@
 'use client'
 
 import { CirclePlus, SquarePlus } from 'lucide-react'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import {
 	Button,
 	Menu,
@@ -20,13 +20,34 @@ import { useSpaces } from '@/app/features/spaces/contexts/SpaceContext'
 export default function SpacesMenu() {
 	const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false)
 	const [isCreatingWorkspace, setIsCreatingWorkspace] = useState(false)
+	const [defaultWorkspaceId, setDefaultWorkspaceId] = useState<string>('')
 	const { workspaces, setWorkspaces } = useWorkspaces()
 	const { spaces, setSpaces } = useSpaces()
 
-	const handleCreateSpace = async (data: { name: string }) => {
+	// デフォルトワークスペースIDを取得
+	useEffect(() => {
+		const fetchDefaultWorkspace = async () => {
+			try {
+				const response = await fetch('/api/workspaces/default')
+				const defaultWorkspace = await response.json()
+				console.log('Default workspace:', defaultWorkspace)
+				setDefaultWorkspaceId(defaultWorkspace.data.id)
+			} catch (error) {
+				console.error('Error fetching default workspace:', error)
+			}
+		}
+		fetchDefaultWorkspace()
+	}, [])
+
+	const handleCreateSpace = async (
+		data: { name: string; workspaceId: string },
+		close: () => void,
+	) => {
 		try {
-			const defaultWorkspaceResponse = await fetch('/api/workspaces/default')
-			const defaultWorkspace = await defaultWorkspaceResponse.json()
+			console.log('Creating space with data:', data)
+			if (!data.workspaceId) {
+				throw new Error('workspaceId is required')
+			}
 
 			const response = await fetch('/api/spaces', {
 				method: 'POST',
@@ -35,30 +56,35 @@ export default function SpacesMenu() {
 				},
 				body: JSON.stringify({
 					name: data.name,
-					workspaceId: defaultWorkspace.id,
+					workspaceId: data.workspaceId,
 				}),
 			})
 
 			if (!response.ok) {
+				const errorData = await response.json()
+				console.error('Server response:', errorData)
 				throw new Error('スペースの作成に失敗しました')
 			}
 
 			const newSpace = await response.json()
 			setSpaces((prev) => [...prev, newSpace])
-			setIsCreateDialogOpen(false)
+			close()
 		} catch (error) {
 			console.error('Error creating space:', error)
 		}
 	}
 
-	const handleCreateWorkspace = async (data: { name: string }) => {
+	const handleCreateWorkspace = async (
+		data: { name: string; workspaceId: string },
+		close: () => void,
+	) => {
 		try {
 			const response = await fetch('/api/workspaces', {
 				method: 'POST',
 				headers: {
 					'Content-Type': 'application/json',
 				},
-				body: JSON.stringify(data),
+				body: JSON.stringify({ name: data.name }),
 			})
 
 			if (!response.ok) {
@@ -67,7 +93,7 @@ export default function SpacesMenu() {
 
 			const newWorkspace = await response.json()
 			setWorkspaces((prev) => [...prev, newWorkspace])
-			setIsCreateDialogOpen(false)
+			close()
 		} catch (error) {
 			console.error('Error creating workspace:', error)
 		}
@@ -125,14 +151,19 @@ export default function SpacesMenu() {
 											? '新しいワークスペースを作成'
 											: '新しいスペースを作成'}
 									</h2>
-									<CreateSpaceForm
-										onClose={close}
-										onSubmit={
-											isCreatingWorkspace
-												? handleCreateWorkspace
-												: handleCreateSpace
-										}
-									/>
+									{isCreatingWorkspace ? (
+										<CreateSpaceForm
+											onClose={close}
+											onSubmit={(data) => handleCreateWorkspace(data, close)}
+											workspaceId={defaultWorkspaceId}
+										/>
+									) : (
+										<CreateSpaceForm
+											onClose={close}
+											onSubmit={(data) => handleCreateSpace(data, close)}
+											workspaceId={defaultWorkspaceId}
+										/>
+									)}
 								</div>
 							)}
 						</Dialog>

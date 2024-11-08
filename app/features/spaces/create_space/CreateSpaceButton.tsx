@@ -14,10 +14,12 @@ import CreateSpaceForm from '@/app/features/spaces/create_space/CreateSpaceForm'
 
 interface CreateSpaceButtonProps {
 	onSpaceCreated: (space: Space) => void
+	workspaceId: string
 }
 
 export default function CreateSpaceButton({
 	onSpaceCreated,
+	workspaceId,
 }: CreateSpaceButtonProps) {
 	const [isOpen, setIsOpen] = useState(false)
 
@@ -28,7 +30,10 @@ export default function CreateSpaceButton({
 				headers: {
 					'Content-Type': 'application/json',
 				},
-				body: JSON.stringify(data),
+				body: JSON.stringify({
+					name: data.name,
+					workspaceId: workspaceId,
+				}),
 			})
 
 			if (!response.ok) {
@@ -61,7 +66,11 @@ export default function CreateSpaceButton({
 								<h2 className="text-lg font-semibold mb-4">
 									新しいスペースを作成
 								</h2>
-								<CreateSpaceForm onClose={close} onSubmit={handleCreateSpace} />
+								<CreateSpaceForm
+									onClose={close}
+									onSubmit={handleCreateSpace}
+									workspaceId={workspaceId}
+								/>
 							</div>
 						)}
 					</Dialog>
