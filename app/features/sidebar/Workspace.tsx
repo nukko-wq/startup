@@ -34,6 +34,13 @@ const WorkspaceInSidebar = () => {
 			}
 			return 'move'
 		},
+		renderDropIndicator(target) {
+			return (
+				<div
+					className={`drop-indicator ${target.type === 'item' ? 'active' : ''}`}
+				/>
+			)
+		},
 		async onReorder(e) {
 			try {
 				const draggedId = Array.from(e.keys)[0] as string
