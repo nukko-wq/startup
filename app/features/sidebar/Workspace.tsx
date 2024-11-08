@@ -40,6 +40,12 @@ const WorkspaceInSidebar = () => {
 				const draggedId = Array.from(e.keys)[0] as string
 				const targetId = e.target.key as string
 
+				console.log('Reorder payload:', {
+					draggedId,
+					targetId,
+					dropPosition: e.target.dropPosition,
+				})
+
 				// デフォルトワークスペースを除外した配列を作成
 				const reorderableWorkspaces = workspaces.filter((w) => !w.isDefault)
 
@@ -82,23 +88,10 @@ const WorkspaceInSidebar = () => {
 					}),
 				)
 
-				// APIを呼び出し
-				const response = await fetch('/api/workspaces/reorder', {
-					method: 'PUT',
-					headers: {
-						'Content-Type': 'application/json',
-					},
-					body: JSON.stringify(payload),
-				})
+				console.log('API request payload:', payload)
 
-				if (!response.ok) {
-					throw new Error('Failed to reorder workspaces')
-				}
-
-				const data = await response.json()
-				if (!data.success) {
-					throw new Error(data.error || 'Reorder failed')
-				}
+				// reorderWorkspaces関数を使用
+				await reorderWorkspaces(payload)
 			} catch (error) {
 				console.error('Reorder error:', error)
 				setWorkspaces(workspaces) // エラー時は元の状態に戻す
@@ -125,23 +118,23 @@ const WorkspaceInSidebar = () => {
 								<div className="flex items-center justify-between group">
 									{/* ワークスペース名(Default Workspaceの場合は非表示) */}
 									{!workspace.isDefault && (
-										<div className="flex items-center cursor-grab">
-											<Button
-												slot="drag"
-												className=" rounded-full py-1 pl-1 pr-2 ml-2"
-											>
-												<ChevronRight className="w-6 h-6 text-gray-500" />
-											</Button>
-											<span className="font-medium text-zinc-50">
-												{workspace.name}
-											</span>
-										</div>
-									)}
-									{!workspace.isDefault && (
-										<WorkspaceButtonMenu
-											workspaceId={workspace.id}
-											workspaceName={workspace.name}
-										/>
+										<>
+											<div className="flex items-center cursor-grab">
+												<Button
+													slot="drag"
+													className=" rounded-full py-1 pl-1 pr-2 ml-2"
+												>
+													<ChevronRight className="w-6 h-6 text-gray-500" />
+												</Button>
+												<span className="font-medium text-zinc-50">
+													{workspace.name}
+												</span>
+											</div>
+											<WorkspaceButtonMenu
+												workspaceId={workspace.id}
+												workspaceName={workspace.name}
+											/>
+										</>
 									)}
 								</div>
 								{/* ワークスペースに所属するスペースを表示 */}

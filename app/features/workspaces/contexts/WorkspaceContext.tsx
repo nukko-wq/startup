@@ -32,6 +32,11 @@ export function WorkspaceProvider({
 
 	const reorderWorkspaces = async (payload: ReorderWorkspacesPayload) => {
 		try {
+			console.log(
+				'Sending reorder request with payload:',
+				JSON.stringify(payload),
+			)
+
 			const response = await fetch('/api/workspaces/reorder', {
 				method: 'PUT',
 				headers: {
@@ -40,17 +45,23 @@ export function WorkspaceProvider({
 				body: JSON.stringify(payload),
 			})
 
-			const data = await response.json()
+			const text = await response.text()
+			console.log('Raw response:', text)
 
-			if (!response.ok) {
+			// biome-ignore lint/suspicious/noImplicitAnyLet: <explanation>
+			let data
+			try {
+				data = JSON.parse(text)
+			} catch (e) {
+				console.error('Response parse error:', e)
+				throw new Error('レスポンスの解析に失敗しました')
+			}
+
+			if (!response.ok || !data.success) {
+				console.error('API error:', data)
 				throw new Error(data.error || 'ワークスペースの並び替えに失敗しました')
 			}
 
-			if (!data.success) {
-				throw new Error(data.error || 'ワークスペースの並び替えに失敗しました')
-			}
-
-			// 更新されたワークスペースで状態を更新
 			if (data.data) {
 				setWorkspaces(data.data)
 			}
@@ -66,10 +77,17 @@ export function WorkspaceProvider({
 		const fetchDefaultWorkspace = async () => {
 			try {
 				const response = await fetch('/api/workspaces/default')
-				if (!response.ok)
+				if (!response.ok) {
 					throw new Error('デフォルトワークスペースの取得に失敗しました')
+				}
 				const data = await response.json()
-				setDefaultWorkspace(data)
+				if (data.success && data.data) {
+					setDefaultWorkspace(data.data)
+				} else {
+					throw new Error(
+						data.error || 'デフォルトワークスペースの取得に失敗しました',
+					)
+				}
 			} catch (error) {
 				console.error('デフォルトワークスペースの取得に失敗しました:', error)
 			}
