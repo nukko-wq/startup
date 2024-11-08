@@ -319,9 +319,8 @@ const Spaces = ({ workspaceId }: SpacesProps) => {
 					textValue={space.name}
 					className={({ isSelected, isFocusVisible }) => `
 						flex flex-grow items-center justify-between outline-none cursor-pointer hover:bg-gray-700 hover:bg-opacity-75 group transition duration-200
-						${isSelected ? 'bg-gray-700' : ''}
+						${isSelected ? 'bg-gray-700 border-l-4 border-blue-500 pl-3' : 'pl-4'}
 						${isFocusVisible ? '' : ''}
-						${activeSpaceId === space.id ? 'border-l-4 border-blue-500 pl-3' : 'pl-4'}
 					`}
 				>
 					<div className="flex flex-grow items-center justify-between group py-1">

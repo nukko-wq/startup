@@ -1,48 +1,51 @@
 'use client'
 
 import { useWorkspaces } from '@/app/features/workspaces/contexts/WorkspaceContext'
-import { useSpaces } from '@/app/features/spaces/contexts/SpaceContext'
 import { Button } from 'react-aria-components'
-import {
-	GridList,
-	GridListItem,
-	useDragAndDrop,
-	DropIndicator,
-} from 'react-aria-components'
-import {
-	ChevronRight,
-	CircleChevronRight,
-	GripVertical,
-	Layers,
-} from 'lucide-react'
+import { GridList, GridListItem, useDragAndDrop } from 'react-aria-components'
+import { ChevronRight, Layers, Layers3 } from 'lucide-react'
 import WorkspaceButtonMenu from './WorkspaceButtonMenu'
 import Spaces from '@/app/features/sidebar/Spaces'
-import SpacesMenu from '@/app/features/sidebar/SpacesMenu'
+import SpacesMenu from './SpacesMenu'
 
 const WorkspaceInSidebar = () => {
 	const { workspaces, defaultWorkspace, reorderWorkspaces, setWorkspaces } =
 		useWorkspaces()
 
-	// デフォルトワークスペース以外のワークスペースを取得
-	const nonDefaultWorkspaces = workspaces.filter((w) => !w.isDefault)
-
 	const { dragAndDropHooks } = useDragAndDrop({
 		getItems: (keys) => {
-			return [...keys].map((key) => ({
-				'workspace-id': String(key),
-				'text/plain': String(key),
-			}))
+			const workspace = workspaces.find((w) => w.id === Array.from(keys)[0])
+			// Default Workspaceの場合はドラッグを無効化
+			if (workspace?.isDefault) return []
+
+			return [
+				{
+					'workspace-id': String(workspace?.id),
+					'text/plain': workspace?.name || '',
+				},
+			]
 		},
 		acceptedDragTypes: ['workspace-id'],
-		getDropOperation: () => 'move',
+		getDropOperation: (target) => {
+			// Default Workspaceへのドロップを防ぐ
+			if (target?.type === 'item') {
+				const workspace = workspaces.find((w) => w.id === target.key)
+				return workspace?.isDefault ? 'cancel' : 'move'
+			}
+			return 'move'
+		},
 		async onReorder(e) {
 			try {
 				const draggedId = Array.from(e.keys)[0] as string
 				const targetId = e.target.key as string
 
-				// デフォルトワークスペースを除外
-				const reorderableWorkspaces = workspaces.filter((w) => !w.isDefault)
+				// ドラッグ元またはドロップ先がDefault Workspaceの場合は処理を中止
+				const draggedWorkspace = workspaces.find((w) => w.id === draggedId)
+				const targetWorkspace = workspaces.find((w) => w.id === targetId)
+				if (draggedWorkspace?.isDefault || targetWorkspace?.isDefault) return
 
+				// 以下、既存のreorder処理
+				const reorderableWorkspaces = workspaces.filter((w) => !w.isDefault)
 				const draggedIndex = reorderableWorkspaces.findIndex(
 					(w) => w.id === draggedId,
 				)
@@ -73,7 +76,7 @@ const WorkspaceInSidebar = () => {
 					})),
 				}
 
-				// 一時的に状態を更新
+				// 一時的に状態を更新（デフォルトワークスペースは維持）
 				setWorkspaces(
 					workspaces.map((w) => {
 						if (w.isDefault) return w
@@ -82,20 +85,45 @@ const WorkspaceInSidebar = () => {
 					}),
 				)
 
-				// APIを呼び出し
+				console.log('API request payload:', payload)
+
+				// reorderWorkspaces関数を使用
 				await reorderWorkspaces(payload)
 			} catch (error) {
 				console.error('Reorder error:', error)
-				setWorkspaces(workspaces) // エラー時は元の状態に戻す
+				setWorkspaces(workspaces)
 			}
 		},
 	})
 
 	return (
 		<div className="space-y-1">
+			{/* Default Workspace */}
+			{defaultWorkspace && (
+				<div className="mb-4">
+					<div className="flex items-center">
+						<div className="flex flex-col flex-grow justify-between">
+							<div className="flex items-center justify-between">
+								<div className="flex items-center">
+									<div className="rounded-full py-1 pl-1 pr-2 ml-2">
+										<Layers className="w-6 h-6 text-gray-500" />
+									</div>
+									<span className="font-medium text-gray-500">Spaces</span>
+								</div>
+								<SpacesMenu />
+							</div>
+							<div className="mt-2 space-y-1">
+								<Spaces workspaceId={defaultWorkspace.id} />
+							</div>
+						</div>
+					</div>
+				</div>
+			)}
+
+			{/* 通常のワークスペース */}
 			<GridList
 				aria-label="Workspaces"
-				items={nonDefaultWorkspaces}
+				items={workspaces.filter((w) => !w.isDefault)}
 				dragAndDropHooks={dragAndDropHooks}
 				className="flex flex-col outline-none"
 			>
@@ -110,23 +138,24 @@ const WorkspaceInSidebar = () => {
 								<div className="flex items-center justify-between group">
 									{/* ワークスペース名(Default Workspaceの場合は非表示) */}
 									{!workspace.isDefault && (
-										<div className="flex items-center cursor-grab">
-											<Button
-												slot="drag"
-												className=" rounded-full py-1 pl-1 pr-2 ml-2"
-											>
-												<ChevronRight className="w-6 h-6 text-gray-500" />
-											</Button>
-											<span className="font-medium text-zinc-50">
-												{workspace.name}
-											</span>
-										</div>
-									)}
-									{!workspace.isDefault && (
-										<WorkspaceButtonMenu
-											workspaceId={workspace.id}
-											workspaceName={workspace.name}
-										/>
+										<>
+											<div className="flex items-center cursor-grab">
+												<Button
+													slot="drag"
+													className=" rounded-full py-1 pl-1 pr-2 ml-2"
+												>
+													<ChevronRight className="w-6 h-6 text-gray-500" />
+												</Button>
+												{/* ワークスペース名 */}
+												<span className="font-medium text-gray-500">
+													{workspace.name}
+												</span>
+											</div>
+											<WorkspaceButtonMenu
+												workspaceId={workspace.id}
+												workspaceName={workspace.name}
+											/>
+										</>
 									)}
 								</div>
 								{/* ワークスペースに所属するスペースを表示 */}
