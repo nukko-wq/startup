@@ -40,7 +40,7 @@ const WorkspaceInSidebar = () => {
 				const draggedId = Array.from(e.keys)[0] as string
 				const targetId = e.target.key as string
 
-				// デフォルトワークスペースを除外
+				// デフォルトワークスペースを除外した配列を作成
 				const reorderableWorkspaces = workspaces.filter((w) => !w.isDefault)
 
 				const draggedIndex = reorderableWorkspaces.findIndex(
@@ -73,7 +73,7 @@ const WorkspaceInSidebar = () => {
 					})),
 				}
 
-				// 一時的に状態を更新
+				// 一時的に状態を更新（デフォルトワークスペースは維持）
 				setWorkspaces(
 					workspaces.map((w) => {
 						if (w.isDefault) return w
@@ -83,7 +83,22 @@ const WorkspaceInSidebar = () => {
 				)
 
 				// APIを呼び出し
-				await reorderWorkspaces(payload)
+				const response = await fetch('/api/workspaces/reorder', {
+					method: 'PUT',
+					headers: {
+						'Content-Type': 'application/json',
+					},
+					body: JSON.stringify(payload),
+				})
+
+				if (!response.ok) {
+					throw new Error('Failed to reorder workspaces')
+				}
+
+				const data = await response.json()
+				if (!data.success) {
+					throw new Error(data.error || 'Reorder failed')
+				}
 			} catch (error) {
 				console.error('Reorder error:', error)
 				setWorkspaces(workspaces) // エラー時は元の状態に戻す

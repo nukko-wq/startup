@@ -32,33 +32,25 @@ export async function PUT(req: Request) {
 			)
 		}
 
-		const validatedData = reorderSchema.safeParse(body)
-		if (!validatedData.success) {
-			return NextResponse.json(
-				{
-					success: false,
-					error: '無効なリクエストデータです',
-					details: validatedData.error.format(),
-				},
-				{ status: 400 },
-			)
-		}
-
-		const { items } = validatedData.data
+		const { items } = body
 
 		const updatedWorkspaces = await db.$transaction(async (tx) => {
-			// 更新対象のワークスペースを取得
+			// 更新対象のワークスペースを取得して検証
 			const targetWorkspaces = await tx.workspace.findMany({
 				where: {
-					id: { in: items.map((item) => item.id) },
+					id: { in: items.map((item: { id: string }) => item.id) },
 					userId: user.id,
 					isDefault: false,
 				},
 			})
 
+			if (targetWorkspaces.length !== items.length) {
+				throw new Error('Invalid workspace IDs')
+			}
+
 			// 各ワークスペースの更新
 			await Promise.all(
-				items.map(({ id, order }) =>
+				items.map(({ id, order }: { id: string; order: number }) =>
 					tx.workspace.update({
 						where: { id, userId: user.id, isDefault: false },
 						data: { order },
@@ -66,14 +58,16 @@ export async function PUT(req: Request) {
 				),
 			)
 
-			// 更新後のすべてのワークスペースを取得
 			return await tx.workspace.findMany({
 				where: { userId: user.id },
 				orderBy: [{ isDefault: 'desc' }, { order: 'asc' }],
 			})
 		})
 
-		return NextResponse.json({ success: true, data: updatedWorkspaces })
+		return NextResponse.json({
+			success: true,
+			data: updatedWorkspaces,
+		})
 	} catch (error) {
 		console.error('Server error:', error)
 		return NextResponse.json(
