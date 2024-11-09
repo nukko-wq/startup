@@ -11,7 +11,7 @@ import {
 } from 'react-aria-components'
 import SpaceRenameDialog from './SpaceRenameDialog'
 import DeleteSpaceDialog from '@/app/features/spaces/delete_space/DeleteSpaceDialog'
-import { useSpaces } from '@/app/features/spaces/contexts/SpaceContext'
+import { useSpaceStore } from '@/app/store/spaceStore'
 
 interface HeaderMenuProps {
 	spaceId: string
@@ -21,7 +21,7 @@ interface HeaderMenuProps {
 const HeaderMenu = ({ spaceId, spaceName }: HeaderMenuProps) => {
 	const [isRenameOpen, setIsRenameOpen] = useState(false)
 	const [isDeleteOpen, setIsDeleteOpen] = useState(false)
-	const { setSpaces } = useSpaces()
+	const { setSpaces } = useSpaceStore()
 
 	return (
 		<>

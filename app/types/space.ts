@@ -4,4 +4,7 @@ export interface Space {
 	order: number
 	userId: string
 	workspaceId: string
+	isLastActive?: boolean
+	createdAt: Date
+	updatedAt: Date
 }

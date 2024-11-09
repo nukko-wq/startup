@@ -1,19 +1,27 @@
 import { create } from 'zustand'
 import type { Space } from '@/app/types/space'
 
-interface SpaceStore {
+export interface SpaceStore {
 	spaces: Space[]
 	activeSpaceId: string | null
 	currentSpace: Space | null
 	isLoading: boolean
 	isNavigating: boolean
+	isDragging: boolean
 	setSpaces: (spaces: Space[]) => void
 	setActiveSpaceId: (id: string | null) => void
 	setCurrentSpace: (space: Space | null) => void
 	setIsLoading: (loading: boolean) => void
 	setIsNavigating: (navigating: boolean) => void
+	setIsDragging: (dragging: boolean) => void
+	initializeSpaces: (initialSpaces: Space[], activeSpaceId?: string) => void
 	handleSpaceClick: (spaceId: string) => Promise<void>
 	reorderSpaces: (newSpaces: Space[]) => Promise<void>
+	updateSpaceWorkspace: (
+		spaceId: string,
+		workspaceId: string,
+		newOrder: number,
+	) => Promise<void>
 }
 
 export const useSpaceStore = create<SpaceStore>((set, get) => ({
@@ -22,12 +30,41 @@ export const useSpaceStore = create<SpaceStore>((set, get) => ({
 	currentSpace: null,
 	isLoading: true,
 	isNavigating: false,
+	isDragging: false,
 
-	setSpaces: (spaces) => set({ spaces }),
+	setSpaces: (spaces: Space[]) => set({ spaces }),
 	setActiveSpaceId: (id) => set({ activeSpaceId: id }),
 	setCurrentSpace: (space) => set({ currentSpace: space }),
 	setIsLoading: (loading) => set({ isLoading: loading }),
 	setIsNavigating: (navigating) => set({ isNavigating: navigating }),
+	setIsDragging: (dragging) => set({ isDragging: dragging }),
+
+	initializeSpaces: (initialSpaces, activeSpaceId) => {
+		set({
+			spaces: initialSpaces,
+			isLoading: false,
+		})
+
+		if (activeSpaceId) {
+			const activeSpace = initialSpaces.find(
+				(space) => space.id === activeSpaceId,
+			)
+			if (activeSpace) {
+				set({
+					activeSpaceId: activeSpace.id,
+					currentSpace: activeSpace,
+				})
+			}
+		} else {
+			const lastActiveSpace = initialSpaces.find((space) => space.isLastActive)
+			if (lastActiveSpace) {
+				set({
+					activeSpaceId: lastActiveSpace.id,
+					currentSpace: lastActiveSpace,
+				})
+			}
+		}
+	},
 
 	handleSpaceClick: async (spaceId) => {
 		const { setIsLoading, setIsNavigating, setActiveSpaceId, spaces } = get()
@@ -61,7 +98,7 @@ export const useSpaceStore = create<SpaceStore>((set, get) => ({
 		const { setSpaces, spaces: previousSpaces } = get()
 
 		try {
-			setSpaces(newSpaces)
+			setSpaces(newSpaces.sort((a, b) => a.order - b.order))
 
 			const response = await fetch('/api/spaces/reorder', {
 				method: 'PUT',
@@ -79,6 +116,38 @@ export const useSpaceStore = create<SpaceStore>((set, get) => ({
 			}
 		} catch (error) {
 			console.error('Reorder error:', error)
+			setSpaces(previousSpaces)
+		}
+	},
+
+	updateSpaceWorkspace: async (spaceId, workspaceId, newOrder) => {
+		const { spaces, setSpaces } = get()
+		const previousSpaces = [...spaces]
+
+		try {
+			const updatedSpaces = spaces.map((space) => {
+				if (space.id === spaceId) {
+					return { ...space, workspaceId, order: newOrder }
+				}
+				return space
+			})
+
+			setSpaces(updatedSpaces.sort((a, b) => a.order - b.order))
+
+			const response = await fetch(`/api/spaces/${spaceId}`, {
+				method: 'PATCH',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({
+					workspaceId,
+					order: newOrder,
+				}),
+			})
+
+			if (!response.ok) {
+				throw new Error('Failed to update space workspace')
+			}
+		} catch (error) {
+			console.error('Update workspace error:', error)
 			setSpaces(previousSpaces)
 		}
 	},

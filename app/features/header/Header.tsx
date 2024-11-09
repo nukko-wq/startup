@@ -5,7 +5,7 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { useState, useEffect } from 'react'
 import HeaderMenu from '@/app/features/header/header_menu/HeaderMenu'
-import { useSpaces } from '@/app/features/spaces/contexts/SpaceContext'
+import { useSpaceStore } from '@/app/store/spaceStore'
 import { Button, Input, Text } from 'react-aria-components'
 import { Pencil } from 'lucide-react'
 import type { Space } from '@/app/types/space'
@@ -29,7 +29,7 @@ export default function Header({
 	spaceId,
 }: HeaderProps) {
 	const [isEditing, setIsEditing] = useState(false)
-	const { setCurrentSpace, currentSpace, spaces, setSpaces } = useSpaces()
+	const { currentSpace, setCurrentSpace, spaces, setSpaces } = useSpaceStore()
 
 	const displayName = currentSpace?.name || initialSpaceName
 
@@ -69,17 +69,18 @@ export default function Header({
 				throw new Error('Failed to update space name')
 			}
 
-			const updatedSpace = {
+			if (!currentSpace) {
+				throw new Error('Current space not found')
+			}
+
+			const updatedSpace: Space = {
 				...currentSpace,
-				id: spaceId,
 				name: data.name,
-			} as Space
+			}
 
 			setCurrentSpace(updatedSpace)
-			setSpaces((prevSpaces) =>
-				prevSpaces.map((space) =>
-					space.id === spaceId ? updatedSpace : space,
-				),
+			setSpaces(
+				spaces.map((space) => (space.id === spaceId ? updatedSpace : space)),
 			)
 
 			setIsEditing(false)

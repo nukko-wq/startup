@@ -14,7 +14,7 @@ import {
 } from 'react-aria-components'
 import { useEffect, useRef } from 'react'
 import { Earth } from 'lucide-react'
-import { useResources } from '@/app/features/resources/contexts/ResourceContext'
+import { useResourceStore } from '@/app/store/resourceStore'
 
 interface ResourceEditFormProps {
 	resource: Pick<Resource, 'id' | 'title' | 'url' | 'description'>
@@ -26,19 +26,17 @@ export default function ResourceEditForm({
 	onClose,
 }: ResourceEditFormProps) {
 	const titleInputRef = useRef<HTMLInputElement>(null)
-	const { updateResource } = useResources()
+	const updateResource = useResourceStore((state) => state.updateResource)
 
 	useEffect(() => {
 		if (titleInputRef.current) {
 			titleInputRef.current.focus()
-
 			const length = titleInputRef.current.value.length
 			titleInputRef.current.setSelectionRange(length, length)
 		}
 	}, [])
 
 	const {
-		register,
 		handleSubmit,
 		control,
 		formState: { errors, isSubmitting },
@@ -55,42 +53,15 @@ export default function ResourceEditForm({
 
 	const onSubmit = async (data: ResourceSchema) => {
 		try {
-			// Optimistic Update
-			const optimisticData = {
-				...resource,
-				title: data.title || resource.title,
-				url: data.url,
-				description: data.description || '',
-			}
-
-			// 更新に必要なフィールドのみ送信
 			const updateData = {
 				title: data.title,
 				url: data.url,
 				description: data.description,
 			}
 
-			await updateResource(resource.id, optimisticData)
+			await updateResource(resource.id, updateData)
 			onClose()
-
-			// APIリクエストを実行
-			const response = await fetch(`/api/resources/${resource.id}`, {
-				method: 'PATCH',
-				headers: {
-					'Content-Type': 'application/json',
-				},
-				body: JSON.stringify(updateData),
-			})
-
-			if (!response.ok) {
-				const errorData = await response.json()
-				if (response.status === 404) {
-					throw new Error('Resource not found')
-				}
-				throw new Error(errorData.error || 'Failed to update resource')
-			}
 		} catch (err) {
-			await updateResource(resource.id, resource)
 			setError('root', {
 				message:
 					err instanceof Error ? err.message : 'Failed to update resource',
@@ -124,28 +95,26 @@ export default function ResourceEditForm({
 				)}
 			</div>
 			<div className="flex flex-col px-[40px] py-[32px] gap-2">
-				<div className="">
-					<div>
-						<Label className="text-sm">URL</Label>
-						<Controller
-							name="url"
-							control={control}
-							render={({ field: { value, onChange, onBlur, ref } }) => (
-								<Input
-									value={value}
-									onChange={onChange}
-									onBlur={onBlur}
-									ref={ref}
-									type="url"
-									className="w-full p-2 border rounded mt-1 focus:outline-blue-500"
-									aria-label="URL"
-								/>
-							)}
-						/>
-						{errors.url && (
-							<div className="text-red-500 text-sm">{errors.url.message}</div>
+				<div>
+					<Label className="text-sm">URL</Label>
+					<Controller
+						name="url"
+						control={control}
+						render={({ field: { value, onChange, onBlur, ref } }) => (
+							<Input
+								value={value}
+								onChange={onChange}
+								onBlur={onBlur}
+								ref={ref}
+								type="url"
+								className="w-full p-2 border rounded mt-1 focus:outline-blue-500"
+								aria-label="URL"
+							/>
 						)}
-					</div>
+					/>
+					{errors.url && (
+						<div className="text-red-500 text-sm">{errors.url.message}</div>
+					)}
 				</div>
 				<div>
 					<TextField>
@@ -186,7 +155,7 @@ export default function ResourceEditForm({
 						className="px-4 py-2 text-sm border rounded bg-blue-500 text-white hover:bg-blue-600 disabled:opacity-50 outline-none"
 						isDisabled={isSubmitting}
 					>
-						{isSubmitting ? 'Saving...' : 'Save'}
+						Save
 					</Button>
 				</div>
 			</div>

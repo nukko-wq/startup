@@ -8,12 +8,10 @@ import {
 	MenuTrigger,
 	Popover,
 } from 'react-aria-components'
-import { useRouter } from 'next/navigation'
 import { useState } from 'react'
-import type { Space } from '@/app/types/space'
 import SpaceRenameDialog from '@/app/features/header/header_menu/SpaceRenameDialog'
 import DeleteSpaceDialog from '@/app/features/spaces/delete_space/DeleteSpaceDialog'
-import { useSpaces } from '@/app/features/spaces/contexts/SpaceContext'
+import { useSpaceStore } from '@/app/store/spaceStore'
 
 interface SpaceButtonMenuProps {
 	spaceId: string
@@ -21,9 +19,9 @@ interface SpaceButtonMenuProps {
 }
 
 const SpaceButtonMenu = ({ spaceId, spaceName }: SpaceButtonMenuProps) => {
-	const router = useRouter()
 	const [isRenameOpen, setIsRenameOpen] = useState(false)
 	const [isDeleteOpen, setIsDeleteOpen] = useState(false)
+	const { currentSpace } = useSpaceStore()
 
 	return (
 		<>

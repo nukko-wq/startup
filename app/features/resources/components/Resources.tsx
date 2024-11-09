@@ -1,34 +1,38 @@
 'use client'
 
 import { useEffect } from 'react'
-import { ResourceProvider } from '@/app/features/resources/contexts/ResourceContext'
 import {
 	Button,
 	GridList,
 	GridListItem,
 	useDragAndDrop,
-	DropIndicator,
 } from 'react-aria-components'
 import Section from '@/app/features/sections/components/Section'
 import type { getInitialSections } from '@/app/features/resources/utils/getInitialSections'
 import { Plus } from 'lucide-react'
-import { useSpaces } from '@/app/features/spaces/contexts/SpaceContext'
+import { useSpaceStore } from '@/app/store/spaceStore'
 import LoadingSpinner from '@/app/components/ui/LoadingSpinner'
 import { useResourceStore } from '@/app/store/resourceStore'
 
 interface ResourceProps {
 	initialData: Awaited<ReturnType<typeof getInitialSections>>
 	spaceId?: string
-	spaceName?: string
 }
 
-const Resources = ({ initialData, spaceId, spaceName }: ResourceProps) => {
-	const { isLoading: isSpaceLoading, activeSpaceId, isNavigating } = useSpaces()
+const Resources = ({ initialData, spaceId }: ResourceProps) => {
+	const {
+		isLoading: isSpaceLoading,
+		activeSpaceId,
+		isNavigating,
+	} = useSpaceStore()
+
 	const {
 		sections,
+		resources,
 		isLoading,
 		isCreating,
 		setSections,
+		setResources,
 		fetchSections,
 		createSection,
 		deleteSection,
@@ -40,7 +44,10 @@ const Resources = ({ initialData, spaceId, spaceName }: ResourceProps) => {
 		if (initialData.sections.length > 0) {
 			setSections(initialData.sections)
 		}
-	}, [initialData.sections, setSections])
+		if (initialData.sections.flatMap((s) => s.resources).length > 0) {
+			setResources(initialData.sections.flatMap((s) => s.resources))
+		}
+	}, [initialData.sections, setSections, setResources])
 
 	// スペース切り替え時のデータ取得
 	useEffect(() => {
@@ -97,49 +104,44 @@ const Resources = ({ initialData, spaceId, spaceName }: ResourceProps) => {
 	}
 
 	return (
-		<ResourceProvider
-			initialResources={initialData.sections.flatMap((s) => s.resources)}
-			sections={sections}
-		>
-			<div className="flex flex-col flex-grow w-full justify-center">
-				<div className="flex flex-col w-full outline-none">
-					<div className="flex flex-col w-full items-center">
-						<GridList
-							aria-label="Draggable sections"
-							items={sections}
-							dragAndDropHooks={dragAndDropHooks}
-							className="w-full outline-none"
-						>
-							{(section) => (
-								<GridListItem
-									key={section.id}
-									textValue={section.name}
-									className="w-full outline-none"
-								>
-									<Section
-										id={section.id}
-										name={section.name}
-										onDelete={() => deleteSection(section.id)}
-									/>
-								</GridListItem>
-							)}
-						</GridList>
-					</div>
-					<div className="flex justify-center">
-						<div className="flex justify-center">
-							<Button
-								className="flex items-center gap-1 px-4 py-2 outline-none text-gray-500"
-								onPress={() => spaceId && createSection(spaceId)}
-								isDisabled={isCreating}
+		<div className="flex flex-col flex-grow w-full justify-center">
+			<div className="flex flex-col w-full outline-none">
+				<div className="flex flex-col w-full items-center">
+					<GridList
+						aria-label="Draggable sections"
+						items={sections}
+						dragAndDropHooks={dragAndDropHooks}
+						className="w-full outline-none"
+					>
+						{(section) => (
+							<GridListItem
+								key={section.id}
+								textValue={section.name}
+								className="w-full outline-none"
 							>
-								<Plus className="w-3 h-3" />
-								<div>RESOURCE SECTION</div>
-							</Button>
-						</div>
+								<Section
+									id={section.id}
+									name={section.name}
+									onDelete={() => deleteSection(section.id)}
+								/>
+							</GridListItem>
+						)}
+					</GridList>
+				</div>
+				<div className="flex justify-center">
+					<div className="flex justify-center">
+						<Button
+							className="flex items-center gap-1 px-4 py-2 outline-none text-gray-500"
+							onPress={() => spaceId && createSection(spaceId)}
+							isDisabled={isCreating}
+						>
+							<Plus className="w-3 h-3" />
+							<div>RESOURCE SECTION</div>
+						</Button>
 					</div>
 				</div>
 			</div>
-		</ResourceProvider>
+		</div>
 	)
 }
 

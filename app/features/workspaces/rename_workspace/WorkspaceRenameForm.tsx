@@ -5,7 +5,7 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { Button, Form, Input, Label, TextField } from 'react-aria-components'
 import { workspaceUpdateSchema } from '@/lib/validations/workspace'
 import type { z } from 'zod'
-import { useWorkspaces } from '@/app/features/workspaces/contexts/WorkspaceContext'
+import { useWorkspaceStore } from '@/app/store/workspaceStore'
 
 type FormData = z.infer<typeof workspaceUpdateSchema>
 
@@ -20,7 +20,8 @@ const WorkspaceRenameForm = ({
 	initialName,
 	onClose,
 }: WorkspaceRenameFormProps) => {
-	const { workspaces, setWorkspaces } = useWorkspaces()
+	const { renameWorkspace } = useWorkspaceStore()
+
 	const { control, handleSubmit } = useForm<FormData>({
 		resolver: zodResolver(workspaceUpdateSchema),
 		defaultValues: {
@@ -30,24 +31,7 @@ const WorkspaceRenameForm = ({
 
 	const onSubmit = async (data: FormData) => {
 		try {
-			const response = await fetch(`/api/workspaces/${workspaceId}`, {
-				method: 'PATCH',
-				headers: { 'Content-Type': 'application/json' },
-				body: JSON.stringify(data),
-			})
-
-			if (!response.ok) {
-				throw new Error('Failed to update workspace')
-			}
-
-			const updatedWorkspace = await response.json()
-			setWorkspaces(
-				workspaces.map((workspace) =>
-					workspace.id === workspaceId
-						? { ...workspace, name: updatedWorkspace.name }
-						: workspace,
-				),
-			)
+			await renameWorkspace(workspaceId, data.name)
 			onClose()
 		} catch (error) {
 			console.error('Workspace update error:', error)

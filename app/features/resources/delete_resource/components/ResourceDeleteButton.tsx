@@ -9,13 +9,13 @@ import {
 	TooltipTrigger,
 } from 'react-aria-components'
 import { Trash2 } from 'lucide-react'
-import { useResources } from '@/app/features/resources/contexts/ResourceContext'
+import { useResourceStore } from '@/app/store/resourceStore'
 
 const ResourceDeleteButton = ({
 	resource,
 }: { resource: Pick<Resource, 'id'> }) => {
 	const [isTooltipVisible, setIsTooltipVisible] = useState(false)
-	const { removeResource } = useResources()
+	const removeResource = useResourceStore((state) => state.removeResource)
 
 	const handleDelete = async () => {
 		try {
