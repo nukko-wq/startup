@@ -270,7 +270,7 @@ export default function Sidebar() {
 
 	return (
 		<div className="w-[320px] bg-gray-800 h-screen flex flex-col">
-			<div className="flex items-center justify-between p-4">
+			<div className="flex items-center justify-between pl-4 pr-3 pt-4 pb-4">
 				<div className="text-zinc-50 text-2xl font-semibold">Startup</div>
 				<SidebarMenu />
 			</div>
