@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { ResourceProvider } from '@/app/features/resources/contexts/ResourceContext'
 import {
 	Button,
@@ -25,10 +25,60 @@ interface ResourceProps {
 const Resources = ({ initialData, spaceId, spaceName }: ResourceProps) => {
 	const [sections, setSections] = useState(initialData.sections)
 	const [isCreating, setIsCreating] = useState(false)
-	const { isLoading } = useSpaces()
+	const { isLoading, activeSpaceId, isNavigating } = useSpaces()
+	const prevSpaceIdRef = useRef<string | undefined>(spaceId)
+	const [isLoadingData, setIsLoadingData] = useState(false)
+	const dataFetchLock = useRef<boolean>(false)
 
+	// スペース切り替え時のデータ再取得を改善
+	// biome-ignore lint/correctness/useExhaustiveDependencies: <explanation>
 	useEffect(() => {
-		setSections(initialData.sections)
+		const fetchSections = async () => {
+			if (
+				!spaceId ||
+				spaceId === prevSpaceIdRef.current ||
+				isLoading ||
+				dataFetchLock.current
+			)
+				return
+
+			try {
+				dataFetchLock.current = true
+				setIsLoadingData(true)
+
+				const response = await fetch(`/api/spaces/${spaceId}/sections`, {
+					method: 'GET',
+					headers: {
+						'Content-Type': 'application/json',
+					},
+					cache: 'no-store',
+				})
+
+				if (!response.ok) {
+					throw new Error('Failed to fetch sections')
+				}
+
+				const data = await response.json()
+				setSections(data.sections)
+				prevSpaceIdRef.current = spaceId
+			} catch (error) {
+				console.error('Error fetching sections:', error)
+			} finally {
+				setIsLoadingData(false)
+				setTimeout(() => {
+					dataFetchLock.current = false
+				}, 500)
+			}
+		}
+
+		fetchSections()
+	}, [spaceId, activeSpaceId, isLoading])
+
+	// 初期データの同期
+	useEffect(() => {
+		if (initialData.sections.length > 0) {
+			setSections(initialData.sections)
+		}
 	}, [initialData.sections])
 
 	const { dragAndDropHooks } = useDragAndDrop({
@@ -141,7 +191,13 @@ const Resources = ({ initialData, spaceId, spaceName }: ResourceProps) => {
 		}
 	}
 
-	if (isLoading) {
+	if (
+		isLoading ||
+		isLoadingData ||
+		!spaceId ||
+		spaceId !== activeSpaceId ||
+		isNavigating
+	) {
 		return <LoadingSpinner />
 	}
 

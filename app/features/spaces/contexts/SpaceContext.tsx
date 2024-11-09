@@ -55,6 +55,8 @@ export function SpaceProvider({
 	const pendingUpdate = useRef<string | null>(null)
 	const [currentSpace, setCurrentSpace] = useState<Space | null>(null)
 	const [isLoading, setIsLoading] = useState(true)
+	const spaceCache = useRef<Map<string, Space>>(new Map())
+	const navigationLock = useRef<boolean>(false)
 
 	// 初期データのロード完了時にローディングを解除
 	useEffect(() => {
@@ -164,34 +166,57 @@ export function SpaceProvider({
 	}
 
 	const handleSpaceClick = async (spaceId: string) => {
+		if (navigationLock.current) return
 		try {
+			navigationLock.current = true
 			setIsLoading(true)
 			setIsNavigating(true)
 			lastUpdateSource.current = 'click'
 
-			// 状態更新を同期的に行う
-			setActiveSpaceId(spaceId)
+			// キャッシュに保存
+			const targetSpace = spaces.find((space) => space.id === spaceId)
+			if (targetSpace) {
+				spaceCache.current.set(spaceId, targetSpace)
+			}
 
-			// 状態更新が確実に完了するまで待機
+			// 状態を一括更新（同期的に実行）
+			setActiveSpaceId(spaceId)
+			if (targetSpace) {
+				setCurrentSpace(targetSpace)
+			}
+
+			// ナビゲーション前に少し待機
 			await new Promise((resolve) => setTimeout(resolve, 50))
 
-			// 並行して実行
-			await Promise.all([
-				router.replace(`/?spaceId=${spaceId}`, { scroll: false }),
-				handleSpaceSelect(spaceId),
-			])
+			// ナビゲーションを実行
+			await router.replace(`/?spaceId=${spaceId}`, { scroll: false })
+			await handleSpaceSelect(spaceId)
 		} catch (error) {
 			console.error('Error switching space:', error)
 		} finally {
-			// ナビゲーション完了後に状態をリセット
+			// 完了後にロックを解除（遅延を延長）
 			setTimeout(() => {
 				setIsNavigating(false)
 				setIsLoading(false)
 				lastUpdateSource.current = null
 				pendingUpdate.current = null
-			}, 300)
+				navigationLock.current = false
+			}, 500)
 		}
 	}
+
+	// URLとの同期処理を改善
+	useEffect(() => {
+		const spaceId = searchParams.get('spaceId')
+
+		if (!spaceId || isNavigating || navigationLock.current) return
+
+		const cachedSpace = spaceCache.current.get(spaceId)
+		if (cachedSpace && cachedSpace.id !== activeSpaceId) {
+			setActiveSpaceId(cachedSpace.id)
+			setCurrentSpace(cachedSpace)
+		}
+	}, [searchParams, isNavigating, activeSpaceId])
 
 	const value = {
 		spaces,
