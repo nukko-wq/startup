@@ -137,11 +137,20 @@ const ResourceCreateForm = ({
 			)
 			const faviconData = await faviconResponse.json()
 
+			// セクション内のリソースを取得して最大のpositionを見つける
+			const sectionResources = resources.filter(
+				(r) => r.sectionId === sectionId,
+			)
+			const maxPosition =
+				sectionResources.length > 0
+					? Math.max(...sectionResources.map((r) => r.position))
+					: -1
+
 			const submissionData = {
 				...data,
 				title: data.title || data.url,
 				faviconUrl: faviconData.faviconUrl,
-				position: resources.length + 1,
+				position: maxPosition + 1, // セクション内での新しいposition
 				description: data.description || '',
 				mimeType: data.mimeType || '',
 				isGoogleDrive: data.isGoogleDrive || false,
@@ -222,13 +231,22 @@ const ResourceCreateForm = ({
 					break
 			}
 
+			// セクション内のリソースを取得して最大のpositionを見つける
+			const sectionResources = resources.filter(
+				(r) => r.sectionId === sectionId,
+			)
+			const maxPosition =
+				sectionResources.length > 0
+					? Math.max(...sectionResources.map((r) => r.position))
+					: -1
+
 			const submissionData = {
 				title: file.name,
 				url: file.webViewLink,
 				driveFileId: file.id,
 				mimeType: file.mimeType,
 				isGoogleDrive: true,
-				position: resources.length + 1,
+				position: maxPosition + 1, // セクション内での新しいposition
 				description: description,
 				faviconUrl: '',
 				sectionId: sectionId,
