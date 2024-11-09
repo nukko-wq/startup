@@ -1,10 +1,11 @@
 import { auth } from '@/lib/auth'
 import { db } from '@/lib/db'
+import type { NextRequest } from 'next/server'
 import { NextResponse } from 'next/server'
 
 export async function GET(
-	request: Request,
-	{ params }: { params: { spaceId: string } },
+	request: NextRequest,
+	context: { params: Promise<{ spaceId: string }> },
 ) {
 	try {
 		const session = await auth()
@@ -14,7 +15,7 @@ export async function GET(
 			return NextResponse.json({ error: '認証が必要です' }, { status: 401 })
 		}
 
-		const spaceId = params.spaceId
+		const { spaceId } = await context.params
 
 		const sections = await db.section.findMany({
 			where: {
