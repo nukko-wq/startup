@@ -16,6 +16,8 @@ interface SpaceContextType {
 	handleSpaceClick: (spaceId: string) => Promise<void>
 	currentSpace: Space | null
 	setCurrentSpace: (space: Space) => void
+	isLoading: boolean
+	setIsLoading: React.Dispatch<React.SetStateAction<boolean>>
 }
 
 export const SpaceContext = createContext<SpaceContextType>({
@@ -29,6 +31,8 @@ export const SpaceContext = createContext<SpaceContextType>({
 	handleSpaceClick: async () => {},
 	currentSpace: null,
 	setCurrentSpace: () => {},
+	isLoading: false,
+	setIsLoading: () => {},
 })
 
 export function SpaceProvider({
@@ -50,6 +54,7 @@ export function SpaceProvider({
 	const lastUpdateSource = useRef<'url' | 'click' | null>(null)
 	const pendingUpdate = useRef<string | null>(null)
 	const [currentSpace, setCurrentSpace] = useState<Space | null>(null)
+	const [isLoading, setIsLoading] = useState(false)
 
 	// activeSpaceIdが変更されたときにcurrentSpaceを更新
 	useEffect(() => {
@@ -149,15 +154,13 @@ export function SpaceProvider({
 
 	const handleSpaceClick = async (spaceId: string) => {
 		try {
-			// まず状態を更新
+			setIsLoading(true)
 			setIsNavigating(true)
 			lastUpdateSource.current = 'click'
 			setActiveSpaceId(spaceId)
 
-			// 状態の更新が確実に完了するまで待機
 			await new Promise((resolve) => setTimeout(resolve, 100))
 
-			// その後でナビゲーションと他の処理を実行
 			await Promise.all([
 				router.push(`/?spaceId=${spaceId}`, { scroll: false }),
 				handleSpaceSelect(spaceId),
@@ -165,9 +168,9 @@ export function SpaceProvider({
 		} catch (error) {
 			console.error('Error switching space:', error)
 		} finally {
-			// クリーンアップは少し遅延させる
 			setTimeout(() => {
 				setIsNavigating(false)
+				setIsLoading(false)
 				lastUpdateSource.current = null
 				pendingUpdate.current = null
 			}, 500)
@@ -185,6 +188,8 @@ export function SpaceProvider({
 		handleSpaceClick,
 		currentSpace,
 		setCurrentSpace: updateCurrentSpace,
+		isLoading,
+		setIsLoading,
 	}
 
 	return <SpaceContext.Provider value={value}>{children}</SpaceContext.Provider>
