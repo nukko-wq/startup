@@ -42,7 +42,6 @@ const WorkspaceInSidebar = () => {
 			)
 		},
 		async onReorder(e) {
-			const previousWorkspaces = [...workspaces]
 			try {
 				const draggedId = Array.from(e.keys)[0] as string
 				const targetId = e.target.key as string
@@ -62,41 +61,36 @@ const WorkspaceInSidebar = () => {
 
 				if (draggedIndex === -1 || targetIndex === -1) return
 
-				// 新しい順序を計算
+				// 新しい順序を計算（メモリ効率を改善）
 				const newWorkspaces = [...reorderableWorkspaces]
 				const [draggedItem] = newWorkspaces.splice(draggedIndex, 1)
 				const insertAt =
 					e.target.dropPosition === 'before' ? targetIndex : targetIndex + 1
 				newWorkspaces.splice(insertAt, 0, draggedItem)
 
-				// orderを1から振り直し
-				const updatedWorkspaces = newWorkspaces.map((workspace, index) => ({
-					...workspace,
-					order: index + 1,
-				}))
+				// 楽観的更新：即座にUIを更新（パフォーマンス改善）
+				const updatedWorkspaces = workspaces.map((w) => {
+					if (w.isDefault) return w
+					const index = newWorkspaces.findIndex((nw) => nw.id === w.id)
+					return index !== -1 ? { ...w, order: index + 1 } : w
+				})
 
-				// 楽観的更新：即座にUIを更新
-				setWorkspaces(
-					workspaces.map((w) => {
-						if (w.isDefault) return w
-						const updated = updatedWorkspaces.find((u) => u.id === w.id)
-						return updated || w
-					}),
-				)
+				setWorkspaces(updatedWorkspaces)
 
-				// APIリクエストのペイロード
+				// APIリクエストを非同期で実行
 				const payload = {
-					items: updatedWorkspaces.map((w) => ({
+					items: newWorkspaces.map((w, index) => ({
 						id: w.id,
-						order: w.order,
+						order: index + 1,
 					})),
 				}
 
-				// バックグラウンドでAPIリクエストを実行
-				await reorderWorkspaces(payload)
+				reorderWorkspaces(payload).catch(() => {
+					// エラー時は元の状態に戻す
+					setWorkspaces(workspaces)
+				})
 			} catch (error) {
 				console.error('Reorder error:', error)
-				setWorkspaces(previousWorkspaces)
 			}
 		},
 	})

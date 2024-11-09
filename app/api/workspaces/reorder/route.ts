@@ -37,23 +37,25 @@ export async function PUT(req: Request) {
 
 		const { items } = result.data
 
-		// トランザクションで一括更新（最適化版）
-		const updatedWorkspaces = await db.$transaction(async (tx) => {
-			// 一括で一時的な順序を更新
-			await tx.workspace.updateMany({
-				where: {
-					id: { in: items.map((item) => item.id) },
-					userId,
-					isDefault: false,
-				},
-				data: {
-					order: {
-						increment: 10000, // 十分大きな値
-					},
-				},
-			})
+		// トランザクションで一括更新
+		await db.$transaction(async (tx) => {
+			// 各ワークスペースを個別に一時的な値に更新（重複を避けるため、異なる負の値を使用）
+			await Promise.all(
+				items.map((item, index) =>
+					tx.workspace.update({
+						where: {
+							id: item.id,
+							userId,
+							isDefault: false,
+						},
+						data: {
+							order: -(index + 1000000), // 各アイテムに異なる負の値を設定
+						},
+					}),
+				),
+			)
 
-			// 目的の順序に一括更新
+			// 最終的な順序に更新
 			await Promise.all(
 				items.map((item) =>
 					tx.workspace.update({
@@ -62,16 +64,18 @@ export async function PUT(req: Request) {
 							userId,
 							isDefault: false,
 						},
-						data: { order: item.order },
+						data: {
+							order: item.order,
+						},
 					}),
 				),
 			)
+		})
 
-			// 更新後のワークスペースを取得
-			return tx.workspace.findMany({
-				where: { userId },
-				orderBy: [{ isDefault: 'desc' }, { order: 'asc' }],
-			})
+		// 更新後のワークスペースを取得して返す
+		const updatedWorkspaces = await db.workspace.findMany({
+			where: { userId },
+			orderBy: [{ isDefault: 'desc' }, { order: 'asc' }],
 		})
 
 		return NextResponse.json({
@@ -79,7 +83,7 @@ export async function PUT(req: Request) {
 			data: updatedWorkspaces,
 		})
 	} catch (error) {
-		console.error('Server error:', error)
+		console.error('Reorder error:', error)
 		return NextResponse.json(
 			{ success: false, error: 'サーバーエラーが発生しました' },
 			{ status: 500 },

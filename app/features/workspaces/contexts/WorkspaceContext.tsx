@@ -31,33 +31,26 @@ export function WorkspaceProvider({
 	)
 
 	const reorderWorkspaces = async (payload: ReorderWorkspacesPayload) => {
-		try {
-			const response = await fetch('/api/workspaces/reorder', {
-				method: 'PUT',
-				headers: {
-					'Content-Type': 'application/json',
-				},
-				body: JSON.stringify(payload),
-			})
+		const response = await fetch('/api/workspaces/reorder', {
+			method: 'PUT',
+			headers: {
+				'Content-Type': 'application/json',
+			},
+			body: JSON.stringify(payload),
+		})
 
-			if (!response.ok) {
-				throw new Error('ワークスペースの並び替えに失敗しました')
-			}
+		if (!response.ok) {
+			throw new Error('ワークスペースの並び替えに失敗しました')
+		}
 
-			const data = await response.json()
-			if (!data.success) {
-				throw new Error(data.error || 'ワークスペースの並び替えに失敗しました')
-			}
+		const data = await response.json()
+		if (!data.success) {
+			throw new Error(data.error || 'ワークスペースの並び替えに失敗しました')
+		}
 
-			// APIからの応答で最終的な状態を更新
-			if (data.data) {
-				setWorkspaces(data.data)
-			}
-
-			return data
-		} catch (error) {
-			console.error('ワークスペースの並び替えに失敗しました:', error)
-			throw error
+		// APIからの応答で最終的な状態を更新（必要な場合のみ）
+		if (data.data) {
+			setWorkspaces(data.data)
 		}
 	}
 
