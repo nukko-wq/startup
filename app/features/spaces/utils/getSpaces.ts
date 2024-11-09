@@ -18,6 +18,8 @@ export const getSpaces = cache(async (userId: string): Promise<Space[]> => {
 				order: true,
 				userId: true,
 				workspaceId: true,
+				createdAt: true,
+				updatedAt: true,
 			},
 			orderBy: {
 				order: 'asc',
