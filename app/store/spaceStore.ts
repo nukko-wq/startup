@@ -73,39 +73,75 @@ export const useSpaceStore = create<SpaceStore>((set, get) => ({
 
 	handleSpaceClick: async (spaceId, router) => {
 		const { setIsLoading, setIsNavigating, setActiveSpaceId, spaces } = get()
+		const resourceStore = useResourceStore.getState()
 
 		try {
-			setIsLoading(true)
 			setIsNavigating(true)
-			setActiveSpaceId(spaceId)
+			setIsLoading(true)
 
+			// 新しいスペースのデータを先に確認
+			const cacheKey = `sections-${spaceId}`
+			const cachedData = sessionStorage.getItem(cacheKey)
+			const hasPrefetchedData = resourceStore.prefetchedSections[spaceId]
+
+			// 現在のスペースのデータを保存
+			const currentSpaceId = get().activeSpaceId
+			if (currentSpaceId) {
+				sessionStorage.setItem(
+					`sections-${currentSpaceId}`,
+					JSON.stringify({
+						sections: resourceStore.sections,
+						resources: resourceStore.resources,
+					}),
+				)
+			}
+
+			// 新しいスペースの状態を設定
 			const space = spaces.find((s) => s.id === spaceId)
 			if (space) {
 				set({ currentSpace: space })
+				setActiveSpaceId(spaceId)
 			}
 
-			await new Promise((resolve) => setTimeout(resolve, 50))
-
-			await router.replace(`/?spaceId=${spaceId}`, { scroll: false })
-
-			const response = await fetch('/api/users/last-active-space', {
-				method: 'PUT',
-				headers: { 'Content-Type': 'application/json' },
-				body: JSON.stringify({ spaceId }),
-			})
-
-			if (!response.ok) {
-				throw new Error('Failed to update last active space')
+			// データの設定を一括で行う
+			if (cachedData) {
+				const parsedData = JSON.parse(cachedData)
+				await Promise.all([
+					resourceStore.setSections(parsedData.sections),
+					resourceStore.setResources(parsedData.resources),
+					router.replace(`/?spaceId=${spaceId}`, { scroll: false }),
+				])
+			} else if (hasPrefetchedData) {
+				await Promise.all([
+					resourceStore.setSections(resourceStore.prefetchedSections[spaceId]),
+					resourceStore.setResources(
+						resourceStore.prefetchedResources[spaceId] || [],
+					),
+				])
+			} else {
+				// データがない場合は空の状態を表示
+				resourceStore.setSections([])
+				resourceStore.setResources([])
+				setIsLoading(true)
 			}
 
-			await useResourceStore.getState().fetchSections(spaceId)
+			// URLの更新とデータフェッチを並行して実行
+			await Promise.all([
+				!cachedData &&
+					!hasPrefetchedData &&
+					resourceStore.fetchSections(spaceId),
+				router.replace(`/?spaceId=${spaceId}`, { scroll: false }),
+				fetch('/api/users/last-active-space', {
+					method: 'PUT',
+					headers: { 'Content-Type': 'application/json' },
+					body: JSON.stringify({ spaceId }),
+				}),
+			])
 		} catch (error) {
 			console.error('Error switching space:', error)
 		} finally {
-			setTimeout(() => {
-				setIsNavigating(false)
-				setIsLoading(false)
-			}, 500)
+			setIsNavigating(false)
+			setIsLoading(false)
 		}
 	},
 

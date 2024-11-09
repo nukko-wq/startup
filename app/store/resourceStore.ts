@@ -52,6 +52,13 @@ export interface ResourceStore {
 	}
 	reorderResources: (newResources: ResourceStore['resources']) => Promise<void>
 	updateAllResources: (newResources: ResourceStore['resources']) => void
+	prefetchedSections: Record<string, Section[]>
+	setPrefetchedSections: (spaceId: string, sections: Section[]) => void
+	prefetchedResources: Record<string, ResourceStore['resources']>
+	setPrefetchedResources: (
+		spaceId: string,
+		resources: ResourceStore['resources'],
+	) => void
 }
 
 export const useResourceStore = create<ResourceStore>((set, get) => ({
@@ -60,30 +67,82 @@ export const useResourceStore = create<ResourceStore>((set, get) => ({
 	driveFiles: [],
 	isLoading: false,
 	isCreating: false,
+	prefetchedSections: {},
+	prefetchedResources: {},
 
 	setIsCreating: (creating) => set({ isCreating: creating }),
 	setSections: (sections) => set({ sections }),
 	setIsLoading: (loading) => set({ isLoading: loading }),
 
-	fetchSections: async (spaceId) => {
-		try {
-			set({ isLoading: true })
-			const response = await fetch(`/api/spaces/${spaceId}/sections`, {
-				method: 'GET',
-				headers: { 'Content-Type': 'application/json' },
-				cache: 'no-store',
-			})
+	setPrefetchedSections: (spaceId, sections) =>
+		set((state) => ({
+			prefetchedSections: {
+				...state.prefetchedSections,
+				[spaceId]: sections,
+			},
+		})),
 
-			if (!response.ok) {
-				throw new Error('Failed to fetch sections')
+	setPrefetchedResources: (spaceId, resources) =>
+		set((state) => ({
+			prefetchedResources: {
+				...state.prefetchedResources,
+				[spaceId]: resources,
+			},
+		})),
+
+	fetchSections: async (spaceId) => {
+		const {
+			prefetchedSections,
+			setPrefetchedSections,
+			setPrefetchedResources,
+		} = get()
+
+		try {
+			const cacheKey = `sections-${spaceId}`
+			const cachedData = sessionStorage.getItem(cacheKey)
+
+			if (cachedData) {
+				const parsedData = JSON.parse(cachedData)
+				set({
+					sections: parsedData.sections,
+					resources: parsedData.resources,
+				})
+				return
 			}
 
+			if (prefetchedSections[spaceId]) {
+				set({
+					sections: prefetchedSections[spaceId],
+					resources: get().prefetchedResources[spaceId] || [],
+				})
+				return
+			}
+
+			const response = await fetch(`/api/spaces/${spaceId}/sections`)
+			if (!response.ok) throw new Error('Failed to fetch sections')
+
 			const data = await response.json()
-			set({ sections: data.sections })
+
+			// セッションストレージにキャッシュ
+			sessionStorage.setItem(
+				cacheKey,
+				JSON.stringify({
+					sections: data.sections,
+					resources: data.resources,
+				}),
+			)
+
+			// プリフェッチデータを更新
+			setPrefetchedSections(spaceId, data.sections)
+			setPrefetchedResources(spaceId, data.resources)
+
+			// 状態を更新
+			set({
+				sections: data.sections,
+				resources: data.resources,
+			})
 		} catch (error) {
 			console.error('Error fetching sections:', error)
-		} finally {
-			set({ isLoading: false })
 		}
 	},
 

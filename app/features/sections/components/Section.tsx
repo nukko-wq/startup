@@ -19,11 +19,11 @@ export default function Section({ id, name, onDelete }: SectionProps) {
 	const ref = useRef<HTMLDivElement>(null)
 	const [sectionName, setSectionName] = useState(name)
 	const [isResourceCreateOpen, setIsResourceCreateOpen] = useState(false)
-	const { resources } = useResourceStore()
+	const { resources = [] } = useResourceStore()
 
-	const sectionResources = resources
-		.filter((resource) => resource.sectionId === id)
-		.sort((a, b) => a.position - b.position)
+	const sectionResources = (resources || [])
+		.filter((resource) => resource?.sectionId === id)
+		.sort((a, b) => (a?.position || 0) - (b?.position || 0))
 
 	const handleNameEdit = (newName: string) => {
 		setSectionName(newName)
