@@ -7,6 +7,8 @@ import { spaceUpdateSchema } from '@/lib/validations/space'
 import type { z } from 'zod'
 import { useSpaceStore } from '@/app/store/spaceStore'
 import type { Space } from '@/app/types/space'
+import { useState } from 'react'
+import LoadingSpinner from '@/app/components/ui/LoadingSpinner'
 
 type FormData = z.infer<typeof spaceUpdateSchema>
 
@@ -22,6 +24,7 @@ const SpaceRenameForm = ({
 	onClose,
 }: SpaceRenameFormProps) => {
 	const { spaces, setSpaces, currentSpace, setCurrentSpace } = useSpaceStore()
+	const [isSubmitting, setIsSubmitting] = useState(false)
 	const { control, handleSubmit } = useForm<FormData>({
 		resolver: zodResolver(spaceUpdateSchema),
 		defaultValues: {
@@ -31,21 +34,9 @@ const SpaceRenameForm = ({
 
 	const onSubmit = async (data: FormData) => {
 		if (!currentSpace || !data.name) return
+		setIsSubmitting(true)
 
 		try {
-			onClose()
-
-			const updatedSpace: Space = {
-				...currentSpace,
-				name: data.name,
-				updatedAt: new Date(),
-			}
-
-			setCurrentSpace(updatedSpace)
-			setSpaces(
-				spaces.map((space) => (space.id === spaceId ? updatedSpace : space)),
-			)
-
 			const response = await fetch(`/api/spaces/${spaceId}`, {
 				method: 'PATCH',
 				headers: { 'Content-Type': 'application/json' },
@@ -53,19 +44,26 @@ const SpaceRenameForm = ({
 			})
 
 			if (!response.ok) {
-				const originalSpace: Space = {
-					...currentSpace,
-					name: initialName,
-				}
-				setCurrentSpace(originalSpace)
-				setSpaces(
-					spaces.map((space) => (space.id === spaceId ? originalSpace : space)),
-				)
-				throw new Error('Failed to update space')
+				throw new Error('スペースの更新に失敗しました')
 			}
+
+			const updatedSpace = await response.json()
+
+			const updatedSpaces = spaces.map((space) =>
+				space.id === spaceId ? { ...space, name: updatedSpace.name } : space,
+			)
+
+			const uniqueSpaces = Array.from(
+				new Map(updatedSpaces.map((space) => [space.id, space])).values(),
+			)
+
+			setSpaces(uniqueSpaces)
+			setCurrentSpace({ ...currentSpace, name: updatedSpace.name })
+			onClose()
 		} catch (error) {
-			console.error('Space update error:', error)
-			alert('スペース名の更新に失敗しました')
+			console.error('Error updating space:', error)
+		} finally {
+			setIsSubmitting(false)
 		}
 	}
 
@@ -98,14 +96,23 @@ const SpaceRenameForm = ({
 					type="button"
 					onPress={onClose}
 					className="px-4 py-2 bg-gray-200 rounded hover:bg-gray-300 outline-none"
+					isDisabled={isSubmitting}
 				>
 					キャンセル
 				</Button>
 				<Button
 					type="submit"
-					className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 outline-none"
+					className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 outline-none flex items-center gap-2"
+					isDisabled={isSubmitting}
 				>
-					保存
+					{isSubmitting ? (
+						<>
+							<LoadingSpinner className="w-4 h-4" />
+							更新中...
+						</>
+					) : (
+						'保存'
+					)}
 				</Button>
 			</div>
 		</Form>

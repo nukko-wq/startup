@@ -11,6 +11,7 @@ import {
 } from 'react-aria-components'
 import CreateSpaceForm from '@/app/features/spaces/create_space/CreateSpaceForm'
 import type { Space } from '@/app/types/space'
+import { useSpaceStore } from '@/app/store/spaceStore'
 
 interface CreateSpaceInWorkspaceProps {
 	workspaceId: string
@@ -43,8 +44,18 @@ export default function CreateSpaceInWorkspace({
 				throw new Error('スペースの作成に失敗しました')
 			}
 
-			const space = await response.json()
-			onSpaceCreated(space)
+			const newSpace = await response.json()
+
+			// 新しいスペースを追加する前に重複チェック
+			const existingSpaces = useSpaceStore.getState().spaces
+			const isDuplicate = existingSpaces.some(
+				(space) => space.id === newSpace.id,
+			)
+
+			if (!isDuplicate) {
+				onSpaceCreated(newSpace)
+			}
+
 			close()
 		} catch (error) {
 			console.error('Error creating space:', error)

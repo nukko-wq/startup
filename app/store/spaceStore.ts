@@ -149,13 +149,30 @@ export const useSpaceStore = create<SpaceStore>((set, get) => ({
 		const { setSpaces, spaces: previousSpaces } = get()
 
 		try {
-			setSpaces(newSpaces.sort((a, b) => a.order - b.order))
+			// 新しい配列を作成して順序を更新
+			const updatedSpaces = [...previousSpaces]
+			for (const newSpace of newSpaces) {
+				const index = updatedSpaces.findIndex((s) => s.id === newSpace.id)
+				if (index !== -1) {
+					updatedSpaces[index] = {
+						...updatedSpaces[index],
+						order: newSpace.order,
+					}
+				}
+			}
+
+			// 重複を避けるため、一意のIDでソート
+			const uniqueSpaces = Array.from(
+				new Map(updatedSpaces.map((space) => [space.id, space])).values(),
+			).sort((a, b) => a.order - b.order)
+
+			setSpaces(uniqueSpaces)
 
 			const response = await fetch('/api/spaces/reorder', {
 				method: 'PUT',
 				headers: { 'Content-Type': 'application/json' },
 				body: JSON.stringify({
-					items: newSpaces.map((space) => ({
+					items: uniqueSpaces.map((space) => ({
 						id: space.id,
 						order: space.order,
 					})),
@@ -176,14 +193,26 @@ export const useSpaceStore = create<SpaceStore>((set, get) => ({
 		const previousSpaces = [...spaces]
 
 		try {
-			const updatedSpaces = spaces.map((space) => {
-				if (space.id === spaceId) {
-					return { ...space, workspaceId, order: newOrder }
-				}
-				return space
-			})
+			// 一度に状態を更新
+			const updatedSpaces = spaces
+				.map((space) => {
+					if (space.id === spaceId) {
+						return { ...space, workspaceId, order: newOrder }
+					}
+					// 同じワークスペース内の他のスペースの順序を調整
+					if (space.workspaceId === workspaceId && space.order >= newOrder) {
+						return { ...space, order: space.order + 1 }
+					}
+					return space
+				})
+				.sort((a, b) => a.order - b.order)
 
-			setSpaces(updatedSpaces.sort((a, b) => a.order - b.order))
+			// 重複を避けるため、一意のIDでフィルタリング
+			const uniqueSpaces = Array.from(
+				new Map(updatedSpaces.map((space) => [space.id, space])).values(),
+			)
+
+			setSpaces(uniqueSpaces)
 
 			const response = await fetch(`/api/spaces/${spaceId}`, {
 				method: 'PATCH',
