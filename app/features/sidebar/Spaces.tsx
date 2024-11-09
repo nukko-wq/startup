@@ -21,6 +21,7 @@ interface SpacesProps {
 }
 
 const Spaces = ({ workspaceId }: SpacesProps) => {
+	const router = useRouter()
 	const {
 		spaces,
 		activeSpaceId,
@@ -253,7 +254,7 @@ const Spaces = ({ workspaceId }: SpacesProps) => {
 			onSelectionChange={(keys) => {
 				const selectedKey = Array.from(keys)[0] as string
 				if (selectedKey && selectedKey !== activeSpaceId && !isNavigating) {
-					handleSpaceClick(selectedKey)
+					handleSpaceClick(selectedKey, router)
 				}
 			}}
 			renderEmptyState={() => (
@@ -287,7 +288,7 @@ const Spaces = ({ workspaceId }: SpacesProps) => {
 							</div>
 							{/* スペース名 */}
 							<Button
-								onPress={() => handleSpaceClick(space.id)}
+								onPress={() => handleSpaceClick(space.id, router)}
 								className="flex-grow text-left outline-none text-sm"
 							>
 								{space.name}

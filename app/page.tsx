@@ -11,11 +11,13 @@ import { getWorkspaces } from '@/app/features/workspaces/utils/getWorkspaces'
 export const revalidate = 0
 
 interface PageProps {
-	searchParams: { [key: string]: string | string[] | undefined }
+	params: Promise<{ [key: string]: string }>
+	searchParams: Promise<{ [key: string]: string | string[] | undefined }>
 }
 
 export default async function Index({ searchParams }: PageProps) {
 	const session = await auth()
+	const resolvedSearchParams = await searchParams
 
 	if (!session?.user?.id) {
 		redirect('/login')
@@ -27,7 +29,7 @@ export default async function Index({ searchParams }: PageProps) {
 			select: { lastActiveSpaceId: true },
 		})
 
-		const spaceIdFromParams = searchParams?.spaceId
+		const spaceIdFromParams = resolvedSearchParams?.spaceId
 		const spaceId =
 			typeof spaceIdFromParams === 'string'
 				? spaceIdFromParams

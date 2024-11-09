@@ -1,5 +1,7 @@
 import { create } from 'zustand'
 import type { Space } from '@/app/types/space'
+import { useResourceStore } from '@/app/store/resourceStore'
+import type { useRouter } from 'next/navigation'
 
 export interface SpaceStore {
 	spaces: Space[]
@@ -15,7 +17,10 @@ export interface SpaceStore {
 	setIsNavigating: (navigating: boolean) => void
 	setIsDragging: (dragging: boolean) => void
 	initializeSpaces: (initialSpaces: Space[], activeSpaceId?: string) => void
-	handleSpaceClick: (spaceId: string) => Promise<void>
+	handleSpaceClick: (
+		spaceId: string,
+		router: ReturnType<typeof useRouter>,
+	) => Promise<void>
 	reorderSpaces: (newSpaces: Space[]) => Promise<void>
 	updateSpaceWorkspace: (
 		spaceId: string,
@@ -66,7 +71,7 @@ export const useSpaceStore = create<SpaceStore>((set, get) => ({
 		}
 	},
 
-	handleSpaceClick: async (spaceId) => {
+	handleSpaceClick: async (spaceId, router) => {
 		const { setIsLoading, setIsNavigating, setActiveSpaceId, spaces } = get()
 
 		try {
@@ -79,11 +84,21 @@ export const useSpaceStore = create<SpaceStore>((set, get) => ({
 				set({ currentSpace: space })
 			}
 
-			await fetch('/api/users/last-active-space', {
+			await new Promise((resolve) => setTimeout(resolve, 50))
+
+			await router.replace(`/?spaceId=${spaceId}`, { scroll: false })
+
+			const response = await fetch('/api/users/last-active-space', {
 				method: 'PUT',
 				headers: { 'Content-Type': 'application/json' },
 				body: JSON.stringify({ spaceId }),
 			})
+
+			if (!response.ok) {
+				throw new Error('Failed to update last active space')
+			}
+
+			await useResourceStore.getState().fetchSections(spaceId)
 		} catch (error) {
 			console.error('Error switching space:', error)
 		} finally {

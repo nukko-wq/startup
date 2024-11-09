@@ -1,7 +1,7 @@
-import { db } from '@/lib/db'
-import { cache } from 'react'
+import { prisma } from '@/lib/prisma'
+import { unstable_cache } from 'next/cache'
 
-export const getInitialSections = cache(
+export const getInitialSections = unstable_cache(
 	async (userId: string, spaceId?: string) => {
 		console.log('getInitialSections called with userId:', userId)
 
@@ -14,7 +14,7 @@ export const getInitialSections = cache(
 		}
 
 		try {
-			const space = await db.space.findUnique({
+			const space = await prisma.space.findUnique({
 				where: {
 					id: spaceId,
 					userId,
@@ -25,7 +25,7 @@ export const getInitialSections = cache(
 				return { sections: [], userId, spaceId }
 			}
 
-			const sections = await db.section.findMany({
+			const sections = await prisma.section.findMany({
 				where: {
 					userId: userId,
 					spaceId: spaceId,
@@ -36,6 +36,17 @@ export const getInitialSections = cache(
 					order: true,
 					createdAt: true,
 					resources: {
+						select: {
+							id: true,
+							title: true,
+							url: true,
+							faviconUrl: true,
+							mimeType: true,
+							isGoogleDrive: true,
+							position: true,
+							description: true,
+							sectionId: true,
+						},
 						orderBy: {
 							position: 'asc',
 						},
@@ -51,5 +62,10 @@ export const getInitialSections = cache(
 			console.error('Error in getInitialSections:', error)
 			throw error
 		}
+	},
+	['sections'],
+	{
+		revalidate: false,
+		tags: ['sections'],
 	},
 )

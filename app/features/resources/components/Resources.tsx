@@ -7,16 +7,16 @@ import {
 	GridListItem,
 	useDragAndDrop,
 } from 'react-aria-components'
-import Section from '@/app/features/sections/components/Section'
-import type { getInitialSections } from '@/app/features/resources/utils/getInitialSections'
+import SectionComponent from '@/app/features/sections/components/Section'
+import type { Section } from '@/app/types/section'
 import { Plus } from 'lucide-react'
 import { useSpaceStore } from '@/app/store/spaceStore'
 import LoadingSpinner from '@/app/components/ui/LoadingSpinner'
 import { useResourceStore } from '@/app/store/resourceStore'
 
 interface ResourceProps {
-	initialData: Awaited<ReturnType<typeof getInitialSections>>
-	spaceId?: string
+	initialData: { sections: Section[]; userId: string; spaceId: string }
+	spaceId: string
 }
 
 const Resources = ({ initialData, spaceId }: ResourceProps) => {
@@ -39,27 +39,32 @@ const Resources = ({ initialData, spaceId }: ResourceProps) => {
 		reorderSections,
 	} = useResourceStore()
 
-	// 初期データの同期
+	// 初期データのセット
 	useEffect(() => {
-		if (initialData.sections.length > 0) {
-			setSections(initialData.sections)
-		}
-		if (initialData.sections.flatMap((s) => s.resources).length > 0) {
-			setResources(initialData.sections.flatMap((s) => s.resources))
-		}
-	}, [initialData.sections, setSections, setResources])
+		setSections(initialData.sections)
+		const initialResources = initialData.sections.flatMap(
+			(section) =>
+				section.resources?.map((resource) => ({
+					id: resource.id,
+					title: resource.title,
+					url: resource.url,
+					faviconUrl: resource.faviconUrl,
+					mimeType: resource.mimeType,
+					isGoogleDrive: resource.isGoogleDrive,
+					position: resource.position,
+					description: resource.description,
+					sectionId: section.id,
+				})) ?? [],
+		)
+		setResources(initialResources)
+	}, [initialData, setSections, setResources])
 
-	// スペース切り替え時のデータ取得
+	// スペース切り替え時のデータ再取得
 	useEffect(() => {
-		if (
-			spaceId &&
-			spaceId === activeSpaceId &&
-			!isNavigating &&
-			!isSpaceLoading
-		) {
+		if (!isNavigating && spaceId) {
 			fetchSections(spaceId)
 		}
-	}, [spaceId, activeSpaceId, isNavigating, isSpaceLoading, fetchSections])
+	}, [spaceId, isNavigating, fetchSections])
 
 	const { dragAndDropHooks } = useDragAndDrop({
 		getItems: (keys) => {
@@ -119,7 +124,7 @@ const Resources = ({ initialData, spaceId }: ResourceProps) => {
 								textValue={section.name}
 								className="w-full outline-none"
 							>
-								<Section
+								<SectionComponent
 									id={section.id}
 									name={section.name}
 									onDelete={() => deleteSection(section.id)}
