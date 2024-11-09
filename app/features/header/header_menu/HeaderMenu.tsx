@@ -64,7 +64,6 @@ const HeaderMenu = ({ spaceId, spaceName }: HeaderMenuProps) => {
 			/>
 			<DeleteSpaceDialog
 				spaceId={spaceId}
-				setSpaces={setSpaces}
 				isOpen={isDeleteOpen}
 				onOpenChange={setIsDeleteOpen}
 			/>
