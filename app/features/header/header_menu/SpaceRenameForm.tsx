@@ -20,7 +20,7 @@ const SpaceRenameForm = ({
 	initialName,
 	onClose,
 }: SpaceRenameFormProps) => {
-	const { spaces, setSpaces } = useSpaces()
+	const { spaces, setSpaces, handleSpaceClick } = useSpaces()
 	const { control, handleSubmit } = useForm<FormData>({
 		resolver: zodResolver(spaceUpdateSchema),
 		defaultValues: {
@@ -47,6 +47,7 @@ const SpaceRenameForm = ({
 				),
 			)
 			onClose()
+			await handleSpaceClick(spaceId)
 		} catch (error) {
 			console.error('Space update error:', error)
 			alert('スペース名の更新に失敗しました')

@@ -14,7 +14,7 @@ interface HeaderProps {
 export default function Header({ spaceName, spaceId }: HeaderProps) {
 	const [isEditing, setIsEditing] = useState(false)
 	const [editedName, setEditedName] = useState(spaceName)
-	const { setSpaces } = useSpaces()
+	const { setSpaces, handleSpaceClick } = useSpaces()
 
 	// spaceNameが変更されたときにeditedNameを更新
 	useEffect(() => {
@@ -46,6 +46,7 @@ export default function Header({ spaceName, spaceId }: HeaderProps) {
 				),
 			)
 			setIsEditing(false)
+			await handleSpaceClick(spaceId)
 		} catch (error) {
 			console.error('Error updating space name:', error)
 			setEditedName(spaceName)
