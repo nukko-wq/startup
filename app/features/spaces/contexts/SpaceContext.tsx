@@ -100,7 +100,11 @@ export function SpaceProvider({
 		) {
 			lastUpdateSource.current = 'url'
 			pendingUpdate.current = spaceId
-			setActiveSpaceId(spaceId)
+
+			// 状態更新を遅延させて実行
+			setTimeout(() => {
+				setActiveSpaceId(spaceId)
+			}, 0)
 		}
 	}, [searchParams, isNavigating, activeSpaceId, spaces])
 
@@ -164,23 +168,28 @@ export function SpaceProvider({
 			setIsLoading(true)
 			setIsNavigating(true)
 			lastUpdateSource.current = 'click'
+
+			// 状態更新を同期的に行う
 			setActiveSpaceId(spaceId)
 
-			await new Promise((resolve) => setTimeout(resolve, 100))
+			// 状態更新が確実に完了するまで待機
+			await new Promise((resolve) => setTimeout(resolve, 50))
 
+			// 並行して実行
 			await Promise.all([
-				router.push(`/?spaceId=${spaceId}`, { scroll: false }),
+				router.replace(`/?spaceId=${spaceId}`, { scroll: false }),
 				handleSpaceSelect(spaceId),
 			])
 		} catch (error) {
 			console.error('Error switching space:', error)
 		} finally {
+			// ナビゲーション完了後に状態をリセット
 			setTimeout(() => {
 				setIsNavigating(false)
 				setIsLoading(false)
 				lastUpdateSource.current = null
 				pendingUpdate.current = null
-			}, 500)
+			}, 300)
 		}
 	}
 
