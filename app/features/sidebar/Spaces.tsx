@@ -270,8 +270,8 @@ const Spaces = ({ workspaceId }: SpacesProps) => {
 				<GridListItem
 					textValue={space.name}
 					className={({ isSelected, isFocusVisible }) => `
-						flex flex-grow items-center justify-between outline-none cursor-pointer hover:bg-gray-700 hover:bg-opacity-75 group transition duration-200
-						${isSelected ? 'bg-gray-700 border-l-4 border-blue-500 pl-3' : 'pl-4'}
+						flex flex-grow items-center justify-between text-gray-400 outline-none cursor-pointer hover:bg-gray-700 hover:bg-opacity-75 group transition duration-200
+						${isSelected ? 'bg-gray-700 border-l-4 border-blue-500 pl-3 text-zinc-50' : 'pl-4'}
 						${isFocusVisible ? '' : ''}
 					`}
 				>
@@ -290,13 +290,8 @@ const Spaces = ({ workspaceId }: SpacesProps) => {
 							<Button
 								onPress={() => handleSpaceClick(space.id)}
 								className={`
-										flex-grow text-left outline-none text-sm
-										${
-											activeSpaceId === space.id
-												? 'text-zinc-200 font-medium hover:text-zinc-50 transition-colors duration-200'
-												: 'text-gray-400 hover:text-zinc-50 transition-colors duration-200'
-										}
-									`}
+									flex-grow text-left outline-none text-sm
+								`}
 							>
 								{space.name}
 							</Button>
