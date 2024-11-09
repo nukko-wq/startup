@@ -32,11 +32,6 @@ export function WorkspaceProvider({
 
 	const reorderWorkspaces = async (payload: ReorderWorkspacesPayload) => {
 		try {
-			console.log(
-				'Sending reorder request with payload:',
-				JSON.stringify(payload),
-			)
-
 			const response = await fetch('/api/workspaces/reorder', {
 				method: 'PUT',
 				headers: {
@@ -45,23 +40,16 @@ export function WorkspaceProvider({
 				body: JSON.stringify(payload),
 			})
 
-			const text = await response.text()
-			console.log('Raw response:', text)
-
-			// biome-ignore lint/suspicious/noImplicitAnyLet: <explanation>
-			let data
-			try {
-				data = JSON.parse(text)
-			} catch (e) {
-				console.error('Response parse error:', e)
-				throw new Error('レスポンスの解析に失敗しました')
+			if (!response.ok) {
+				throw new Error('ワークスペースの並び替えに失敗しました')
 			}
 
-			if (!response.ok || !data.success) {
-				console.error('API error:', data)
+			const data = await response.json()
+			if (!data.success) {
 				throw new Error(data.error || 'ワークスペースの並び替えに失敗しました')
 			}
 
+			// APIからの応答で最終的な状態を更新
 			if (data.data) {
 				setWorkspaces(data.data)
 			}
