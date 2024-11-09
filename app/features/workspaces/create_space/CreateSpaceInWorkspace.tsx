@@ -1,6 +1,6 @@
 'use client'
 
-import { SquarePlus } from 'lucide-react'
+import { Plus, SquarePlus } from 'lucide-react'
 import { Button } from 'react-aria-components'
 import { useState } from 'react'
 import {
@@ -53,9 +53,9 @@ export default function CreateSpaceInWorkspace({
 
 	return (
 		<DialogTrigger isOpen={isOpen} onOpenChange={setIsOpen}>
-			<Button className="w-full text-left px-4 py-2 text-sm text-zinc-300 hover:bg-zinc-800 flex items-center gap-2">
-				<SquarePlus className="w-4 h-4" />
-				スペースを作成
+			<Button className="w-full text-left px-5 py-4 text-sm text-gray-400 hover:bg-gray-700 flex items-center gap-1 border border-gray-700">
+				<Plus className="w-4 h-4" />
+				Add Space to Workspace
 			</Button>
 
 			<ModalOverlay className="fixed inset-0 z-10 overflow-y-auto bg-black/25 flex min-h-full items-center justify-center p-4 text-center backdrop-blur">

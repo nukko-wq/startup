@@ -14,6 +14,7 @@ import {
 import SpaceButtonMenu from './SpaceButtonMenu'
 import { useRouter } from 'next/navigation'
 import { useRef, useCallback } from 'react'
+import CreateSpaceInWorkspace from '../workspaces/create_space/CreateSpaceInWorkspace'
 
 interface SpacesProps {
 	workspaceId: string
@@ -312,11 +313,11 @@ const Spaces = ({ workspaceId }: SpacesProps) => {
 				}
 			}}
 			renderEmptyState={() => (
-				<div
-					data-drop-target
-					className="p-2 text-center text-gray-500 min-h-[30px] border-2 border-dashed border-zinc-700 rounded"
-				>
-					Add Space to Workspace
+				<div data-drop-target className="mx-4">
+					<CreateSpaceInWorkspace
+						workspaceId={workspaceId}
+						onSpaceCreated={(newSpace) => setSpaces([...spaces, newSpace])}
+					/>
 				</div>
 			)}
 		>
