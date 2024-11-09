@@ -13,8 +13,9 @@ import {
 } from 'react-aria-components'
 import SpaceButtonMenu from './SpaceButtonMenu'
 import { useRouter } from 'next/navigation'
-import { useMemo } from 'react'
+import { useMemo, useCallback } from 'react'
 import CreateSpaceInWorkspace from '../workspaces/create_space/CreateSpaceInWorkspace'
+import { useResourceStore } from '@/app/store/resourceStore'
 
 interface SpacesProps {
 	workspaceId: string
@@ -33,10 +34,49 @@ const Spaces = ({ workspaceId }: SpacesProps) => {
 		setIsDragging,
 		updateSpaceWorkspace,
 	} = useSpaceStore()
+	const { fetchSections, prefetchedSections } = useResourceStore()
 
 	const workspaceSpaces = useMemo(
 		() => spaces.filter((space) => space.workspaceId === workspaceId),
 		[spaces, workspaceId],
+	)
+
+	// スペースにホバーした時のデータ事前取得
+	const handleSpaceHover = useCallback(
+		async (spaceId: string) => {
+			if (spaceId !== activeSpaceId && !isNavigating) {
+				try {
+					const cacheKey = `sections-${spaceId}`
+					const hasCache = sessionStorage.getItem(cacheKey)
+					const resourceStore = useResourceStore.getState()
+					const hasPrefetchedData = resourceStore.prefetchedSections[spaceId]
+
+					if (!hasCache && !hasPrefetchedData) {
+						const response = await fetch(`/api/spaces/${spaceId}/sections`)
+						if (response.ok) {
+							const data = await response.json()
+							resourceStore.setPrefetchedSections(spaceId, data.sections)
+							resourceStore.setPrefetchedResources(
+								spaceId,
+								data.resources || [],
+							)
+
+							// キャッシュの保存
+							sessionStorage.setItem(
+								cacheKey,
+								JSON.stringify({
+									sections: data.sections,
+									resources: data.resources,
+								}),
+							)
+						}
+					}
+				} catch (error) {
+					console.error('Error prefetching data:', error)
+				}
+			}
+		},
+		[activeSpaceId, isNavigating],
 	)
 
 	const { dragAndDropHooks } = useDragAndDrop({
@@ -275,7 +315,10 @@ const Spaces = ({ workspaceId }: SpacesProps) => {
 							${isFocusVisible ? '' : ''}
 						`}
 				>
-					<div className="flex flex-grow items-center justify-between group py-1">
+					<div
+						className="flex flex-grow items-center justify-between group py-1"
+						onPointerEnter={() => handleSpaceHover(space.id)}
+					>
 						<div className="flex items-center flex-grow">
 							<div className="flex items-center cursor-grab">
 								<Button

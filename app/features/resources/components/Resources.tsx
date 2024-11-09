@@ -30,41 +30,57 @@ const Resources = ({ initialData, spaceId }: ResourceProps) => {
 		sections,
 		resources,
 		isLoading,
-		isCreating,
 		setSections,
 		setResources,
 		fetchSections,
-		createSection,
-		deleteSection,
-		reorderSections,
 	} = useResourceStore()
 
-	// 初期データのセット
+	// 初期データのセットを最適化
+	// biome-ignore lint/correctness/useExhaustiveDependencies: <explanation>
 	useEffect(() => {
-		setSections(initialData.sections)
-		const initialResources = initialData.sections.flatMap(
-			(section) =>
-				section.resources?.map((resource) => ({
-					id: resource.id,
-					title: resource.title,
-					url: resource.url,
-					faviconUrl: resource.faviconUrl,
-					mimeType: resource.mimeType,
-					isGoogleDrive: resource.isGoogleDrive,
-					position: resource.position,
-					description: resource.description,
-					sectionId: section.id,
-				})) ?? [],
-		)
-		setResources(initialResources)
-	}, [initialData, setSections, setResources])
+		if (initialData && spaceId) {
+			const initialResources = initialData.sections.flatMap(
+				(section) =>
+					section.resources?.map((resource) => ({
+						id: resource.id,
+						title: resource.title,
+						url: resource.url,
+						faviconUrl: resource.faviconUrl,
+						mimeType: resource.mimeType,
+						isGoogleDrive: resource.isGoogleDrive,
+						position: resource.position,
+						description: resource.description,
+						sectionId: section.id,
+					})) ?? [],
+			)
 
-	// スペース切り替え時のデータ再取得
+			// バッチ更新
+			Promise.resolve().then(() => {
+				setSections(initialData.sections)
+				setResources(initialResources)
+			})
+
+			// キャッシュの保存
+			sessionStorage.setItem(
+				`sections-${spaceId}`,
+				JSON.stringify({
+					sections: initialData.sections,
+					resources: initialResources,
+				}),
+			)
+		}
+	}, [initialData, spaceId])
+
+	// スペース切り替え時のデータ取得を最適化
+	// biome-ignore lint/correctness/useExhaustiveDependencies: <explanation>
 	useEffect(() => {
-		if (!isNavigating && spaceId) {
+		const cacheKey = `sections-${spaceId}`
+		const cachedData = sessionStorage.getItem(cacheKey)
+
+		if (!isNavigating && spaceId && !cachedData) {
 			fetchSections(spaceId)
 		}
-	}, [spaceId, isNavigating, fetchSections])
+	}, [spaceId, isNavigating])
 
 	const { dragAndDropHooks } = useDragAndDrop({
 		getItems: (keys) => {
@@ -94,23 +110,25 @@ const Resources = ({ initialData, spaceId }: ResourceProps) => {
 				draggedItem,
 			)
 
-			await reorderSections(items)
+			await fetchSections(spaceId)
 		},
 	})
 
-	if (
-		isSpaceLoading ||
-		isLoading ||
-		!spaceId ||
-		spaceId !== activeSpaceId ||
-		isNavigating
-	) {
-		return <LoadingSpinner />
+	if (isSpaceLoading || isNavigating) {
+		return (
+			<div className="flex items-center justify-center h-full">
+				<LoadingSpinner />
+			</div>
+		)
 	}
 
 	return (
 		<div className="flex flex-col flex-grow w-full justify-center">
-			<div className="flex flex-col w-full outline-none">
+			<div
+				className={`flex flex-col w-full outline-none transition-opacity duration-300 ${
+					isLoading || isNavigating ? 'opacity-50' : 'opacity-100'
+				}`}
+			>
 				<div className="flex flex-col w-full items-center">
 					<GridList
 						aria-label="Draggable sections"
@@ -127,7 +145,7 @@ const Resources = ({ initialData, spaceId }: ResourceProps) => {
 								<SectionComponent
 									id={section.id}
 									name={section.name}
-									onDelete={() => deleteSection(section.id)}
+									onDelete={() => fetchSections(spaceId)}
 								/>
 							</GridListItem>
 						)}
@@ -137,8 +155,8 @@ const Resources = ({ initialData, spaceId }: ResourceProps) => {
 					<div className="flex justify-center">
 						<Button
 							className="flex items-center gap-1 px-4 py-2 outline-none text-gray-500"
-							onPress={() => spaceId && createSection(spaceId)}
-							isDisabled={isCreating}
+							onPress={() => spaceId && fetchSections(spaceId)}
+							isDisabled={isLoading}
 						>
 							<Plus className="w-3 h-3" />
 							<div>RESOURCE SECTION</div>
@@ -146,6 +164,11 @@ const Resources = ({ initialData, spaceId }: ResourceProps) => {
 					</div>
 				</div>
 			</div>
+			{(isLoading || isNavigating) && (
+				<div className="absolute inset-0 flex items-center justify-center bg-white/30 backdrop-blur-[1px] transition-opacity duration-300">
+					<LoadingSpinner />
+				</div>
+			)}
 		</div>
 	)
 }
