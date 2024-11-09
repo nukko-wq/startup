@@ -260,12 +260,15 @@ const Spaces = ({ workspaceId }: SpacesProps) => {
 				const draggedSpace = items[0]
 				if (!draggedSpace) return
 
+				// 空のワークスペースの場合は order を 1 に設定
 				const newOrder = 1
 
 				const updatedSpaces = spaces
 					.map((space) => {
-						if (space.workspaceId === workspaceId) {
-							return { ...space, order: space.order + 1 }
+						if (space.workspaceId === draggedSpace.workspaceId) {
+							if (space.order > draggedSpace.order) {
+								return { ...space, order: space.order - 1 }
+							}
 						}
 						if (space.id === draggedSpace.id) {
 							return { ...space, order: newOrder, workspaceId }
@@ -309,7 +312,10 @@ const Spaces = ({ workspaceId }: SpacesProps) => {
 				}
 			}}
 			renderEmptyState={() => (
-				<div className="p-2 text-center text-gray-500 min-h-[30px] border-2 border-dashed border-zinc-700 rounded">
+				<div
+					data-drop-target
+					className="p-2 text-center text-gray-500 min-h-[30px] border-2 border-dashed border-zinc-700 rounded"
+				>
 					Add Space to Workspace
 				</div>
 			)}
@@ -334,10 +340,11 @@ const Spaces = ({ workspaceId }: SpacesProps) => {
 									<GripVertical className="w-4 h-4 text-zinc-500" />
 								</Button>
 							</div>
+							{/* スペース名 */}
 							<Button
 								onPress={() => handleSpaceClick(space.id)}
 								className={`
-										flex-grow text-left outline-none
+										flex-grow text-left outline-none text-sm
 										${
 											activeSpaceId === space.id
 												? 'text-zinc-200 font-medium hover:text-zinc-50 transition-colors duration-200'

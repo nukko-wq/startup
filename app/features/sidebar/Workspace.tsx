@@ -34,6 +34,13 @@ const WorkspaceInSidebar = () => {
 			}
 			return 'move'
 		},
+		renderDropIndicator(target) {
+			return (
+				<div
+					className={`drop-indicator ${target.type === 'item' ? 'active' : ''}`}
+				/>
+			)
+		},
 		async onReorder(e) {
 			try {
 				const draggedId = Array.from(e.keys)[0] as string
@@ -138,7 +145,7 @@ const WorkspaceInSidebar = () => {
 								<div className="flex items-center justify-between group">
 									{/* ワークスペース名(Default Workspaceの場合は非表示) */}
 									{!workspace.isDefault && (
-										<>
+										<div className="flex items-center flex-grow mt-6">
 											<div className="flex items-center cursor-grab">
 												<Button
 													slot="drag"
@@ -146,16 +153,18 @@ const WorkspaceInSidebar = () => {
 												>
 													<ChevronRight className="w-6 h-6 text-gray-500" />
 												</Button>
+											</div>
+											<div className="flex items-center flex-grow justify-between hover:border-b-2 hover:border-blue-500 pb-1">
 												{/* ワークスペース名 */}
 												<span className="font-medium text-gray-500">
 													{workspace.name}
 												</span>
+												<WorkspaceButtonMenu
+													workspaceId={workspace.id}
+													workspaceName={workspace.name}
+												/>
 											</div>
-											<WorkspaceButtonMenu
-												workspaceId={workspace.id}
-												workspaceName={workspace.name}
-											/>
-										</>
+										</div>
 									)}
 								</div>
 								{/* ワークスペースに所属するスペースを表示 */}

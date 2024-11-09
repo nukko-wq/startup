@@ -121,6 +121,9 @@ a {
 .workspace-drop-indicator {
 	height: 2px;
 	background: transparent;
+	position: absolute;
+	left: 0;
+	right: 0;
 	transition: background 0.2s;
 }
 

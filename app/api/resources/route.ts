@@ -32,6 +32,11 @@ export async function POST(req: NextRequest) {
 				id: body.sectionId,
 				userId,
 			},
+			include: {
+				resources: {
+					select: { position: true },
+				},
+			},
 		})
 
 		if (!section) {
@@ -41,11 +46,15 @@ export async function POST(req: NextRequest) {
 			)
 		}
 
+		const maxPosition =
+			section.resources.length > 0
+				? Math.max(...section.resources.map((r) => r.position))
+				: -1
+
 		const {
 			title,
 			description = '',
 			url,
-			position,
 			faviconUrl = '',
 			mimeType,
 			isGoogleDrive = false,
@@ -58,7 +67,7 @@ export async function POST(req: NextRequest) {
 				description,
 				url,
 				faviconUrl,
-				position,
+				position: maxPosition + 1,
 				mimeType,
 				isGoogleDrive,
 				user: {
