@@ -253,7 +253,7 @@ const Spaces = ({ workspaceId }: SpacesProps) => {
 			selectedKeys={activeSpaceId ? [activeSpaceId] : []}
 			onSelectionChange={(keys) => {
 				const selectedKey = Array.from(keys)[0] as string
-				if (selectedKey) {
+				if (selectedKey && selectedKey !== activeSpaceId) {
 					handleSpaceClick(selectedKey)
 				}
 			}}
