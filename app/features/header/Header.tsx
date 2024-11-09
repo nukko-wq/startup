@@ -29,6 +29,15 @@ export default function Header({ spaceName, spaceId }: HeaderProps) {
 			return
 		}
 
+		// 楽観的更新を即座に適用
+		const previousName = spaceName
+		setSpaces((prevSpaces) =>
+			prevSpaces.map((space) =>
+				space.id === spaceId ? { ...space, name: editedName } : space,
+			),
+		)
+		setIsEditing(false)
+
 		try {
 			const response = await fetch(`/api/spaces/${spaceId}`, {
 				method: 'PATCH',
@@ -40,16 +49,16 @@ export default function Header({ spaceName, spaceId }: HeaderProps) {
 				throw new Error('Failed to update space name')
 			}
 
-			setSpaces((prevSpaces) =>
-				prevSpaces.map((space) =>
-					space.id === spaceId ? { ...space, name: editedName } : space,
-				),
-			)
-			setIsEditing(false)
 			await handleSpaceClick(spaceId)
 		} catch (error) {
+			// エラー時に元の状態に戻す
 			console.error('Error updating space name:', error)
-			setEditedName(spaceName)
+			setSpaces((prevSpaces) =>
+				prevSpaces.map((space) =>
+					space.id === spaceId ? { ...space, name: previousName } : space,
+				),
+			)
+			setEditedName(previousName)
 			alert('スペース名の更新に失敗しました')
 		}
 	}
