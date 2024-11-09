@@ -29,19 +29,24 @@ const DeleteWorkspaceDialog = ({
 
 	const handleDelete = async (close: () => void) => {
 		try {
-			const response = await fetch(`/api/workspaces/${workspaceId}`, {
-				method: 'DELETE',
-			})
-
-			if (!response.ok) {
-				throw new Error('Failed to delete workspace')
-			}
-
 			setWorkspaces((prevWorkspaces) =>
 				prevWorkspaces.filter((workspace) => workspace.id !== workspaceId),
 			)
 
 			close()
+
+			const response = await fetch(`/api/workspaces/${workspaceId}`, {
+				method: 'DELETE',
+			})
+
+			if (!response.ok) {
+				const prevWorkspaces = await fetch('/api/workspaces').then((res) =>
+					res.json(),
+				)
+				setWorkspaces(prevWorkspaces)
+				throw new Error('Failed to delete workspace')
+			}
+
 			router.refresh()
 		} catch (error) {
 			console.error('Workspace delete error:', error)
