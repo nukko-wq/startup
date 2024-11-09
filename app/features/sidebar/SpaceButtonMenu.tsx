@@ -13,18 +13,14 @@ import { useState } from 'react'
 import type { Space } from '@/app/types/space'
 import SpaceRenameDialog from '@/app/features/header/header_menu/SpaceRenameDialog'
 import DeleteSpaceDialog from '@/app/features/spaces/delete_space/DeleteSpaceDialog'
+import { useSpaces } from '@/app/features/spaces/contexts/SpaceContext'
 
 interface SpaceButtonMenuProps {
 	spaceId: string
 	spaceName: string
-	setSpaces: React.Dispatch<React.SetStateAction<Space[]>>
 }
 
-const SpaceButtonMenu = ({
-	spaceId,
-	spaceName,
-	setSpaces,
-}: SpaceButtonMenuProps) => {
+const SpaceButtonMenu = ({ spaceId, spaceName }: SpaceButtonMenuProps) => {
 	const router = useRouter()
 	const [isRenameOpen, setIsRenameOpen] = useState(false)
 	const [isDeleteOpen, setIsDeleteOpen] = useState(false)
@@ -70,7 +66,6 @@ const SpaceButtonMenu = ({
 			/>
 			<DeleteSpaceDialog
 				spaceId={spaceId}
-				setSpaces={setSpaces}
 				isOpen={isDeleteOpen}
 				onOpenChange={setIsDeleteOpen}
 			/>

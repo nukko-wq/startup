@@ -10,39 +10,52 @@ import {
 	ModalOverlay,
 } from 'react-aria-components'
 import { useRouter } from 'next/navigation'
-import type { Space } from '@/app/types/space'
+import { useSpaces } from '@/app/features/spaces/contexts/SpaceContext'
 
 interface DeleteSpaceDialogProps {
 	spaceId: string
-	setSpaces: React.Dispatch<React.SetStateAction<Space[]>>
 	isOpen: boolean
 	onOpenChange: (isOpen: boolean) => void
 }
 
 const DeleteSpaceDialog = ({
 	spaceId,
-	setSpaces,
 	isOpen,
 	onOpenChange,
 }: DeleteSpaceDialogProps) => {
 	const router = useRouter()
+	const { spaces, setSpaces, setActiveSpaceId } = useSpaces()
 
 	const handleDelete = async (close: () => void) => {
 		try {
+			const previousSpaces = [...spaces]
+			const deletedSpace = spaces.find((space) => space.id === spaceId)
+
+			setSpaces((prevSpaces) =>
+				prevSpaces.filter((space) => space.id !== spaceId),
+			)
+			close()
+
+			const remainingSpaces = previousSpaces.filter(
+				(space) => space.id !== spaceId,
+			)
+			if (remainingSpaces.length > 0) {
+				const nextSpace = remainingSpaces[0]
+				setActiveSpaceId(nextSpace.id)
+				router.push(`/?spaceId=${nextSpace.id}`, { scroll: false })
+			} else {
+				router.push('/')
+			}
+
 			const response = await fetch(`/api/spaces/${spaceId}`, {
 				method: 'DELETE',
 			})
 
 			if (!response.ok) {
+				setSpaces(previousSpaces)
 				throw new Error('Failed to delete space')
 			}
 
-			setSpaces((prevSpaces) =>
-				prevSpaces.filter((space) => space.id !== spaceId),
-			)
-
-			close()
-			router.push('/')
 			router.refresh()
 		} catch (error) {
 			console.error('Space delete error:', error)
