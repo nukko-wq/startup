@@ -14,6 +14,8 @@ interface SpaceContextType {
 	isNavigating: boolean
 	setIsNavigating: React.Dispatch<React.SetStateAction<boolean>>
 	handleSpaceClick: (spaceId: string) => Promise<void>
+	currentSpace: Space | null
+	setCurrentSpace: (space: Space) => void
 }
 
 export const SpaceContext = createContext<SpaceContextType>({
@@ -25,6 +27,8 @@ export const SpaceContext = createContext<SpaceContextType>({
 	isNavigating: false,
 	setIsNavigating: () => {},
 	handleSpaceClick: async () => {},
+	currentSpace: null,
+	setCurrentSpace: () => {},
 })
 
 export function SpaceProvider({
@@ -45,6 +49,28 @@ export function SpaceProvider({
 	const router = useRouter()
 	const lastUpdateSource = useRef<'url' | 'click' | null>(null)
 	const pendingUpdate = useRef<string | null>(null)
+	const [currentSpace, setCurrentSpace] = useState<Space | null>(null)
+
+	// activeSpaceIdが変更されたときにcurrentSpaceを更新
+	useEffect(() => {
+		if (activeSpaceId) {
+			const space = spaces.find((space) => space.id === activeSpaceId)
+			if (space) {
+				setCurrentSpace(space)
+			}
+		}
+	}, [activeSpaceId, spaces])
+
+	// currentSpaceを更新する関数
+	const updateCurrentSpace = (space: Space) => {
+		setCurrentSpace((prev) => {
+			const updatedSpace = { ...prev, ...space }
+			setSpaces((prevSpaces) =>
+				prevSpaces.map((s) => (s.id === space.id ? updatedSpace : s)),
+			)
+			return updatedSpace
+		})
+	}
 
 	// URLのspaceIdパラメータとactiveSpaceIdの同期
 	useEffect(() => {
@@ -157,6 +183,8 @@ export function SpaceProvider({
 		isNavigating,
 		setIsNavigating,
 		handleSpaceClick,
+		currentSpace,
+		setCurrentSpace: updateCurrentSpace,
 	}
 
 	return <SpaceContext.Provider value={value}>{children}</SpaceContext.Provider>
