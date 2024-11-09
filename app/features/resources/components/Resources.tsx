@@ -12,6 +12,7 @@ import {
 import Section from '@/app/features/sections/components/Section'
 import type { getInitialSections } from '@/app/features/resources/utils/getInitialSections'
 import { Plus } from 'lucide-react'
+import type { Section as SectionType } from '@/app/types/section'
 
 interface ResourceProps {
 	initialData: Awaited<ReturnType<typeof getInitialSections>>
@@ -22,13 +23,9 @@ interface ResourceProps {
 const Resources = ({ initialData, spaceId, spaceName }: ResourceProps) => {
 	const [sections, setSections] = useState(initialData.sections)
 	const [isCreating, setIsCreating] = useState(false)
-	const [resources, setResources] = useState(
-		initialData.sections.flatMap((s) => s.resources),
-	)
 
 	useEffect(() => {
 		setSections(initialData.sections)
-		setResources(initialData.sections.flatMap((s) => s.resources))
 	}, [initialData.sections])
 
 	const { dragAndDropHooks } = useDragAndDrop({
@@ -102,15 +99,7 @@ const Resources = ({ initialData, spaceId, spaceName }: ResourceProps) => {
 	}
 
 	const handleCreateSection = async () => {
-		// spaceIdがない場合はアラートを表示
-		if (!spaceId) {
-			alert('スペースを選択してください')
-			return
-		}
-
-		if (isCreating) {
-			return
-		}
+		if (!spaceId || isCreating) return
 
 		setIsCreating(true)
 
@@ -120,7 +109,6 @@ const Resources = ({ initialData, spaceId, spaceName }: ResourceProps) => {
 				order: sections.length,
 				spaceId: spaceId,
 			}
-			console.log('Creating section with:', requestBody)
 
 			const response = await fetch('/api/sections', {
 				method: 'POST',
@@ -137,7 +125,7 @@ const Resources = ({ initialData, spaceId, spaceName }: ResourceProps) => {
 			}
 
 			const newSection = await response.json()
-			setSections((prev) => [...prev, { ...newSection, resources: [] }])
+			setSections((prev) => [...prev, newSection])
 		} catch (error) {
 			console.error('Section creation error:', error)
 			if (error instanceof Error && error.message.includes('認証')) {
@@ -153,6 +141,7 @@ const Resources = ({ initialData, spaceId, spaceName }: ResourceProps) => {
 	return (
 		<ResourceProvider
 			initialResources={initialData.sections.flatMap((s) => s.resources)}
+			sections={sections}
 		>
 			<div className="flex flex-col flex-grow w-full justify-center">
 				<div className="flex flex-col w-full outline-none">

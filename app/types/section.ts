@@ -3,9 +3,9 @@ export interface Resource {
 	title: string
 	description: string
 	url: string
-	faviconUrl: string
+	faviconUrl: string | null
 	position: number
-	mimeType: string
+	mimeType: string | null
 	isGoogleDrive: boolean
 	sectionId: string
 }
@@ -14,7 +14,8 @@ export interface Section {
 	id: string
 	name: string
 	order: number
-	userId: string
-	spaceId: string | null
+	createdAt: Date
 	resources: Resource[]
+	userId?: string
+	spaceId?: string | null
 }

@@ -2,6 +2,7 @@
 
 import { createContext, useContext, useEffect, useState } from 'react'
 import type { Resource } from '@prisma/client'
+import type { Section } from '@/app/types/section'
 
 interface DriveFile {
 	id: string
@@ -54,18 +55,36 @@ const ResourceContext = createContext<ResourceContextType | undefined>(
 export function ResourceProvider({
 	children,
 	initialResources,
+	sections,
 }: {
 	children: React.ReactNode
 	initialResources: ResourceContextType['resources']
+	sections: Section[]
 }) {
-	const [resources, setResources] = useState(
-		initialResources.sort((a, b) => a.position - b.position),
+	const [resources, setResources] = useState(() =>
+		initialResources.sort((a, b) => {
+			if (a.sectionId === b.sectionId) {
+				return a.position - b.position
+			}
+			const sectionAIndex = sections.findIndex((s) => s.id === a.sectionId)
+			const sectionBIndex = sections.findIndex((s) => s.id === b.sectionId)
+			return sectionAIndex - sectionBIndex
+		}),
 	)
 	const [driveFiles, setDriveFiles] = useState<DriveFile[]>([])
 
 	useEffect(() => {
-		setResources(initialResources.sort((a, b) => a.position - b.position))
-	}, [initialResources])
+		setResources((prev) =>
+			[...prev].sort((a, b) => {
+				if (a.sectionId === b.sectionId) {
+					return a.position - b.position
+				}
+				const sectionAIndex = sections.findIndex((s) => s.id === a.sectionId)
+				const sectionBIndex = sections.findIndex((s) => s.id === b.sectionId)
+				return sectionAIndex - sectionBIndex
+			}),
+		)
+	}, [sections])
 
 	const removeResource = async (id: string) => {
 		const previousResources = [...resources]
@@ -165,7 +184,14 @@ export function ResourceProvider({
 	const updateAllResources = (
 		newResources: ResourceContextType['resources'],
 	) => {
-		setResources(newResources.sort((a, b) => a.position - b.position))
+		setResources(
+			newResources.sort((a, b) => {
+				if (a.sectionId === b.sectionId) {
+					return a.position - b.position
+				}
+				return 0
+			}),
+		)
 	}
 
 	return (
