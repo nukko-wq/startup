@@ -313,7 +313,7 @@ const Spaces = ({ workspaceId }: SpacesProps) => {
 				}
 			}}
 			renderEmptyState={() => (
-				<div data-drop-target className="mx-4">
+				<div data-drop-target className="ml-11 mr-4">
 					<CreateSpaceInWorkspace
 						workspaceId={workspaceId}
 						onSpaceCreated={(newSpace) => setSpaces([...spaces, newSpace])}
