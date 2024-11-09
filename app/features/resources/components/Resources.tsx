@@ -117,13 +117,13 @@ const Resources = ({ initialData, spaceId }: ResourceProps) => {
 	if (isSpaceLoading || isNavigating) {
 		return (
 			<div className="flex items-center justify-center h-full">
-				<LoadingSpinner />
+				<LoadingSpinner className="w-14 h-14" />
 			</div>
 		)
 	}
 
 	return (
-		<div className="flex flex-col flex-grow w-full justify-center">
+		<div className="flex flex-col flex-grow w-full">
 			<div
 				className={`flex flex-col w-full outline-none transition-opacity duration-300 ${
 					isLoading || isNavigating ? 'opacity-50' : 'opacity-100'

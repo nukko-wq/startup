@@ -24,7 +24,7 @@ export default function CreateSpaceInWorkspace({
 	const [isOpen, setIsOpen] = useState(false)
 
 	const handleCreateSpace = async (
-		data: { name: string },
+		data: { name: string; workspaceId: string },
 		close: () => void,
 	) => {
 		try {
@@ -35,7 +35,7 @@ export default function CreateSpaceInWorkspace({
 				},
 				body: JSON.stringify({
 					name: data.name,
-					workspaceId: workspaceId,
+					workspaceId: data.workspaceId,
 				}),
 			})
 
@@ -48,6 +48,7 @@ export default function CreateSpaceInWorkspace({
 			close()
 		} catch (error) {
 			console.error('Error creating space:', error)
+			throw error
 		}
 	}
 

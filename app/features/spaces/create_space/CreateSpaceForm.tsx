@@ -4,6 +4,8 @@ import { useForm, Controller } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { Button, Form, Input, Label, TextField } from 'react-aria-components'
 import { z } from 'zod'
+import LoadingSpinner from '@/app/components/ui/LoadingSpinner'
+import { useState } from 'react'
 
 // 新しいスキーマを作成
 const createFormSchema = z.object({
@@ -26,6 +28,7 @@ export default function CreateSpaceForm({
 	onSubmit,
 	workspaceId,
 }: CreateSpaceFormProps) {
+	const [isSubmitting, setIsSubmitting] = useState(false)
 	const { control, handleSubmit } = useForm<FormData>({
 		resolver: zodResolver(createFormSchema),
 		defaultValues: {
@@ -34,7 +37,12 @@ export default function CreateSpaceForm({
 	})
 
 	const handleFormSubmit = async (data: FormData) => {
-		await onSubmit({ ...data, workspaceId }, onClose)
+		setIsSubmitting(true)
+		try {
+			await onSubmit({ ...data, workspaceId }, onClose)
+		} finally {
+			setIsSubmitting(false)
+		}
 	}
 
 	return (
@@ -66,14 +74,23 @@ export default function CreateSpaceForm({
 					type="button"
 					onPress={onClose}
 					className="px-4 py-2 bg-gray-200 rounded hover:bg-gray-300 outline-none"
+					isDisabled={isSubmitting}
 				>
 					キャンセル
 				</Button>
 				<Button
 					type="submit"
-					className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 outline-none"
+					className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 outline-none flex items-center gap-2"
+					isDisabled={isSubmitting}
 				>
-					作成
+					{isSubmitting ? (
+						<>
+							<LoadingSpinner className="w-4 h-4" />
+							作成中...
+						</>
+					) : (
+						'作成'
+					)}
 				</Button>
 			</div>
 		</Form>
