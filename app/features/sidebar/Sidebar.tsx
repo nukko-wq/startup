@@ -5,7 +5,7 @@ import { useEffect, useCallback, useRef } from 'react'
 import SidebarMenu from '@/app/features/sidebar/SidebarMenu'
 import SpaceButtonMenu from '@/app/features/sidebar/SpaceButtonMenu'
 import type { Space } from '@/app/types/space'
-import { Button } from 'react-aria-components'
+import { Button, Link } from 'react-aria-components'
 import {
 	GridList,
 	GridListItem,
@@ -271,7 +271,12 @@ export default function Sidebar() {
 	return (
 		<div className="w-[320px] bg-gray-800 h-screen flex flex-col">
 			<div className="flex items-center justify-between pl-4 pr-3 pt-4 pb-4">
-				<div className="text-zinc-50 text-2xl font-semibold">Startup</div>
+				<Link
+					href="/"
+					className="text-zinc-50 text-2xl font-semibold outline-none"
+				>
+					Startup
+				</Link>
 				<SidebarMenu />
 			</div>
 			<Workspace />
