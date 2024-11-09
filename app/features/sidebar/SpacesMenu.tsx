@@ -44,10 +44,11 @@ export default function SpacesMenu() {
 		close: () => void,
 	) => {
 		try {
-			console.log('Creating space with data:', data)
 			if (!data.workspaceId) {
 				throw new Error('workspaceId is required')
 			}
+
+			close()
 
 			const response = await fetch('/api/spaces', {
 				method: 'POST',
@@ -68,7 +69,6 @@ export default function SpacesMenu() {
 
 			const newSpace = await response.json()
 			setSpaces((prev) => [...prev, newSpace])
-			close()
 		} catch (error) {
 			console.error('Error creating space:', error)
 		}
