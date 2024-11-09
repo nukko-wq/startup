@@ -30,6 +30,16 @@ const SpaceRenameForm = ({
 
 	const onSubmit = async (data: FormData) => {
 		try {
+			onClose()
+
+			setSpaces(
+				spaces.map((space) =>
+					space.id === spaceId
+						? { ...space, name: data.name as string }
+						: space,
+				),
+			)
+
 			const response = await fetch(`/api/spaces/${spaceId}`, {
 				method: 'PATCH',
 				headers: { 'Content-Type': 'application/json' },
@@ -37,16 +47,14 @@ const SpaceRenameForm = ({
 			})
 
 			if (!response.ok) {
+				setSpaces(
+					spaces.map((space) =>
+						space.id === spaceId ? { ...space, name: initialName } : space,
+					),
+				)
 				throw new Error('Failed to update space')
 			}
 
-			const updatedSpace = await response.json()
-			setSpaces(
-				spaces.map((space) =>
-					space.id === spaceId ? { ...space, name: updatedSpace.name } : space,
-				),
-			)
-			onClose()
 			await handleSpaceClick(spaceId)
 		} catch (error) {
 			console.error('Space update error:', error)
