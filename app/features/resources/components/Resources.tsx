@@ -14,6 +14,7 @@ import type { getInitialSections } from '@/app/features/resources/utils/getIniti
 import { Plus } from 'lucide-react'
 import type { Section as SectionType } from '@/app/types/section'
 import { useSpaces } from '@/app/features/spaces/contexts/SpaceContext'
+import LoadingSpinner from '@/app/components/ui/LoadingSpinner'
 
 interface ResourceProps {
 	initialData: Awaited<ReturnType<typeof getInitialSections>>
@@ -141,12 +142,7 @@ const Resources = ({ initialData, spaceId, spaceName }: ResourceProps) => {
 	}
 
 	if (isLoading) {
-		return (
-			<div className="flex flex-col items-center justify-center flex-grow">
-				<div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-gray-900" />
-				<div className="mt-4 text-gray-600">Loading resources...</div>
-			</div>
-		)
+		return <LoadingSpinner />
 	}
 
 	return (

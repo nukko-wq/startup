@@ -54,7 +54,14 @@ export function SpaceProvider({
 	const lastUpdateSource = useRef<'url' | 'click' | null>(null)
 	const pendingUpdate = useRef<string | null>(null)
 	const [currentSpace, setCurrentSpace] = useState<Space | null>(null)
-	const [isLoading, setIsLoading] = useState(false)
+	const [isLoading, setIsLoading] = useState(true)
+
+	// 初期データのロード完了時にローディングを解除
+	useEffect(() => {
+		if (initialSpaces.length > 0) {
+			setIsLoading(false)
+		}
+	}, [initialSpaces])
 
 	// activeSpaceIdが変更されたときにcurrentSpaceを更新
 	useEffect(() => {
