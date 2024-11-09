@@ -26,62 +26,34 @@ export async function PUT(req: Request) {
 		}
 
 		const body = await req.json()
-		console.log('Request body:', body)
-
 		const result = reorderSchema.safeParse(body)
 
 		if (!result.success) {
 			return NextResponse.json(
-				{
-					success: false,
-					error: '無効なリクエストデータです',
-					details: result.error.format(),
-				},
+				{ success: false, error: '無効なリクエストデータです' },
 				{ status: 400 },
 			)
 		}
 
 		const { items } = result.data
-		console.log('Validated items:', items)
 
-		// 既存のワークスペースを確認
-		const existingWorkspaces = await db.workspace.findMany({
-			where: {
-				id: { in: items.map((item) => item.id) },
-				userId,
-				isDefault: false,
-			},
-		})
-
-		if (existingWorkspaces.length !== items.length) {
-			return NextResponse.json(
-				{
-					success: false,
-					error: '一部のワークスペースが見つかりませんでした',
-				},
-				{ status: 404 },
-			)
-		}
-
-		// トランザクションで一括更新
+		// トランザクションで一括更新（最適化版）
 		const updatedWorkspaces = await db.$transaction(async (tx) => {
-			// 一時的に順序を大きな値に更新
-			await Promise.all(
-				items.map((item, index) =>
-					tx.workspace.update({
-						where: {
-							id: item.id,
-							userId,
-							isDefault: false,
-						},
-						data: {
-							order: 1000 + index, // 一時的な値
-						},
-					}),
-				),
-			)
+			// 一括で一時的な順序を更新
+			await tx.workspace.updateMany({
+				where: {
+					id: { in: items.map((item) => item.id) },
+					userId,
+					isDefault: false,
+				},
+				data: {
+					order: {
+						increment: 10000, // 十分大きな値
+					},
+				},
+			})
 
-			// 目的の順序に更新
+			// 目的の順序に一括更新
 			await Promise.all(
 				items.map((item) =>
 					tx.workspace.update({
@@ -90,9 +62,7 @@ export async function PUT(req: Request) {
 							userId,
 							isDefault: false,
 						},
-						data: {
-							order: item.order,
-						},
+						data: { order: item.order },
 					}),
 				),
 			)
@@ -111,10 +81,7 @@ export async function PUT(req: Request) {
 	} catch (error) {
 		console.error('Server error:', error)
 		return NextResponse.json(
-			{
-				success: false,
-				error: 'サーバーエラーが発生しました',
-			},
+			{ success: false, error: 'サーバーエラーが発生しました' },
 			{ status: 500 },
 		)
 	}

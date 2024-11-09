@@ -42,6 +42,7 @@ const WorkspaceInSidebar = () => {
 			)
 		},
 		async onReorder(e) {
+			const previousWorkspaces = [...workspaces]
 			try {
 				const draggedId = Array.from(e.keys)[0] as string
 				const targetId = e.target.key as string
@@ -51,7 +52,6 @@ const WorkspaceInSidebar = () => {
 				const targetWorkspace = workspaces.find((w) => w.id === targetId)
 				if (draggedWorkspace?.isDefault || targetWorkspace?.isDefault) return
 
-				// 以下、既存のreorder処理
 				const reorderableWorkspaces = workspaces.filter((w) => !w.isDefault)
 				const draggedIndex = reorderableWorkspaces.findIndex(
 					(w) => w.id === draggedId,
@@ -75,15 +75,7 @@ const WorkspaceInSidebar = () => {
 					order: index + 1,
 				}))
 
-				// APIリクエストのペイロード
-				const payload = {
-					items: updatedWorkspaces.map((w) => ({
-						id: w.id,
-						order: w.order,
-					})),
-				}
-
-				// 一時的に状態を更新（デフォルトワークスペースは維持）
+				// 楽観的更新：即座にUIを更新
 				setWorkspaces(
 					workspaces.map((w) => {
 						if (w.isDefault) return w
@@ -92,13 +84,19 @@ const WorkspaceInSidebar = () => {
 					}),
 				)
 
-				console.log('API request payload:', payload)
+				// APIリクエストのペイロード
+				const payload = {
+					items: updatedWorkspaces.map((w) => ({
+						id: w.id,
+						order: w.order,
+					})),
+				}
 
-				// reorderWorkspaces関数を使用
+				// バックグラウンドでAPIリクエストを実行
 				await reorderWorkspaces(payload)
 			} catch (error) {
 				console.error('Reorder error:', error)
-				setWorkspaces(workspaces)
+				setWorkspaces(previousWorkspaces)
 			}
 		},
 	})
