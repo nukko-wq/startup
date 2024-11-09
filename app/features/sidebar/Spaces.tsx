@@ -13,7 +13,7 @@ import {
 } from 'react-aria-components'
 import SpaceButtonMenu from './SpaceButtonMenu'
 import { useRouter } from 'next/navigation'
-import { useRef, useCallback } from 'react'
+import { useRef, useCallback, useMemo, useState } from 'react'
 import CreateSpaceInWorkspace from '../workspaces/create_space/CreateSpaceInWorkspace'
 
 interface SpacesProps {
@@ -21,75 +21,22 @@ interface SpacesProps {
 }
 
 const Spaces = ({ workspaceId }: SpacesProps) => {
-	const {
-		spaces,
-		activeSpaceId,
-		setActiveSpaceId,
-		setIsNavigating,
-		reorderSpaces,
-		setSpaces,
-	} = useSpaces()
-	const router = useRouter()
+	const { spaces, setSpaces, reorderSpaces, activeSpaceId, handleSpaceClick } =
+		useSpaces()
+	const [isDragging, setIsDragging] = useState(false)
 
-	const lastUpdateSource = useRef<string | null>(null)
-
-	const handleSpaceSelect = useCallback(async (spaceId: string) => {
-		try {
-			await fetch('/api/users/last-active-space', {
-				method: 'PUT',
-				headers: { 'Content-Type': 'application/json' },
-				body: JSON.stringify({ spaceId }),
-			})
-		} catch (error) {
-			console.error('Error updating last active space:', error)
-		}
-	}, [])
-
-	const handleSpaceClick = useCallback(
-		async (spaceId: string) => {
-			try {
-				setIsNavigating(true)
-				lastUpdateSource.current = 'click'
-
-				setActiveSpaceId(spaceId)
-
-				await new Promise((resolve) => setTimeout(resolve, 50))
-
-				await Promise.all([
-					router.push(`/?spaceId=${spaceId}`, { scroll: false }),
-					handleSpaceSelect(spaceId),
-				])
-			} catch (error) {
-				console.error('Error switching space:', error)
-				setActiveSpaceId(activeSpaceId)
-			} finally {
-				setTimeout(() => {
-					setIsNavigating(false)
-				}, 500)
-			}
-		},
-		[
-			router,
-			handleSpaceSelect,
-			setActiveSpaceId,
-			setIsNavigating,
-			activeSpaceId,
-		],
-	)
-
-	const workspaceSpaces = spaces.filter(
-		(space) => space.workspaceId === workspaceId,
+	const workspaceSpaces = useMemo(
+		() => spaces.filter((space) => space.workspaceId === workspaceId),
+		[spaces, workspaceId],
 	)
 
 	const { dragAndDropHooks } = useDragAndDrop({
-		getItems(keys) {
-			const space = spaces.find((s) => s.id === Array.from(keys)[0])
-			return [
-				{
-					'space-item': JSON.stringify(space),
-					'text/plain': space?.name || '',
-				},
-			]
+		getItems: (keys) =>
+			[...keys].map((key) => ({
+				'space-item': JSON.stringify(spaces.find((space) => space.id === key)),
+			})),
+		onDragStart: () => {
+			setIsDragging(true)
 		},
 		acceptedDragTypes: ['space-item'],
 		getDropOperation: () => 'move',
@@ -104,10 +51,8 @@ const Spaces = ({ workspaceId }: SpacesProps) => {
 				/>
 			)
 		},
-		onDragEnd: (e) => {
-			if (e.dropOperation === 'cancel') {
-				setSpaces(spaces)
-			}
+		onDragEnd: () => {
+			setIsDragging(false)
 		},
 		async onReorder(e) {
 			try {
