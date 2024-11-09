@@ -33,12 +33,12 @@ const SpaceButtonMenu = ({ spaceId, spaceName }: SpaceButtonMenuProps) => {
 					<EllipsisVertical className="w-5 h-5 text-zinc-700 opacity-0 group-hover:opacity-100 group-hover:text-zinc-200 transition duration-300" />
 				</Button>
 				<Popover>
-					<Menu className="bg-zinc-50 outline-none border rounded-lg shadow-md">
+					<Menu className="bg-zinc-50 outline-none border rounded-sm shadow-md min-w-[160px]">
 						<MenuItem
 							onAction={() => setIsRenameOpen(true)}
 							className="pl-3 pr-4 py-2 outline-none hover:bg-zinc-100 hover:cursor-pointer"
 						>
-							<div className="flex items-center gap-2">
+							<div className="flex items-center gap-3">
 								<Pencil className="w-4 h-4" />
 								Rename
 							</div>
@@ -47,7 +47,7 @@ const SpaceButtonMenu = ({ spaceId, spaceName }: SpaceButtonMenuProps) => {
 							onAction={() => setIsDeleteOpen(true)}
 							className="pl-3 pr-4 py-2 outline-none hover:bg-zinc-100 text-red-600 hover:cursor-pointer"
 						>
-							<div className="flex items-center gap-2">
+							<div className="flex items-center gap-3">
 								<Trash2 className="w-4 h-4" />
 								Delete
 							</div>
