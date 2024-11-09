@@ -1,21 +1,20 @@
 'use client'
 
-import { useWorkspaces } from '@/app/features/workspaces/contexts/WorkspaceContext'
 import { Button } from 'react-aria-components'
 import { GridList, GridListItem, useDragAndDrop } from 'react-aria-components'
-import { ChevronRight, Layers, Layers3 } from 'lucide-react'
+import { ChevronRight, Layers } from 'lucide-react'
 import WorkspaceButtonMenu from './WorkspaceButtonMenu'
 import Spaces from '@/app/features/sidebar/Spaces'
 import SpacesMenu from './SpacesMenu'
+import { useWorkspaceStore } from '@/app/store/workspaceStore'
 
 const WorkspaceInSidebar = () => {
 	const { workspaces, defaultWorkspace, reorderWorkspaces, setWorkspaces } =
-		useWorkspaces()
+		useWorkspaceStore()
 
 	const { dragAndDropHooks } = useDragAndDrop({
 		getItems: (keys) => {
 			const workspace = workspaces.find((w) => w.id === Array.from(keys)[0])
-			// Default Workspaceの場合はドラッグを無効化
 			if (workspace?.isDefault) return []
 
 			return [
@@ -27,7 +26,6 @@ const WorkspaceInSidebar = () => {
 		},
 		acceptedDragTypes: ['workspace-id'],
 		getDropOperation: (target) => {
-			// Default Workspaceへのドロップを防ぐ
 			if (target?.type === 'item') {
 				const workspace = workspaces.find((w) => w.id === target.key)
 				return workspace?.isDefault ? 'cancel' : 'move'
@@ -46,7 +44,6 @@ const WorkspaceInSidebar = () => {
 				const draggedId = Array.from(e.keys)[0] as string
 				const targetId = e.target.key as string
 
-				// ドラッグ元またはドロップ先がDefault Workspaceの場合は処理を中止
 				const draggedWorkspace = workspaces.find((w) => w.id === draggedId)
 				const targetWorkspace = workspaces.find((w) => w.id === targetId)
 				if (draggedWorkspace?.isDefault || targetWorkspace?.isDefault) return
@@ -61,14 +58,12 @@ const WorkspaceInSidebar = () => {
 
 				if (draggedIndex === -1 || targetIndex === -1) return
 
-				// 新しい順序を計算（メモリ効率を改善）
 				const newWorkspaces = [...reorderableWorkspaces]
 				const [draggedItem] = newWorkspaces.splice(draggedIndex, 1)
 				const insertAt =
 					e.target.dropPosition === 'before' ? targetIndex : targetIndex + 1
 				newWorkspaces.splice(insertAt, 0, draggedItem)
 
-				// 楽観的更新：即座にUIを更新（パフォーマンス改善）
 				const updatedWorkspaces = workspaces.map((w) => {
 					if (w.isDefault) return w
 					const index = newWorkspaces.findIndex((nw) => nw.id === w.id)
@@ -77,7 +72,6 @@ const WorkspaceInSidebar = () => {
 
 				setWorkspaces(updatedWorkspaces)
 
-				// APIリクエストを非同期で実行
 				const payload = {
 					items: newWorkspaces.map((w, index) => ({
 						id: w.id,
@@ -85,19 +79,16 @@ const WorkspaceInSidebar = () => {
 					})),
 				}
 
-				reorderWorkspaces(payload).catch(() => {
-					// エラー時は元の状態に戻す
-					setWorkspaces(workspaces)
-				})
+				await reorderWorkspaces(payload)
 			} catch (error) {
 				console.error('Reorder error:', error)
+				setWorkspaces(workspaces) // エラー時は元の状態に戻す
 			}
 		},
 	})
 
 	return (
 		<div className="space-y-1">
-			{/* Default Workspace */}
 			{defaultWorkspace && (
 				<div className="mb-4">
 					<div className="flex items-center">
@@ -119,7 +110,6 @@ const WorkspaceInSidebar = () => {
 				</div>
 			)}
 
-			{/* 通常のワークスペース */}
 			<GridList
 				aria-label="Workspaces"
 				items={workspaces.filter((w) => !w.isDefault)}
@@ -135,19 +125,17 @@ const WorkspaceInSidebar = () => {
 						<div className="flex items-center">
 							<div className="flex flex-col flex-grow justify-between">
 								<div className="flex items-center justify-between group">
-									{/* ワークスペース名(Default Workspaceの場合は非表示) */}
 									{!workspace.isDefault && (
 										<div className="flex items-center flex-grow mt-6">
 											<div className="flex items-center cursor-grab">
 												<Button
 													slot="drag"
-													className=" rounded-full py-1 pl-1 pr-2 ml-2"
+													className="rounded-full py-1 pl-1 pr-2 ml-2"
 												>
 													<ChevronRight className="w-6 h-6 text-gray-500" />
 												</Button>
 											</div>
 											<div className="flex items-center flex-grow justify-between hover:border-b-2 hover:border-blue-500 pb-1">
-												{/* ワークスペース名 */}
 												<span className="font-medium text-gray-500">
 													{workspace.name}
 												</span>
@@ -159,7 +147,6 @@ const WorkspaceInSidebar = () => {
 										</div>
 									)}
 								</div>
-								{/* ワークスペースに所属するスペースを表示 */}
 								<div className="mt-2 space-y-1">
 									<Spaces workspaceId={workspace.id} />
 								</div>

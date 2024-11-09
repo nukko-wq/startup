@@ -11,12 +11,12 @@ import {
 	Text,
 } from 'react-aria-components'
 import { Controller, useForm } from 'react-hook-form'
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState, useCallback } from 'react'
 import { Link } from 'lucide-react'
-import { useResources } from '@/app/features/resources/contexts/ResourceContext'
 import { useSession } from 'next-auth/react'
 import IconGoogle from '@/app/components/elements/IconGoogle'
-import { useCallback } from 'react'
+import { useResourceStore } from '@/app/store/resourceStore'
+import type { ResourceStore } from '@/app/store/resourceStore'
 
 interface ResourceCreateFormProps {
 	onClose: () => void
@@ -36,12 +36,13 @@ const ResourceCreateForm = ({
 }: ResourceCreateFormProps) => {
 	const urlInputRef = useRef<HTMLInputElement | null>(null)
 	const [urlPlaceholder, setUrlPlaceholder] = useState('URL')
-	const { resources, addResource, setResources, driveFiles, setDriveFiles } =
-		useResources()
 	const [isLoadingFiles, setIsLoadingFiles] = useState(false)
 	const [error, setError] = useState<string | null>(null)
 	const { data: session } = useSession()
 	const [activeTab, setActiveTab] = useState<'url' | 'drive'>('url')
+
+	const { resources, driveFiles, setDriveFiles, addResource, setResources } =
+		useResourceStore()
 
 	// Google Drive のファイル一覧を取得
 	const fetchDriveFiles = useCallback(async () => {
@@ -137,7 +138,6 @@ const ResourceCreateForm = ({
 			)
 			const faviconData = await faviconResponse.json()
 
-			// セクション内のリソースを取得して最大のpositionを見つける
 			const sectionResources = resources.filter(
 				(r) => r.sectionId === sectionId,
 			)
@@ -150,7 +150,7 @@ const ResourceCreateForm = ({
 				...data,
 				title: data.title || data.url,
 				faviconUrl: faviconData.faviconUrl,
-				position: maxPosition + 1, // セクション内での新しいposition
+				position: maxPosition + 1,
 				description: data.description || '',
 				mimeType: data.mimeType || '',
 				isGoogleDrive: data.isGoogleDrive || false,
@@ -163,11 +163,12 @@ const ResourceCreateForm = ({
 				...submissionData,
 				id: tempId,
 				sectionId,
-			}
+			} as ResourceStore['resources'][0]
+
 			await addResource(optimisticResource)
 			onClose()
 
-			// APリクエストを実行
+			// APIリクエスト
 			const response = await fetch('/api/resources', {
 				method: 'POST',
 				headers: {
@@ -182,22 +183,30 @@ const ResourceCreateForm = ({
 
 			// 成功時は実際のIDで更新
 			const newResource = await response.json()
-			setResources((prev) =>
+			setResources((prev: ResourceStore['resources']) =>
 				prev.map((resource) =>
 					resource.id === tempId
-						? {
+						? ({
 								...resource,
 								id: newResource.id,
-							}
+								sectionId: resource.sectionId,
+								url: resource.url,
+								title: resource.title,
+								description: resource.description,
+								position: resource.position,
+								faviconUrl: resource.faviconUrl,
+								mimeType: resource.mimeType,
+								isGoogleDrive: resource.isGoogleDrive,
+							} as ResourceStore['resources'][0])
 						: resource,
 				),
 			)
 		} catch (err) {
-			console.error('Resource creation error:', error)
+			console.error('Resource creation error:', err)
 			setError(err instanceof Error ? err.message : 'エラーが発生しました')
 
 			// エラー時はリソースを削除
-			addResource((prev) =>
+			setResources((prev) =>
 				prev.filter((resource) => resource.id !== `temp-${Date.now()}`),
 			)
 			alert('リソースの作成に失敗しました')

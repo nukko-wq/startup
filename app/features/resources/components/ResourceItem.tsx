@@ -1,6 +1,5 @@
 'use client'
 
-import type { Resource } from '@prisma/client'
 import ResourceEditMenu from '@/app/features/resources/edit_resource/components/ResourceEditMenu'
 import ResourceDeleteButton from '@/app/features/resources/delete_resource/components/ResourceDeleteButton'
 import {
@@ -12,8 +11,9 @@ import {
 	DropIndicator,
 } from 'react-aria-components'
 import { GripVertical } from 'lucide-react'
-import { useResources } from '@/app/features/resources/contexts/ResourceContext'
+import { useResourceStore } from '@/app/store/resourceStore'
 import ResourceIcon from '@/app/features/resources/components/ResourceIcon'
+import type { Resource } from '@prisma/client'
 
 interface ResourceItemProps {
 	resources: Pick<
@@ -35,7 +35,7 @@ export default function ResourceItem({
 	resources,
 	sectionId,
 }: ResourceItemProps) {
-	const { reorderResources, resources: allResources } = useResources()
+	const { reorderResources, resources: allResources } = useResourceStore()
 
 	const { dragAndDropHooks } = useDragAndDrop({
 		getItems(keys) {

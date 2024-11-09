@@ -1,7 +1,7 @@
 'use client'
 
 import { CirclePlus, Plus, SquarePlus } from 'lucide-react'
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import {
 	Button,
 	Menu,
@@ -14,30 +14,17 @@ import {
 	ModalOverlay,
 } from 'react-aria-components'
 import CreateSpaceForm from '@/app/features/spaces/create_space/CreateSpaceForm'
-import { useWorkspaces } from '@/app/features/workspaces/contexts/WorkspaceContext'
-import { useSpaces } from '@/app/features/spaces/contexts/SpaceContext'
+import { useWorkspaceStore } from '@/app/store/workspaceStore'
+import { useSpaceStore } from '@/app/store/spaceStore'
+import type { Space } from '@/app/types/space'
 
 export default function SpacesMenu() {
 	const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false)
 	const [isCreatingWorkspace, setIsCreatingWorkspace] = useState(false)
-	const [defaultWorkspaceId, setDefaultWorkspaceId] = useState<string>('')
-	const { workspaces, setWorkspaces } = useWorkspaces()
-	const { spaces, setSpaces } = useSpaces()
 
-	// デフォルトワークスペースIDを取得
-	useEffect(() => {
-		const fetchDefaultWorkspace = async () => {
-			try {
-				const response = await fetch('/api/workspaces/default')
-				const defaultWorkspace = await response.json()
-				console.log('Default workspace:', defaultWorkspace)
-				setDefaultWorkspaceId(defaultWorkspace.data.id)
-			} catch (error) {
-				console.error('Error fetching default workspace:', error)
-			}
-		}
-		fetchDefaultWorkspace()
-	}, [])
+	const { defaultWorkspace, workspaces, setWorkspaces } = useWorkspaceStore()
+
+	const { spaces, setSpaces } = useSpaceStore()
 
 	const handleCreateSpace = async (
 		data: { name: string; workspaceId: string },
@@ -68,7 +55,7 @@ export default function SpacesMenu() {
 			}
 
 			const newSpace = await response.json()
-			setSpaces((prev) => [...prev, newSpace])
+			setSpaces([...spaces, newSpace])
 		} catch (error) {
 			console.error('Error creating space:', error)
 		}
@@ -92,7 +79,7 @@ export default function SpacesMenu() {
 			}
 
 			const newWorkspace = await response.json()
-			setWorkspaces((prev) => [...prev, newWorkspace])
+			setWorkspaces([...workspaces, newWorkspace])
 			close()
 		} catch (error) {
 			console.error('Error creating workspace:', error)
@@ -155,13 +142,13 @@ export default function SpacesMenu() {
 										<CreateSpaceForm
 											onClose={close}
 											onSubmit={(data) => handleCreateWorkspace(data, close)}
-											workspaceId={defaultWorkspaceId}
+											workspaceId={defaultWorkspace?.id || ''}
 										/>
 									) : (
 										<CreateSpaceForm
 											onClose={close}
 											onSubmit={(data) => handleCreateSpace(data, close)}
-											workspaceId={defaultWorkspaceId}
+											workspaceId={defaultWorkspace?.id || ''}
 										/>
 									)}
 								</div>

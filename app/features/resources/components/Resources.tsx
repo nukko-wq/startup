@@ -1,85 +1,70 @@
 'use client'
 
-import { useState, useEffect, useRef } from 'react'
-import { ResourceProvider } from '@/app/features/resources/contexts/ResourceContext'
+import { useEffect } from 'react'
 import {
 	Button,
 	GridList,
 	GridListItem,
 	useDragAndDrop,
-	DropIndicator,
 } from 'react-aria-components'
-import Section from '@/app/features/sections/components/Section'
-import type { getInitialSections } from '@/app/features/resources/utils/getInitialSections'
+import SectionComponent from '@/app/features/sections/components/Section'
+import type { Section } from '@/app/types/section'
 import { Plus } from 'lucide-react'
-import type { Section as SectionType } from '@/app/types/section'
-import { useSpaces } from '@/app/features/spaces/contexts/SpaceContext'
+import { useSpaceStore } from '@/app/store/spaceStore'
 import LoadingSpinner from '@/app/components/ui/LoadingSpinner'
+import { useResourceStore } from '@/app/store/resourceStore'
 
 interface ResourceProps {
-	initialData: Awaited<ReturnType<typeof getInitialSections>>
-	spaceId?: string
-	spaceName?: string
+	initialData: { sections: Section[]; userId: string; spaceId: string }
+	spaceId: string
 }
 
-const Resources = ({ initialData, spaceId, spaceName }: ResourceProps) => {
-	const [sections, setSections] = useState(initialData.sections)
-	const [isCreating, setIsCreating] = useState(false)
-	const { isLoading, activeSpaceId, isNavigating } = useSpaces()
-	const prevSpaceIdRef = useRef<string | undefined>(spaceId)
-	const [isLoadingData, setIsLoadingData] = useState(false)
-	const dataFetchLock = useRef<boolean>(false)
+const Resources = ({ initialData, spaceId }: ResourceProps) => {
+	const {
+		isLoading: isSpaceLoading,
+		activeSpaceId,
+		isNavigating,
+	} = useSpaceStore()
 
-	// スペース切り替え時のデータ再取得を改善
-	// biome-ignore lint/correctness/useExhaustiveDependencies: <explanation>
+	const {
+		sections,
+		resources,
+		isLoading,
+		isCreating,
+		setSections,
+		setResources,
+		fetchSections,
+		createSection,
+		deleteSection,
+		reorderSections,
+	} = useResourceStore()
+
+	// 初期データのセット
 	useEffect(() => {
-		const fetchSections = async () => {
-			if (
-				!spaceId ||
-				spaceId === prevSpaceIdRef.current ||
-				isLoading ||
-				dataFetchLock.current
-			)
-				return
+		setSections(initialData.sections)
+		const initialResources = initialData.sections.flatMap(
+			(section) =>
+				section.resources?.map((resource) => ({
+					id: resource.id,
+					title: resource.title,
+					url: resource.url,
+					faviconUrl: resource.faviconUrl,
+					mimeType: resource.mimeType,
+					isGoogleDrive: resource.isGoogleDrive,
+					position: resource.position,
+					description: resource.description,
+					sectionId: section.id,
+				})) ?? [],
+		)
+		setResources(initialResources)
+	}, [initialData, setSections, setResources])
 
-			try {
-				dataFetchLock.current = true
-				setIsLoadingData(true)
-
-				const response = await fetch(`/api/spaces/${spaceId}/sections`, {
-					method: 'GET',
-					headers: {
-						'Content-Type': 'application/json',
-					},
-					cache: 'no-store',
-				})
-
-				if (!response.ok) {
-					throw new Error('Failed to fetch sections')
-				}
-
-				const data = await response.json()
-				setSections(data.sections)
-				prevSpaceIdRef.current = spaceId
-			} catch (error) {
-				console.error('Error fetching sections:', error)
-			} finally {
-				setIsLoadingData(false)
-				setTimeout(() => {
-					dataFetchLock.current = false
-				}, 500)
-			}
-		}
-
-		fetchSections()
-	}, [spaceId, activeSpaceId, isLoading])
-
-	// 初期データの同期
+	// スペース切り替え時のデータ再取得
 	useEffect(() => {
-		if (initialData.sections.length > 0) {
-			setSections(initialData.sections)
+		if (!isNavigating && spaceId) {
+			fetchSections(spaceId)
 		}
-	}, [initialData.sections])
+	}, [spaceId, isNavigating, fetchSections])
 
 	const { dragAndDropHooks } = useDragAndDrop({
 		getItems: (keys) => {
@@ -94,106 +79,28 @@ const Resources = ({ initialData, spaceId, spaceName }: ResourceProps) => {
 		acceptedDragTypes: ['section-item'],
 		getDropOperation: () => 'move',
 
-		/*
-		renderDropIndicator(target) {
-			return (
-				<DropIndicator
-					target={target}
-					className={({ isDropTarget }) =>
-						`drop-indicator ${isDropTarget ? 'active' : ''}`
-					}
-				/>
-			)
-		},
-		*/
-
 		onReorder: async (e) => {
-			try {
-				const items = [...sections]
-				const draggedIndex = items.findIndex(
-					(item) => item.id === Array.from(e.keys)[0],
-				)
-				const targetIndex = items.findIndex((item) => item.id === e.target.key)
-				const draggedItem = items[draggedIndex]
+			const items = [...sections]
+			const draggedIndex = items.findIndex(
+				(item) => item.id === Array.from(e.keys)[0],
+			)
+			const targetIndex = items.findIndex((item) => item.id === e.target.key)
+			const draggedItem = items[draggedIndex]
 
-				items.splice(draggedIndex, 1)
-				items.splice(
-					e.target.dropPosition === 'before' ? targetIndex : targetIndex + 1,
-					0,
-					draggedItem,
-				)
+			items.splice(draggedIndex, 1)
+			items.splice(
+				e.target.dropPosition === 'before' ? targetIndex : targetIndex + 1,
+				0,
+				draggedItem,
+			)
 
-				setSections(items)
-
-				const updatedItems = items.map((item, index) => ({
-					id: item.id,
-					order: index,
-				}))
-
-				const response = await fetch('/api/sections/reorder', {
-					method: 'PUT',
-					headers: { 'Content-Type': 'application/json' },
-					body: JSON.stringify({ items: updatedItems }),
-				})
-
-				if (!response.ok) {
-					throw new Error('Failed to update order')
-				}
-			} catch (error) {
-				console.error('Failed to update section order:', error)
-				setSections(sections)
-				alert('セクションの並び順の更新に失敗しました')
-			}
+			await reorderSections(items)
 		},
 	})
 
-	const handleSectionDelete = (sectionId: string) => {
-		setSections((prev) => prev.filter((section) => section.id !== sectionId))
-	}
-
-	const handleCreateSection = async () => {
-		if (!spaceId || isCreating) return
-
-		setIsCreating(true)
-
-		try {
-			const requestBody = {
-				name: 'Resources',
-				order: sections.length,
-				spaceId: spaceId,
-			}
-
-			const response = await fetch('/api/sections', {
-				method: 'POST',
-				headers: {
-					'Content-Type': 'application/json',
-				},
-				body: JSON.stringify(requestBody),
-				credentials: 'include',
-			})
-
-			if (!response.ok) {
-				const error = await response.json()
-				throw new Error(error.message || 'Failed to create section')
-			}
-
-			const newSection = await response.json()
-			setSections((prev) => [...prev, newSection])
-		} catch (error) {
-			console.error('Section creation error:', error)
-			if (error instanceof Error && error.message.includes('認証')) {
-				window.location.href = '/login'
-				return
-			}
-			alert('セクションの作成に失敗しました')
-		} finally {
-			setIsCreating(false)
-		}
-	}
-
 	if (
+		isSpaceLoading ||
 		isLoading ||
-		isLoadingData ||
 		!spaceId ||
 		spaceId !== activeSpaceId ||
 		isNavigating
@@ -202,49 +109,44 @@ const Resources = ({ initialData, spaceId, spaceName }: ResourceProps) => {
 	}
 
 	return (
-		<ResourceProvider
-			initialResources={initialData.sections.flatMap((s) => s.resources)}
-			sections={sections}
-		>
-			<div className="flex flex-col flex-grow w-full justify-center">
-				<div className="flex flex-col w-full outline-none">
-					<div className="flex flex-col w-full items-center">
-						<GridList
-							aria-label="Draggable sections"
-							items={sections}
-							dragAndDropHooks={dragAndDropHooks}
-							className="w-full outline-none"
-						>
-							{(section) => (
-								<GridListItem
-									key={section.id}
-									textValue={section.name}
-									className="w-full outline-none"
-								>
-									<Section
-										id={section.id}
-										name={section.name}
-										onDelete={handleSectionDelete}
-									/>
-								</GridListItem>
-							)}
-						</GridList>
-					</div>
-					<div className="flex justify-center">
-						<div className="flex justify-center">
-							<Button
-								className="flex items-center gap-1 px-4 py-2 outline-none text-gray-500"
-								onPress={handleCreateSection}
-								isDisabled={isCreating}
+		<div className="flex flex-col flex-grow w-full justify-center">
+			<div className="flex flex-col w-full outline-none">
+				<div className="flex flex-col w-full items-center">
+					<GridList
+						aria-label="Draggable sections"
+						items={sections}
+						dragAndDropHooks={dragAndDropHooks}
+						className="w-full outline-none"
+					>
+						{(section) => (
+							<GridListItem
+								key={section.id}
+								textValue={section.name}
+								className="w-full outline-none"
 							>
-								<Plus className="w-3 h-3" />
-								<div>RESOURCE SECTION</div>
-							</Button>
-						</div>
+								<SectionComponent
+									id={section.id}
+									name={section.name}
+									onDelete={() => deleteSection(section.id)}
+								/>
+							</GridListItem>
+						)}
+					</GridList>
+				</div>
+				<div className="flex justify-center">
+					<div className="flex justify-center">
+						<Button
+							className="flex items-center gap-1 px-4 py-2 outline-none text-gray-500"
+							onPress={() => spaceId && createSection(spaceId)}
+							isDisabled={isCreating}
+						>
+							<Plus className="w-3 h-3" />
+							<div>RESOURCE SECTION</div>
+						</Button>
 					</div>
 				</div>
 			</div>
-		</ResourceProvider>
+		</div>
 	)
 }
 

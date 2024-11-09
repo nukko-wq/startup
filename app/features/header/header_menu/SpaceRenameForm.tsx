@@ -5,7 +5,8 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { Button, Form, Input, Label, TextField } from 'react-aria-components'
 import { spaceUpdateSchema } from '@/lib/validations/space'
 import type { z } from 'zod'
-import { useSpaces } from '@/app/features/spaces/contexts/SpaceContext'
+import { useSpaceStore } from '@/app/store/spaceStore'
+import type { Space } from '@/app/types/space'
 
 type FormData = z.infer<typeof spaceUpdateSchema>
 
@@ -20,7 +21,7 @@ const SpaceRenameForm = ({
 	initialName,
 	onClose,
 }: SpaceRenameFormProps) => {
-	const { spaces, setSpaces, handleSpaceClick } = useSpaces()
+	const { spaces, setSpaces, currentSpace, setCurrentSpace } = useSpaceStore()
 	const { control, handleSubmit } = useForm<FormData>({
 		resolver: zodResolver(spaceUpdateSchema),
 		defaultValues: {
@@ -29,33 +30,39 @@ const SpaceRenameForm = ({
 	})
 
 	const onSubmit = async (data: FormData) => {
+		if (!currentSpace || !data.name) return
+
 		try {
 			onClose()
 
+			const updatedSpace: Space = {
+				...currentSpace,
+				name: data.name,
+				updatedAt: new Date(),
+			}
+
+			setCurrentSpace(updatedSpace)
 			setSpaces(
-				spaces.map((space) =>
-					space.id === spaceId
-						? { ...space, name: data.name as string }
-						: space,
-				),
+				spaces.map((space) => (space.id === spaceId ? updatedSpace : space)),
 			)
 
 			const response = await fetch(`/api/spaces/${spaceId}`, {
 				method: 'PATCH',
 				headers: { 'Content-Type': 'application/json' },
-				body: JSON.stringify(data),
+				body: JSON.stringify({ name: data.name }),
 			})
 
 			if (!response.ok) {
+				const originalSpace: Space = {
+					...currentSpace,
+					name: initialName,
+				}
+				setCurrentSpace(originalSpace)
 				setSpaces(
-					spaces.map((space) =>
-						space.id === spaceId ? { ...space, name: initialName } : space,
-					),
+					spaces.map((space) => (space.id === spaceId ? originalSpace : space)),
 				)
 				throw new Error('Failed to update space')
 			}
-
-			await handleSpaceClick(spaceId)
 		} catch (error) {
 			console.error('Space update error:', error)
 			alert('スペース名の更新に失敗しました')

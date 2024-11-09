@@ -4,24 +4,20 @@ import Resources from '@/app/features/resources/components/Resources'
 import { getInitialSections } from '@/app/features/resources/utils/getInitialSections'
 import { getSpaces } from '@/app/features/spaces/utils/getSpaces'
 import { auth } from '@/lib/auth'
-import type { Space } from '@/app/types/space'
-import type { Section } from '@/app/types/section'
 import { prisma } from '@/lib/prisma'
 import Header from '@/app/features/header/Header'
-import { SpaceProvider } from '@/app/features/spaces/contexts/SpaceContext'
 import { getWorkspaces } from '@/app/features/workspaces/utils/getWorkspaces'
-import { WorkspaceProvider } from '@/app/features/workspaces/contexts/WorkspaceContext'
 
-// ページコンポーネントをキャッシュ化
 export const revalidate = 0
 
 interface PageProps {
+	params: Promise<{ [key: string]: string }>
 	searchParams: Promise<{ [key: string]: string | string[] | undefined }>
 }
 
 export default async function Index({ searchParams }: PageProps) {
 	const session = await auth()
-	const params = await searchParams
+	const resolvedSearchParams = await searchParams
 
 	if (!session?.user?.id) {
 		redirect('/login')
@@ -33,9 +29,10 @@ export default async function Index({ searchParams }: PageProps) {
 			select: { lastActiveSpaceId: true },
 		})
 
+		const spaceIdFromParams = resolvedSearchParams?.spaceId
 		const spaceId =
-			typeof params.spaceId === 'string'
-				? params.spaceId
+			typeof spaceIdFromParams === 'string'
+				? spaceIdFromParams
 				: user?.lastActiveSpaceId || undefined
 
 		const [initialData, spaces, workspaces] = await Promise.all([
@@ -43,31 +40,32 @@ export default async function Index({ searchParams }: PageProps) {
 			getSpaces(session.user.id),
 			getWorkspaces(session.user.id),
 		])
+
 		const sections = initialData.sections
 		const activeSpace = spaces.find((space) => space.id === spaceId)
 
 		return (
 			<div className="flex flex-col min-h-screen">
 				<div className="flex bg-slate-50 flex-grow">
-					<SpaceProvider initialSpaces={spaces} initialActiveSpaceId={spaceId}>
-						<WorkspaceProvider initialWorkspaces={workspaces}>
-							<Sidebar />
-							<main className="flex flex-col flex-grow items-center">
-								<Header
-									spaceName={activeSpace?.name ?? ''}
-									spaceId={spaceId ?? ''}
-								/>
-								<Resources
-									initialData={{
-										sections,
-										userId: session.user.id,
-										spaceId: spaceId ?? '',
-									}}
-									spaceId={spaceId ?? ''}
-								/>
-							</main>
-						</WorkspaceProvider>
-					</SpaceProvider>
+					<Sidebar
+						initialWorkspaces={workspaces}
+						initialSpaces={spaces}
+						initialActiveSpaceId={spaceId}
+					/>
+					<main className="flex flex-col flex-grow items-center">
+						<Header
+							spaceName={activeSpace?.name ?? ''}
+							spaceId={spaceId ?? ''}
+						/>
+						<Resources
+							initialData={{
+								sections,
+								userId: session.user.id,
+								spaceId: spaceId ?? '',
+							}}
+							spaceId={spaceId ?? ''}
+						/>
+					</main>
 				</div>
 			</div>
 		)

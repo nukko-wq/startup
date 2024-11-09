@@ -1,6 +1,6 @@
 'use client'
 
-import { useSpaces } from '@/app/features/spaces/contexts/SpaceContext'
+import { useSpaceStore } from '@/app/store/spaceStore'
 import type { Space } from '@/app/types/space'
 import { GripVertical } from 'lucide-react'
 import {
@@ -13,7 +13,7 @@ import {
 } from 'react-aria-components'
 import SpaceButtonMenu from './SpaceButtonMenu'
 import { useRouter } from 'next/navigation'
-import { useRef, useCallback, useMemo, useState } from 'react'
+import { useMemo } from 'react'
 import CreateSpaceInWorkspace from '../workspaces/create_space/CreateSpaceInWorkspace'
 
 interface SpacesProps {
@@ -21,15 +21,18 @@ interface SpacesProps {
 }
 
 const Spaces = ({ workspaceId }: SpacesProps) => {
+	const router = useRouter()
 	const {
 		spaces,
-		setSpaces,
-		reorderSpaces,
 		activeSpaceId,
-		handleSpaceClick,
 		isNavigating,
-	} = useSpaces()
-	const [isDragging, setIsDragging] = useState(false)
+		isDragging,
+		setSpaces,
+		handleSpaceClick,
+		reorderSpaces,
+		setIsDragging,
+		updateSpaceWorkspace,
+	} = useSpaceStore()
 
 	const workspaceSpaces = useMemo(
 		() => spaces.filter((space) => space.workspaceId === workspaceId),
@@ -100,22 +103,13 @@ const Spaces = ({ workspaceId }: SpacesProps) => {
 					return space
 				})
 
-				setSpaces(updatedSpaces.sort((a, b) => a.order - b.order))
 				await reorderSpaces(updatedSpaces)
 
 				if (draggedSpace.workspaceId !== workspaceId) {
-					await fetch(`/api/spaces/${draggedSpace.id}`, {
-						method: 'PATCH',
-						headers: { 'Content-Type': 'application/json' },
-						body: JSON.stringify({
-							workspaceId,
-							order: newOrder,
-						}),
-					})
+					await updateSpaceWorkspace(draggedSpace.id, workspaceId, newOrder)
 				}
 			} catch (error) {
 				console.error('Failed to reorder spaces:', error)
-				setSpaces(spaces)
 			}
 		},
 		async onInsert(e) {
@@ -260,7 +254,7 @@ const Spaces = ({ workspaceId }: SpacesProps) => {
 			onSelectionChange={(keys) => {
 				const selectedKey = Array.from(keys)[0] as string
 				if (selectedKey && selectedKey !== activeSpaceId && !isNavigating) {
-					handleSpaceClick(selectedKey)
+					handleSpaceClick(selectedKey, router)
 				}
 			}}
 			renderEmptyState={() => (
@@ -276,10 +270,10 @@ const Spaces = ({ workspaceId }: SpacesProps) => {
 				<GridListItem
 					textValue={space.name}
 					className={({ isSelected, isFocusVisible }) => `
-						flex flex-grow items-center justify-between text-gray-400 outline-none cursor-pointer hover:bg-gray-700 hover:bg-opacity-75 group transition duration-200
-						${isSelected ? 'bg-gray-700 border-l-4 border-blue-500 pl-3 text-zinc-50' : 'pl-4'}
-						${isFocusVisible ? '' : ''}
-					`}
+							flex flex-grow items-center justify-between text-gray-400 outline-none cursor-pointer hover:bg-gray-700 hover:bg-opacity-75 group transition duration-200
+							${isSelected ? 'bg-gray-700 border-l-4 border-blue-500 pl-3 text-zinc-50' : 'pl-4'}
+							${isFocusVisible ? '' : ''}
+						`}
 				>
 					<div className="flex flex-grow items-center justify-between group py-1">
 						<div className="flex items-center flex-grow">
@@ -294,10 +288,8 @@ const Spaces = ({ workspaceId }: SpacesProps) => {
 							</div>
 							{/* スペース名 */}
 							<Button
-								onPress={() => handleSpaceClick(space.id)}
-								className={`
-									flex-grow text-left outline-none text-sm
-								`}
+								onPress={() => handleSpaceClick(space.id, router)}
+								className="flex-grow text-left outline-none text-sm"
 							>
 								{space.name}
 							</Button>

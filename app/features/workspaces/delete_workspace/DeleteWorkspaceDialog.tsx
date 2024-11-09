@@ -10,43 +10,26 @@ import {
 	ModalOverlay,
 } from 'react-aria-components'
 import { useRouter } from 'next/navigation'
-import type { Workspace } from '@/app/types/workspace'
+import { useWorkspaceStore } from '@/app/store/workspaceStore'
 
 interface DeleteWorkspaceDialogProps {
 	workspaceId: string
-	setWorkspaces: React.Dispatch<React.SetStateAction<Workspace[]>>
 	isOpen: boolean
 	onOpenChange: (isOpen: boolean) => void
 }
 
 const DeleteWorkspaceDialog = ({
 	workspaceId,
-	setWorkspaces,
 	isOpen,
 	onOpenChange,
 }: DeleteWorkspaceDialogProps) => {
 	const router = useRouter()
+	const { deleteWorkspace } = useWorkspaceStore()
 
 	const handleDelete = async (close: () => void) => {
 		try {
-			setWorkspaces((prevWorkspaces) =>
-				prevWorkspaces.filter((workspace) => workspace.id !== workspaceId),
-			)
-
+			await deleteWorkspace(workspaceId)
 			close()
-
-			const response = await fetch(`/api/workspaces/${workspaceId}`, {
-				method: 'DELETE',
-			})
-
-			if (!response.ok) {
-				const prevWorkspaces = await fetch('/api/workspaces').then((res) =>
-					res.json(),
-				)
-				setWorkspaces(prevWorkspaces)
-				throw new Error('Failed to delete workspace')
-			}
-
 			router.refresh()
 		} catch (error) {
 			console.error('Workspace delete error:', error)

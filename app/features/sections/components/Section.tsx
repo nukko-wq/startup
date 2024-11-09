@@ -3,11 +3,11 @@
 import ResourceCreateButton from '@/app/features/resources/create_resource/components/ResourceCreateButton'
 import ResourceItem from '@/app/features/resources/components/ResourceItem'
 import { File } from 'lucide-react'
-import { useResources } from '@/app/features/resources/contexts/ResourceContext'
 import { useRef, useState } from 'react'
 import SectionMenuButton from '@/app/features/sections/section_menu/SectionMenuButton'
 import SectionNameEdit from '@/app/features/sections/edit_section/components/SectionNameEdit'
 import { Button } from 'react-aria-components'
+import { useResourceStore } from '@/app/store/resourceStore'
 
 interface SectionProps {
 	id: string
@@ -16,10 +16,10 @@ interface SectionProps {
 }
 
 export default function Section({ id, name, onDelete }: SectionProps) {
-	const { resources } = useResources()
 	const ref = useRef<HTMLDivElement>(null)
 	const [sectionName, setSectionName] = useState(name)
 	const [isResourceCreateOpen, setIsResourceCreateOpen] = useState(false)
+	const { resources } = useResourceStore()
 
 	const sectionResources = resources
 		.filter((resource) => resource.sectionId === id)
