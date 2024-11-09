@@ -212,7 +212,7 @@ const ResourceCreateForm = ({
 		}, 0)
 	}
 
-	// ファイルを選択したときの処理
+	// Google Driveファイルを選択したときの処理
 	const handleDriveFileClick = async (file: DriveFile) => {
 		try {
 			let description = ''
@@ -260,6 +260,7 @@ const ResourceCreateForm = ({
 				sectionId,
 			}
 			addResource(optimisticResource)
+			onClose()
 
 			// APIリクエストを実行
 			const response = await fetch('/api/resources', {
@@ -283,7 +284,6 @@ const ResourceCreateForm = ({
 						: resource,
 				),
 			)
-			onClose()
 		} catch (error) {
 			console.error('Resource creation error:', error)
 			// エラー時はリソースを削除
