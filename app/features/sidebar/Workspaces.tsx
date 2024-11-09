@@ -7,6 +7,7 @@ import WorkspaceButtonMenu from './WorkspaceButtonMenu'
 import Spaces from '@/app/features/sidebar/Spaces'
 import SpacesMenu from './SpacesMenu'
 import { useWorkspaceStore } from '@/app/store/workspaceStore'
+import WorkspaceLeftMenu from './WorkspaceLeftMenu'
 
 const WorkspaceInSidebar = () => {
 	const { workspaces, defaultWorkspace, reorderWorkspaces, setWorkspaces } =
@@ -139,10 +140,13 @@ const WorkspaceInSidebar = () => {
 												<span className="font-medium text-gray-500">
 													{workspace.name}
 												</span>
-												<WorkspaceButtonMenu
-													workspaceId={workspace.id}
-													workspaceName={workspace.name}
-												/>
+												<div className="flex items-center">
+													<WorkspaceLeftMenu workspaceId={workspace.id} />
+													<WorkspaceButtonMenu
+														workspaceId={workspace.id}
+														workspaceName={workspace.name}
+													/>
+												</div>
 											</div>
 										</div>
 									)}
