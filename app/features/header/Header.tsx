@@ -3,7 +3,7 @@
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import HeaderMenu from '@/app/features/header/header_menu/HeaderMenu'
 import { useSpaces } from '@/app/features/spaces/contexts/SpaceContext'
 import { Button, Input, Text } from 'react-aria-components'
@@ -43,7 +43,14 @@ export default function Header({
 		defaultValues: {
 			name: displayName,
 		},
+		values: {
+			name: displayName,
+		},
 	})
+
+	useEffect(() => {
+		reset({ name: displayName })
+	}, [displayName, reset])
 
 	const onSubmit = async (data: SpaceFormData) => {
 		if (data.name === displayName) {
