@@ -21,8 +21,14 @@ interface SpacesProps {
 }
 
 const Spaces = ({ workspaceId }: SpacesProps) => {
-	const { spaces, setSpaces, reorderSpaces, activeSpaceId, handleSpaceClick } =
-		useSpaces()
+	const {
+		spaces,
+		setSpaces,
+		reorderSpaces,
+		activeSpaceId,
+		handleSpaceClick,
+		isNavigating,
+	} = useSpaces()
 	const [isDragging, setIsDragging] = useState(false)
 
 	const workspaceSpaces = useMemo(
@@ -253,7 +259,7 @@ const Spaces = ({ workspaceId }: SpacesProps) => {
 			selectedKeys={activeSpaceId ? [activeSpaceId] : []}
 			onSelectionChange={(keys) => {
 				const selectedKey = Array.from(keys)[0] as string
-				if (selectedKey && selectedKey !== activeSpaceId) {
+				if (selectedKey && selectedKey !== activeSpaceId && !isNavigating) {
 					handleSpaceClick(selectedKey)
 				}
 			}}
