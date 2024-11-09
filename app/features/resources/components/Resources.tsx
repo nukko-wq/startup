@@ -13,6 +13,8 @@ import Section from '@/app/features/sections/components/Section'
 import type { getInitialSections } from '@/app/features/resources/utils/getInitialSections'
 import { Plus } from 'lucide-react'
 import type { Section as SectionType } from '@/app/types/section'
+import { useSpaces } from '@/app/features/spaces/contexts/SpaceContext'
+import LoadingSpinner from '@/app/components/ui/LoadingSpinner'
 
 interface ResourceProps {
 	initialData: Awaited<ReturnType<typeof getInitialSections>>
@@ -23,6 +25,7 @@ interface ResourceProps {
 const Resources = ({ initialData, spaceId, spaceName }: ResourceProps) => {
 	const [sections, setSections] = useState(initialData.sections)
 	const [isCreating, setIsCreating] = useState(false)
+	const { isLoading } = useSpaces()
 
 	useEffect(() => {
 		setSections(initialData.sections)
@@ -136,6 +139,10 @@ const Resources = ({ initialData, spaceId, spaceName }: ResourceProps) => {
 		} finally {
 			setIsCreating(false)
 		}
+	}
+
+	if (isLoading) {
+		return <LoadingSpinner />
 	}
 
 	return (

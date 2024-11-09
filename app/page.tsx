@@ -57,22 +57,14 @@ export default async function Index({ searchParams }: PageProps) {
 									spaceName={activeSpace?.name ?? ''}
 									spaceId={spaceId ?? ''}
 								/>
-								{activeSpace ? (
-									<Resources
-										initialData={{
-											sections,
-											userId: session.user.id,
-											spaceId: spaceId ?? '',
-										}}
-										spaceId={spaceId ?? ''}
-									/>
-								) : (
-									<div className="flex flex-col items-center justify-center flex-grow">
-										<div className="text-2xl font-semibold text-gray-500">
-											Open a space to get started
-										</div>
-									</div>
-								)}
+								<Resources
+									initialData={{
+										sections,
+										userId: session.user.id,
+										spaceId: spaceId ?? '',
+									}}
+									spaceId={spaceId ?? ''}
+								/>
 							</main>
 						</WorkspaceProvider>
 					</SpaceProvider>
