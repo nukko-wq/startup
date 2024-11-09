@@ -80,10 +80,15 @@ const Spaces = ({ workspaceId }: SpacesProps) => {
 	)
 
 	const { dragAndDropHooks } = useDragAndDrop({
-		getItems: (keys) =>
-			[...keys].map((key) => ({
-				'space-item': JSON.stringify(spaces.find((space) => space.id === key)),
-			})),
+		getItems: (keys) => {
+			const space = spaces.find((s) => s.id === Array.from(keys)[0])
+			return [
+				{
+					'space-item': JSON.stringify(space),
+					'text/plain': space?.name || '',
+				},
+			]
+		},
 		onDragStart: () => {
 			setIsDragging(true)
 		},
@@ -103,53 +108,29 @@ const Spaces = ({ workspaceId }: SpacesProps) => {
 		onDragEnd: () => {
 			setIsDragging(false)
 		},
-		async onReorder(e) {
-			try {
-				const draggedSpace = spaces.find((s) => s.id === Array.from(e.keys)[0])
-				if (!draggedSpace) return
+		onReorder: async (e) => {
+			const items = [...workspaceSpaces]
+			const draggedIndex = items.findIndex(
+				(item) => item.id === Array.from(e.keys)[0],
+			)
+			const targetIndex = items.findIndex((item) => item.id === e.target.key)
+			const draggedItem = items[draggedIndex]
 
-				const targetSpace = workspaceSpaces.find((s) => s.id === e.target.key)
-				if (!targetSpace) return
+			if (draggedIndex !== -1 && targetIndex !== -1) {
+				items.splice(draggedIndex, 1)
+				items.splice(
+					e.target.dropPosition === 'before' ? targetIndex : targetIndex + 1,
+					0,
+					draggedItem,
+				)
 
-				const newOrder =
-					e.target.dropPosition === 'before'
-						? targetSpace.order
-						: targetSpace.order + 1
+				// 順序を更新
+				const updatedItems = items.map((item, index) => ({
+					...item,
+					order: index,
+				}))
 
-				const updatedSpaces = spaces.map((space) => {
-					if (space.workspaceId === workspaceId) {
-						if (draggedSpace.workspaceId !== workspaceId) {
-							if (space.order >= newOrder) {
-								return { ...space, order: space.order + 1 }
-							}
-						} else {
-							if (space.id === draggedSpace.id) {
-								return { ...space, order: newOrder }
-							}
-							if (draggedSpace.order < space.order && space.order <= newOrder) {
-								return { ...space, order: space.order - 1 }
-							}
-							if (draggedSpace.order > space.order && space.order >= newOrder) {
-								return { ...space, order: space.order + 1 }
-							}
-						}
-					} else if (space.workspaceId === draggedSpace.workspaceId) {
-						if (space.order > draggedSpace.order) {
-							return { ...space, order: space.order - 1 }
-						}
-					} else if (space.id === draggedSpace.id) {
-						return { ...space, order: newOrder, workspaceId }
-					}
-					return space
-				})
-
-				await reorderSpaces(updatedSpaces)
-
-				if (draggedSpace.workspaceId !== workspaceId) {
-					await updateSpaceWorkspace(draggedSpace.id, workspaceId, newOrder)
-				}
-			} catch (error) {
-				console.error('Failed to reorder spaces:', error)
+				await reorderSpaces(updatedItems)
 			}
 		},
 		async onInsert(e) {
@@ -301,23 +282,31 @@ const Spaces = ({ workspaceId }: SpacesProps) => {
 				<div data-drop-target className="ml-11 mr-4">
 					<CreateSpaceInWorkspace
 						workspaceId={workspaceId}
-						onSpaceCreated={(newSpace) => setSpaces([...spaces, newSpace])}
+						onSpaceCreated={(newSpace) => {
+							// 新しいスペースを追加する前に重複チェック
+							const existingSpace = spaces.find((s) => s.id === newSpace.id)
+							if (!existingSpace) {
+								setSpaces([...spaces, newSpace])
+							}
+						}}
 					/>
 				</div>
 			)}
 		>
-			{(space) => (
+			{(item) => (
 				<GridListItem
-					textValue={space.name}
+					key={item.id}
+					id={item.id}
+					textValue={item.name}
 					className={({ isSelected, isFocusVisible }) => `
-							flex flex-grow items-center justify-between text-gray-400 outline-none cursor-pointer hover:bg-gray-700 hover:bg-opacity-75 group transition duration-200
-							${isSelected ? 'bg-gray-700 border-l-4 border-blue-500 pl-3 text-zinc-50' : 'pl-4'}
-							${isFocusVisible ? '' : ''}
-						`}
+						flex flex-grow items-center justify-between text-gray-400 outline-none cursor-pointer hover:bg-gray-700 hover:bg-opacity-75 group transition duration-200
+						${isSelected ? 'bg-gray-700 border-l-4 border-blue-500 pl-3 text-zinc-50' : 'pl-4'}
+						${isFocusVisible ? '' : ''}
+					`}
 				>
 					<div
 						className="flex flex-grow items-center justify-between group py-1"
-						onPointerEnter={() => handleSpaceHover(space.id)}
+						onPointerEnter={() => handleSpaceHover(item.id)}
 					>
 						<div className="flex items-center flex-grow">
 							<div className="flex items-center cursor-grab">
@@ -331,14 +320,14 @@ const Spaces = ({ workspaceId }: SpacesProps) => {
 							</div>
 							{/* スペース名 */}
 							<Button
-								onPress={() => handleSpaceClick(space.id, router)}
+								onPress={() => handleSpaceClick(item.id, router)}
 								className="flex-grow text-left outline-none text-sm"
 							>
-								{space.name}
+								{item.name}
 							</Button>
 						</div>
 						<div className="opacity-0 group-hover:opacity-100">
-							<SpaceButtonMenu spaceId={space.id} spaceName={space.name} />
+							<SpaceButtonMenu spaceId={item.id} spaceName={item.name} />
 						</div>
 					</div>
 				</GridListItem>
