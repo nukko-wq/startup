@@ -75,25 +75,20 @@ export function SpaceProvider({
 	// URLのspaceIdパラメータとactiveSpaceIdの同期
 	useEffect(() => {
 		const spaceId = searchParams.get('spaceId')
+
+		// isNavigatingがtrueの間は同期処理をスキップ
+		if (isNavigating) return
+
 		if (
-			!isNavigating &&
 			spaceId &&
 			spaceId !== activeSpaceId &&
 			lastUpdateSource.current !== 'click' &&
-			pendingUpdate.current !== spaceId
+			pendingUpdate.current !== spaceId &&
+			spaces.some((space) => space.id === spaceId)
 		) {
-			const isNewSpace = spaces.some(
-				(space) =>
-					space.id === spaceId && !spaces.some((s) => s.id === activeSpaceId),
-			)
-
-			// 既存のスペースの場合のみ更新を実行
-			if (!isNewSpace && spaces.some((space) => space.id === spaceId)) {
-				console.log('Updating activeSpaceId from URL:', spaceId)
-				lastUpdateSource.current = 'url'
-				pendingUpdate.current = spaceId
-				setActiveSpaceId(spaceId)
-			}
+			lastUpdateSource.current = 'url'
+			pendingUpdate.current = spaceId
+			setActiveSpaceId(spaceId)
 		}
 	}, [searchParams, isNavigating, activeSpaceId, spaces])
 
@@ -154,24 +149,23 @@ export function SpaceProvider({
 
 	const handleSpaceClick = async (spaceId: string) => {
 		try {
+			// まず状態を更新
 			setIsNavigating(true)
 			lastUpdateSource.current = 'click'
+			setActiveSpaceId(spaceId)
 
-			// 状態更新とナビゲーションを同時に実行
+			// 状態の更新が確実に完了するまで待機
+			await new Promise((resolve) => setTimeout(resolve, 100))
+
+			// その後でナビゲーションと他の処理を実行
 			await Promise.all([
-				(async () => {
-					setActiveSpaceId(spaceId)
-					// 少し待って状態が確実に更新されるのを待つ
-					await new Promise((resolve) => setTimeout(resolve, 50))
-				})(),
 				router.push(`/?spaceId=${spaceId}`, { scroll: false }),
 				handleSpaceSelect(spaceId),
 			])
 		} catch (error) {
 			console.error('Error switching space:', error)
-			setActiveSpaceId(activeSpaceId)
 		} finally {
-			// ナビゲーション完了後のクリーンアップを遅延
+			// クリーンアップは少し遅延させる
 			setTimeout(() => {
 				setIsNavigating(false)
 				lastUpdateSource.current = null
