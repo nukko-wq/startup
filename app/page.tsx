@@ -6,6 +6,7 @@ import { getSpaces } from '@/app/features/spaces/utils/getSpaces'
 import { auth } from '@/lib/auth'
 import Header from '@/app/features/header/Header'
 import { getWorkspaces } from '@/app/features/workspaces/utils/getWorkspaces'
+import TabList from '@/app/features/tabs/components/TabList'
 
 export const revalidate = 0
 
@@ -51,14 +52,21 @@ export default async function Index({ searchParams }: PageProps) {
 				/>
 				<main className="flex flex-col flex-grow items-center">
 					<Header spaceName={activeSpace?.name ?? ''} spaceId={spaceId ?? ''} />
-					<Resources
-						initialData={{
-							sections,
-							userId: session.user.id,
-							spaceId: spaceId ?? '',
-						}}
-						spaceId={spaceId ?? ''}
-					/>
+					<div className="flex w-full">
+						<div className="w-1/4 border-r">
+							<TabList />
+						</div>
+						<div className="flex-1">
+							<Resources
+								initialData={{
+									sections,
+									userId: session.user.id,
+									spaceId: spaceId ?? '',
+								}}
+								spaceId={spaceId ?? ''}
+							/>
+						</div>
+					</div>
 				</main>
 			</div>
 		</div>

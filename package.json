@@ -39,6 +39,7 @@
 	},
 	"devDependencies": {
 		"@biomejs/biome": "1.9.4",
+		"@types/chrome": "^0.0.280",
 		"@types/lodash": "^4.17.13",
 		"@types/node": "20.10.6",
 		"@types/react": "18.2.46",
