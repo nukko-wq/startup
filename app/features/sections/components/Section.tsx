@@ -49,7 +49,7 @@ export default function Section({ id, name, onDelete }: SectionProps) {
 						onEdit={handleNameEdit}
 					/>
 				</div>
-				<div className="flex">
+				<div className="hidden md:flex">
 					<ResourceCreateButton
 						sectionId={id}
 						isOpen={isResourceCreateOpen}
