@@ -338,36 +338,46 @@ export const useResourceStore = create<ResourceStore>((set, get) => ({
 			const cacheKey = `sections-${spaceId}`
 			const cachedData = sessionStorage.getItem(cacheKey)
 
+			// すでにキャッシュがある場合は早期リターン
 			if (cachedData || get().prefetchedSections[spaceId]) {
 				return
 			}
 
-			const response = await fetch(`/api/spaces/${spaceId}/sections`)
+			// AbortControllerを使用してフェッチをキャンセル可能に
+			const controller = new AbortController()
+			const timeoutId = setTimeout(() => controller.abort(), 5000) // 5秒でタイムアウト
+
+			const response = await fetch(`/api/spaces/${spaceId}/sections`, {
+				signal: controller.signal,
+			})
+
+			clearTimeout(timeoutId)
 			if (!response.ok) return
 
 			const data = await response.json()
 
-			// プリフェッチデータを保存
-			set((state) => ({
-				prefetchedSections: {
-					...state.prefetchedSections,
-					[spaceId]: data.sections,
-				},
-				prefetchedResources: {
-					...state.prefetchedResources,
-					[spaceId]: data.resources,
-				},
-			}))
-
-			// セッションストレージにもキャッシュ
-			sessionStorage.setItem(
-				cacheKey,
-				JSON.stringify({
-					sections: data.sections,
-					resources: data.resources,
-				}),
-			)
-		} catch (error) {
+			// メモリとセッションストレージに同時に保存
+			Promise.all([
+				set((state) => ({
+					prefetchedSections: {
+						...state.prefetchedSections,
+						[spaceId]: data.sections,
+					},
+					prefetchedResources: {
+						...state.prefetchedResources,
+						[spaceId]: data.resources,
+					},
+				})),
+				sessionStorage.setItem(
+					cacheKey,
+					JSON.stringify({
+						sections: data.sections,
+						resources: data.resources,
+					}),
+				),
+			])
+		} catch (error: unknown) {
+			if (error instanceof Error && error.name === 'AbortError') return
 			console.error('Error prefetching space data:', error)
 		}
 	},

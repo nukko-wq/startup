@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect } from 'react'
+import { useEffect, useMemo } from 'react'
 import {
 	Button,
 	GridList,
@@ -35,32 +35,37 @@ const Resources = ({ initialData, spaceId }: ResourceProps) => {
 		fetchSections,
 	} = useResourceStore()
 
+	// メモ化によるレンダリングの最適化
+	const memoizedSections = useMemo(() => sections, [sections])
+	const memoizedResources = useMemo(() => resources, [resources])
+
 	// 初期データのセットを最適化
-	// biome-ignore lint/correctness/useExhaustiveDependencies: <explanation>
 	useEffect(() => {
-		if (initialData && spaceId) {
-			const initialResources = initialData.sections.flatMap(
-				(section) =>
-					section.resources?.map((resource) => ({
-						id: resource.id,
-						title: resource.title,
-						url: resource.url,
-						faviconUrl: resource.faviconUrl,
-						mimeType: resource.mimeType,
-						isGoogleDrive: resource.isGoogleDrive,
-						position: resource.position,
-						description: resource.description,
-						sectionId: section.id,
-					})) ?? [],
-			)
+		if (!initialData || !spaceId) return
 
-			// バッチ更新
-			Promise.resolve().then(() => {
-				setSections(initialData.sections)
-				setResources(initialResources)
-			})
+		const initialResources = initialData.sections.flatMap(
+			(section) =>
+				section.resources?.map((resource) => ({
+					id: resource.id,
+					title: resource.title,
+					url: resource.url,
+					faviconUrl: resource.faviconUrl,
+					mimeType: resource.mimeType,
+					isGoogleDrive: resource.isGoogleDrive,
+					position: resource.position,
+					description: resource.description,
+					sectionId: section.id,
+				})) ?? [],
+		)
 
-			// キャッシュの保存
+		// バッチ更新を requestAnimationFrame で最適化
+		requestAnimationFrame(() => {
+			setSections(initialData.sections)
+			setResources(initialResources)
+		})
+
+		// キャッシュの保存を別のタイミングで実行
+		queueMicrotask(() => {
 			sessionStorage.setItem(
 				`sections-${spaceId}`,
 				JSON.stringify({
@@ -68,8 +73,8 @@ const Resources = ({ initialData, spaceId }: ResourceProps) => {
 					resources: initialResources,
 				}),
 			)
-		}
-	}, [initialData, spaceId])
+		})
+	}, [initialData, spaceId, setSections, setResources])
 
 	// スペース切り替え時のデータ取得を最適化
 	// biome-ignore lint/correctness/useExhaustiveDependencies: <explanation>
@@ -132,7 +137,7 @@ const Resources = ({ initialData, spaceId }: ResourceProps) => {
 				<div className="flex flex-col w-full items-center">
 					<GridList
 						aria-label="Draggable sections"
-						items={sections}
+						items={memoizedSections}
 						dragAndDropHooks={dragAndDropHooks}
 						className="w-full outline-none"
 					>

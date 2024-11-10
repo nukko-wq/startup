@@ -79,21 +79,24 @@ export const useSpaceStore = create<SpaceStore>((set, get) => ({
 			setIsNavigating(true)
 			setIsLoading(true)
 
-			// 新しいスペースのデータを先に確認
-			const cacheKey = `sections-${spaceId}`
-			const cachedData = sessionStorage.getItem(cacheKey)
-			const hasPrefetchedData = resourceStore.prefetchedSections[spaceId]
+			// 並行処理の最適化
+			const [cachedData, prefetchedData] = await Promise.all([
+				sessionStorage.getItem(`sections-${spaceId}`),
+				resourceStore.prefetchedSections[spaceId],
+			])
 
 			// 現在のスペースのデータを保存
 			const currentSpaceId = get().activeSpaceId
 			if (currentSpaceId) {
-				sessionStorage.setItem(
-					`sections-${currentSpaceId}`,
-					JSON.stringify({
-						sections: resourceStore.sections,
-						resources: resourceStore.resources,
-					}),
-				)
+				queueMicrotask(() => {
+					sessionStorage.setItem(
+						`sections-${currentSpaceId}`,
+						JSON.stringify({
+							sections: resourceStore.sections,
+							resources: resourceStore.resources,
+						}),
+					)
+				})
 			}
 
 			// 新しいスペースの状態を設定
@@ -103,39 +106,17 @@ export const useSpaceStore = create<SpaceStore>((set, get) => ({
 				setActiveSpaceId(spaceId)
 			}
 
-			// データの設定を一括で行う
-			if (cachedData) {
-				const parsedData = JSON.parse(cachedData)
-				await Promise.all([
-					resourceStore.setSections(parsedData.sections),
-					resourceStore.setResources(parsedData.resources),
-					router.replace(`/?spaceId=${spaceId}`, { scroll: false }),
-				])
-			} else if (hasPrefetchedData) {
-				await Promise.all([
-					resourceStore.setSections(resourceStore.prefetchedSections[spaceId]),
-					resourceStore.setResources(
-						resourceStore.prefetchedResources[spaceId] || [],
-					),
-				])
-			} else {
-				// データがない場合は空の状態を表示
-				resourceStore.setSections([])
-				resourceStore.setResources([])
-				setIsLoading(true)
-			}
-
-			// URLの更新とデータフェッチを並行して実行
+			// データの設定とURLの更新を並行して実行
 			await Promise.all([
-				!cachedData &&
-					!hasPrefetchedData &&
-					resourceStore.fetchSections(spaceId),
+				cachedData
+					? Promise.resolve(JSON.parse(cachedData))
+					: prefetchedData
+						? Promise.resolve({
+								sections: resourceStore.prefetchedSections[spaceId],
+								resources: resourceStore.prefetchedResources[spaceId] || [],
+							})
+						: resourceStore.fetchSections(spaceId),
 				router.replace(`/?spaceId=${spaceId}`, { scroll: false }),
-				fetch('/api/users/last-active-space', {
-					method: 'PUT',
-					headers: { 'Content-Type': 'application/json' },
-					body: JSON.stringify({ spaceId }),
-				}),
 			])
 		} catch (error) {
 			console.error('Error switching space:', error)
