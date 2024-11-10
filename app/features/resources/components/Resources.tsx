@@ -47,10 +47,15 @@ const Resources = memo(({ initialData, spaceId }: ResourceProps) => {
 	const memoizedSections = useMemo(() => sections, [sections])
 	const memoizedResources = useMemo(() => resources, [resources])
 
-	// 初期データのセットを最適化
+	// 初期データのセットアップを修正
+	// biome-ignore lint/correctness/useExhaustiveDependencies: <explanation>
 	useEffect(() => {
 		if (!initialData || !spaceId) return
 
+		// 初期データをセット
+		setSections(initialData.sections)
+
+		// リソースデータを構築
 		const initialResources = initialData.sections.flatMap(
 			(section) =>
 				section.resources?.map((resource) => ({
@@ -66,37 +71,39 @@ const Resources = memo(({ initialData, spaceId }: ResourceProps) => {
 				})) ?? [],
 		)
 
-		// バッチ更新を requestAnimationFrame で最適化
-		requestAnimationFrame(() => {
-			setSections(initialData.sections)
-			setResources(initialResources)
-		})
+		setResources(initialResources)
 
-		// キャッシュの保存を別のタイミングで実行
-		queueMicrotask(() => {
-			sessionStorage.setItem(
-				`sections-${spaceId}`,
-				JSON.stringify({
-					sections: initialData.sections,
-					resources: initialResources,
-				}),
-			)
-		})
-	}, [initialData, spaceId, setSections, setResources])
-
-	// スペース切り替え時のデータ取得を最適化
-	useEffect(() => {
+		// キャッシュを更新
 		const cacheKey = `sections-${spaceId}`
-		const cachedData = sessionStorage.getItem(cacheKey)
+		sessionStorage.setItem(
+			cacheKey,
+			JSON.stringify({
+				sections: initialData.sections,
+				resources: initialResources,
+				timestamp: Date.now(),
+			}),
+		)
+	}, [initialData, spaceId])
 
-		if (!isNavigating && spaceId && !cachedData) {
+	// spaceIdが変更されたときのデータ取得
+	// biome-ignore lint/correctness/useExhaustiveDependencies: <explanation>
+	useEffect(() => {
+		if (!spaceId) return
+
+		const loadData = async () => {
 			try {
-				fetchSections(spaceId).catch(console.error)
+				const data = await fetchSections(spaceId)
+				if (data) {
+					setSections(data.sections)
+					setResources(data.resources)
+				}
 			} catch (error) {
-				console.error('Error fetching sections:', error)
+				console.error('Error loading section data:', error)
 			}
 		}
-	}, [spaceId, isNavigating, fetchSections])
+
+		loadData()
+	}, [spaceId])
 
 	const { dragAndDropHooks } = useDragAndDrop({
 		getItems: (keys) => {
@@ -187,11 +194,13 @@ const Resources = memo(({ initialData, spaceId }: ResourceProps) => {
 							</div>
 						</div>
 					</div>
+					{/*}
 					{(isLoading || isNavigating) && (
 						<div className="absolute inset-0 flex items-center justify-center bg-white/30 backdrop-blur-[1px] transition-opacity duration-300">
 							<LoadingSpinner />
 						</div>
 					)}
+					*/}
 				</>
 			)}
 		</div>

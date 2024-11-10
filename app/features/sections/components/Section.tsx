@@ -22,13 +22,10 @@ export default memo(function Section({ id, name, onDelete }: SectionProps) {
 	const [isResourceCreateOpen, setIsResourceCreateOpen] = useState(false)
 	const { resources = [] } = useResourceStore()
 
-	const sectionResources = useMemo(
-		() =>
-			(resources || [])
-				.filter((resource) => resource?.sectionId === id)
-				.sort((a, b) => (a?.position || 0) - (b?.position || 0)),
-		[resources, id],
-	)
+	const sectionResources = useMemo(() => {
+		const filteredResources = resources.filter((r) => r.sectionId === id)
+		return [...filteredResources].sort((a, b) => a.position - b.position)
+	}, [resources, id])
 
 	const handleNameEdit = (newName: string) => {
 		setSectionName(newName)
