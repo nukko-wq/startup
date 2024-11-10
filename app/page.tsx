@@ -52,7 +52,7 @@ export default async function Index({ searchParams }: PageProps) {
 				/>
 				<main className="flex flex-col flex-grow items-center">
 					<Header spaceName={activeSpace?.name ?? ''} spaceId={spaceId ?? ''} />
-					<div className="flex w-full">
+					<div className="flex flex-grow w-full">
 						<div className="w-1/4 border-r">
 							<TabList />
 						</div>
