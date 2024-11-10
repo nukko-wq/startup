@@ -119,7 +119,8 @@ const Resources = ({ initialData, spaceId }: ResourceProps) => {
 		},
 	})
 
-	if (isSpaceLoading || isNavigating || isLoading) {
+	// ローディング条件を修正
+	if (isSpaceLoading || isNavigating || (isLoading && !sections.length)) {
 		return (
 			<div className="flex items-center justify-center h-full">
 				<LoadingSpinner className="w-14 h-14" />

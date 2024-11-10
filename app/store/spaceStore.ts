@@ -80,12 +80,6 @@ export const useSpaceStore = create<SpaceStore>((set, get) => ({
 			setIsLoading(true)
 			resourceStore.setIsLoading(true)
 
-			// 並行処理の最適化
-			const [cachedData, prefetchedData] = await Promise.all([
-				sessionStorage.getItem(`sections-${spaceId}`),
-				resourceStore.prefetchedSections[spaceId],
-			])
-
 			// 現在のスペースのデータを保存
 			const currentSpaceId = get().activeSpaceId
 			if (currentSpaceId) {
@@ -107,24 +101,17 @@ export const useSpaceStore = create<SpaceStore>((set, get) => ({
 				setActiveSpaceId(spaceId)
 			}
 
-			// データの設定とURLの更新を並行して実行
+			// データの取得とURL更新を並行して実行
 			await Promise.all([
-				cachedData
-					? Promise.resolve(JSON.parse(cachedData))
-					: prefetchedData
-						? Promise.resolve({
-								sections: resourceStore.prefetchedSections[spaceId],
-								resources: resourceStore.prefetchedResources[spaceId] || [],
-							})
-						: resourceStore.fetchSections(spaceId),
+				resourceStore.fetchSections(spaceId),
 				router.replace(`/?spaceId=${spaceId}`, { scroll: false }),
 			])
 		} catch (error) {
 			console.error('Error switching space:', error)
 		} finally {
-			setIsNavigating(false)
 			setIsLoading(false)
 			resourceStore.setIsLoading(false)
+			setIsNavigating(false)
 		}
 	},
 
