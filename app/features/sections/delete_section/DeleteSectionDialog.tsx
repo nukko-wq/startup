@@ -7,6 +7,7 @@ import {
 	Modal,
 	ModalOverlay,
 } from 'react-aria-components'
+import { useResourceStore } from '@/app/store/resourceStore'
 
 interface DeleteSectionDialogProps {
 	sectionId: string
@@ -21,16 +22,11 @@ const DeleteSectionDialog = ({
 	isOpen,
 	onOpenChange,
 }: DeleteSectionDialogProps) => {
+	const deleteSection = useResourceStore((state) => state.deleteSection)
+
 	const handleDelete = async (close: () => void) => {
 		try {
-			const response = await fetch(`/api/sections/${sectionId}`, {
-				method: 'DELETE',
-			})
-
-			if (!response.ok) {
-				throw new Error('Failed to delete section')
-			}
-
+			await deleteSection(sectionId)
 			onDelete?.(sectionId)
 			close()
 		} catch (error) {

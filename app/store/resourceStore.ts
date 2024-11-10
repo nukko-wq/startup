@@ -33,7 +33,7 @@ export interface ResourceStore {
 	setIsLoading: (loading: boolean) => void
 	fetchSections: (spaceId: string) => Promise<void>
 	createSection: (spaceId: string) => Promise<void>
-	deleteSection: (sectionId: string) => void
+	deleteSection: (sectionId: string) => Promise<void>
 	reorderSections: (items: Section[]) => Promise<void>
 	setResources: (
 		resources:
@@ -150,8 +150,9 @@ export const useResourceStore = create<ResourceStore>()(
 				},
 
 				createSection: async (spaceId) => {
-					const { sections, setIsCreating } = get()
+					const { sections, setIsCreating, setIsLoading } = get()
 					setIsCreating(true)
+					setIsLoading(true)
 
 					try {
 						const response = await fetch('/api/sections', {
@@ -167,29 +168,80 @@ export const useResourceStore = create<ResourceStore>()(
 
 						if (!response.ok) {
 							const error = await response.json()
-							throw new Error(error.message || 'Failed to create section')
+							throw new Error(error.message || 'セクションの作成に失敗しました')
 						}
 
 						const newSection = await response.json()
 						set({ sections: [...sections, newSection] })
+
+						// キャッシュを更新
+						const cacheKey = `sections-${spaceId}`
+						const cachedData = sessionStorage.getItem(cacheKey)
+						if (cachedData) {
+							const parsed = JSON.parse(cachedData)
+							sessionStorage.setItem(
+								cacheKey,
+								JSON.stringify({
+									...parsed,
+									sections: [...parsed.sections, newSection],
+								}),
+							)
+						}
+
+						return newSection
 					} catch (error) {
-						console.error('Section creation error:', error)
+						console.error('セクション作成エラー:', error)
 						if (error instanceof Error && error.message.includes('認証')) {
 							window.location.href = '/login'
 							return
 						}
-						alert('セクションの作成に失敗しました')
+						throw new Error('セクションの作成に失敗しました')
 					} finally {
 						setIsCreating(false)
+						setIsLoading(false)
 					}
 				},
 
-				deleteSection: (sectionId) => {
-					set((state) => ({
-						sections: state.sections.filter(
-							(section) => section.id !== sectionId,
-						),
-					}))
+				deleteSection: async (sectionId: string) => {
+					const { sections, resources } = get()
+					const previousSections = [...sections]
+					const previousResources = [...resources]
+
+					try {
+						// 先に状態を更新
+						set({
+							sections: sections.filter((section) => section.id !== sectionId),
+							// このセクションに属するリソースも削除
+							resources: resources.filter(
+								(resource) => resource.sectionId !== sectionId,
+							),
+						})
+
+						const response = await fetch(`/api/sections/${sectionId}`, {
+							method: 'DELETE',
+							headers: {
+								'Content-Type': 'application/json',
+							},
+							credentials: 'include',
+						})
+
+						if (!response.ok) {
+							// エラーの場合は元の状態に戻す
+							set({
+								sections: previousSections,
+								resources: previousResources,
+							})
+							throw new Error('セクションの削除に失敗しました')
+						}
+					} catch (error) {
+						console.error('セクション削除エラー:', error)
+						// エラーの場合は元の状態に戻す
+						set({
+							sections: previousSections,
+							resources: previousResources,
+						})
+						throw error
+					}
 				},
 
 				reorderSections: async (items) => {

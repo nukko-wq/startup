@@ -34,6 +34,8 @@ const Resources = memo(({ initialData, spaceId }: ResourceProps) => {
 		setSections,
 		setResources,
 		fetchSections,
+		createSection,
+		isCreating,
 	} = useResourceStore()
 
 	// スペースが選択されているかどうかをチェック
@@ -173,8 +175,8 @@ const Resources = memo(({ initialData, spaceId }: ResourceProps) => {
 							<div className="flex justify-center">
 								<Button
 									className="flex items-center gap-1 px-4 py-2 outline-none text-gray-500"
-									onPress={() => spaceId && fetchSections(spaceId)}
-									isDisabled={isLoading}
+									onPress={() => spaceId && createSection(spaceId)}
+									isDisabled={isLoading || isCreating}
 								>
 									<Plus className="w-3 h-3" />
 									<div>RESOURCE SECTION</div>
