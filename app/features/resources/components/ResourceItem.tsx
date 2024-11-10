@@ -188,7 +188,7 @@ export default function ResourceItem({
 					target="_blank"
 					className="outline-none cursor-pointer"
 				>
-					<div className="flex justify-between items-center p-1 border-b border-gray-200 last:border-b-0 hover:bg-zinc-100 group">
+					<div className="flex justify-between items-center p-1 border-b border-gray-200 last:border-b-0 hover:bg-gray-100 group">
 						<div
 							className="flex flex-grow p-1 ml-1 gap-2 group"
 							aria-label="Resource Item Wrapper"
