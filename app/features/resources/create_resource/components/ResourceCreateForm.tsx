@@ -138,6 +138,36 @@ const ResourceCreateForm = ({
 			)
 			const faviconData = await faviconResponse.json()
 
+			// URLからドメインを抽出して適切なdescriptionとmimeTypeを設定
+			let description = data.description || ''
+			let mimeType = data.mimeType || ''
+			let isGoogleDrive = data.isGoogleDrive || false
+
+			try {
+				const url = new URL(data.url)
+				if (url.hostname === 'mail.google.com') {
+					description = 'Gmail'
+				} else if (url.hostname === 'drive.google.com') {
+					description = 'Google Drive'
+					isGoogleDrive = true
+				} else if (url.hostname === 'docs.google.com') {
+					// Google Workspaceのタイプに基づいて設定
+					isGoogleDrive = true
+					if (url.pathname.startsWith('/forms/')) {
+						description = 'Google Form'
+						mimeType = 'application/vnd.google-apps.form'
+					} else if (url.pathname.startsWith('/spreadsheets/')) {
+						description = 'Google Sheet'
+						mimeType = 'application/vnd.google-apps.spreadsheet'
+					} else if (url.pathname.startsWith('/document/')) {
+						description = 'Google Doc'
+						mimeType = 'application/vnd.google-apps.document'
+					}
+				}
+			} catch (e) {
+				console.error('Invalid URL:', e)
+			}
+
 			const sectionResources = resources.filter(
 				(r) => r.sectionId === sectionId,
 			)
@@ -151,9 +181,9 @@ const ResourceCreateForm = ({
 				title: data.title || data.url,
 				faviconUrl: faviconData.faviconUrl,
 				position: maxPosition + 1,
-				description: data.description || '',
-				mimeType: data.mimeType || '',
-				isGoogleDrive: data.isGoogleDrive || false,
+				description: description,
+				mimeType: mimeType,
+				isGoogleDrive: isGoogleDrive,
 				sectionId: sectionId,
 			}
 
