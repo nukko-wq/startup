@@ -78,6 +78,7 @@ export const useSpaceStore = create<SpaceStore>((set, get) => ({
 		try {
 			setIsNavigating(true)
 			setIsLoading(true)
+			resourceStore.setIsLoading(true)
 
 			// 並行処理の最適化
 			const [cachedData, prefetchedData] = await Promise.all([
@@ -123,6 +124,7 @@ export const useSpaceStore = create<SpaceStore>((set, get) => ({
 		} finally {
 			setIsNavigating(false)
 			setIsLoading(false)
+			resourceStore.setIsLoading(false)
 		}
 	},
 
