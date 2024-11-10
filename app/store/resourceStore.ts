@@ -59,6 +59,8 @@ export interface ResourceStore {
 		spaceId: string,
 		resources: ResourceStore['resources'],
 	) => void
+	prefetchNextSpace: (spaceId: string) => Promise<void>
+	clearPrefetchedData: (spaceId: string) => void
 }
 
 export const useResourceStore = create<ResourceStore>((set, get) => ({
@@ -328,6 +330,56 @@ export const useResourceStore = create<ResourceStore>((set, get) => ({
 				}
 				return 0
 			}),
+		})
+	},
+
+	prefetchNextSpace: async (spaceId: string) => {
+		try {
+			const cacheKey = `sections-${spaceId}`
+			const cachedData = sessionStorage.getItem(cacheKey)
+
+			if (cachedData || get().prefetchedSections[spaceId]) {
+				return
+			}
+
+			const response = await fetch(`/api/spaces/${spaceId}/sections`)
+			if (!response.ok) return
+
+			const data = await response.json()
+
+			// プリフェッチデータを保存
+			set((state) => ({
+				prefetchedSections: {
+					...state.prefetchedSections,
+					[spaceId]: data.sections,
+				},
+				prefetchedResources: {
+					...state.prefetchedResources,
+					[spaceId]: data.resources,
+				},
+			}))
+
+			// セッションストレージにもキャッシュ
+			sessionStorage.setItem(
+				cacheKey,
+				JSON.stringify({
+					sections: data.sections,
+					resources: data.resources,
+				}),
+			)
+		} catch (error) {
+			console.error('Error prefetching space data:', error)
+		}
+	},
+
+	clearPrefetchedData: (spaceId: string) => {
+		set((state) => {
+			const { [spaceId]: _, ...remainingSections } = state.prefetchedSections
+			const { [spaceId]: __, ...remainingResources } = state.prefetchedResources
+			return {
+				prefetchedSections: remainingSections,
+				prefetchedResources: remainingResources,
+			}
 		})
 	},
 }))

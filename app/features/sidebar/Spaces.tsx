@@ -41,39 +41,11 @@ const Spaces = ({ workspaceId }: SpacesProps) => {
 		[spaces, workspaceId],
 	)
 
-	// スペースにホバーした時のデータ事前取得
+	// スペースにホバーした時のデータ事前取得を最適化
 	const handleSpaceHover = useCallback(
 		async (spaceId: string) => {
 			if (spaceId !== activeSpaceId && !isNavigating) {
-				try {
-					const cacheKey = `sections-${spaceId}`
-					const hasCache = sessionStorage.getItem(cacheKey)
-					const resourceStore = useResourceStore.getState()
-					const hasPrefetchedData = resourceStore.prefetchedSections[spaceId]
-
-					if (!hasCache && !hasPrefetchedData) {
-						const response = await fetch(`/api/spaces/${spaceId}/sections`)
-						if (response.ok) {
-							const data = await response.json()
-							resourceStore.setPrefetchedSections(spaceId, data.sections)
-							resourceStore.setPrefetchedResources(
-								spaceId,
-								data.resources || [],
-							)
-
-							// キャッシュの保存
-							sessionStorage.setItem(
-								cacheKey,
-								JSON.stringify({
-									sections: data.sections,
-									resources: data.resources,
-								}),
-							)
-						}
-					}
-				} catch (error) {
-					console.error('Error prefetching data:', error)
-				}
+				useResourceStore.getState().prefetchNextSpace(spaceId)
 			}
 		},
 		[activeSpaceId, isNavigating],
