@@ -154,11 +154,7 @@ const Resources = memo(({ initialData, spaceId }: ResourceProps) => {
 				</div>
 			) : (
 				<>
-					<div
-						className={`flex flex-col w-full outline-none transition-opacity duration-300 ${
-							isLoading || isNavigating ? 'opacity-50' : 'opacity-100'
-						}`}
-					>
+					<div className="flex flex-col w-full outline-none transition-opacity duration-300">
 						<div className="flex flex-col w-full items-center">
 							<GridList
 								aria-label="Draggable sections"
