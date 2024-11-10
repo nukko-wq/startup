@@ -41,7 +41,7 @@ export default function Sidebar({
 	])
 
 	return (
-		<div className="w-[320px] bg-gray-800 h-screen flex flex-col">
+		<div className="hidden md:flex w-[320px] bg-gray-800 h-screen flex-col">
 			<div className="flex items-center justify-between pl-4 pr-3 pt-4 pb-4">
 				<Link
 					href="/"
