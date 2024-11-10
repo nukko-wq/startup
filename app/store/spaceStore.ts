@@ -2,6 +2,7 @@ import { create } from 'zustand'
 import type { Space } from '@/app/types/space'
 import { useResourceStore } from '@/app/store/resourceStore'
 import type { useRouter } from 'next/navigation'
+import type { Section, Resource } from '@/app/types/section'
 
 export interface SpaceStore {
 	spaces: Space[]
@@ -72,13 +73,11 @@ export const useSpaceStore = create<SpaceStore>((set, get) => ({
 	},
 
 	handleSpaceClick: async (spaceId, router) => {
-		const { setIsLoading, setIsNavigating, setActiveSpaceId, spaces } = get()
+		const { setIsNavigating, setActiveSpaceId, spaces } = get()
 		const resourceStore = useResourceStore.getState()
 
 		try {
 			setIsNavigating(true)
-			setIsLoading(true)
-			resourceStore.setIsLoading(true)
 
 			// 現在のスペースのデータを保存
 			const currentSpaceId = get().activeSpaceId
@@ -94,23 +93,55 @@ export const useSpaceStore = create<SpaceStore>((set, get) => ({
 				})
 			}
 
-			// 新しいスペースの状態を設定
+			// 新しいスペースのデータを事前に準備
+			const cache = resourceStore.resourceCache.get(spaceId)
+			const cachedData = sessionStorage.getItem(`sections-${spaceId}`)
+			const prefetchedData = resourceStore.prefetchedSections[spaceId]
+
+			// biome-ignore lint/suspicious/noImplicitAnyLet: <explanation>
+			let dataToUse
+			if (cache) {
+				dataToUse = cache
+			} else if (cachedData) {
+				dataToUse = JSON.parse(cachedData)
+			} else if (prefetchedData) {
+				dataToUse = {
+					sections: prefetchedData,
+					resources: resourceStore.prefetchedResources[spaceId],
+				}
+			}
+
+			// トランザクション的に状態を更新
+			if (dataToUse) {
+				await Promise.resolve() // マイクロタスクを作成して状態更新を同期化
+				resourceStore.setSections(dataToUse.sections)
+				resourceStore.setResources(dataToUse.resources)
+			}
+
+			// スペースの状態を更新
 			const space = spaces.find((s) => s.id === spaceId)
 			if (space) {
 				set({ currentSpace: space })
 				setActiveSpaceId(spaceId)
 			}
 
-			// データの取得とURL更新を並行して実行
-			await Promise.all([
-				resourceStore.fetchSections(spaceId),
+			// URLの更新とデータ取得を並行実行
+			const [newData] = await Promise.all([
+				resourceStore.fetchSections(spaceId) as unknown as Promise<{
+					sections: Section[]
+					resources: Resource[]
+				}>,
 				router.replace(`/?spaceId=${spaceId}`, { scroll: false }),
 			])
+
+			// 新しいデータがある場合のみ更新
+			if (newData?.sections && newData?.resources) {
+				resourceStore.setSections(newData.sections)
+				resourceStore.setResources(newData.resources)
+			}
 		} catch (error) {
 			console.error('Error switching space:', error)
 		} finally {
-			setIsLoading(false)
-			resourceStore.setIsLoading(false)
 			setIsNavigating(false)
 		}
 	},

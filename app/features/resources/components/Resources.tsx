@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useMemo } from 'react'
+import { useEffect, useMemo, memo } from 'react'
 import {
 	Button,
 	GridList,
@@ -19,11 +19,12 @@ interface ResourceProps {
 	spaceId: string
 }
 
-const Resources = ({ initialData, spaceId }: ResourceProps) => {
+const Resources = memo(({ initialData, spaceId }: ResourceProps) => {
 	const {
 		isLoading: isSpaceLoading,
 		activeSpaceId,
 		isNavigating,
+		spaces,
 	} = useSpaceStore()
 
 	const {
@@ -34,6 +35,11 @@ const Resources = ({ initialData, spaceId }: ResourceProps) => {
 		setResources,
 		fetchSections,
 	} = useResourceStore()
+
+	// スペースが選択されているかどうかをチェック
+	const hasActiveSpace = useMemo(() => {
+		return spaces.some((space) => space.isLastActive) || activeSpaceId
+	}, [spaces, activeSpaceId])
 
 	// メモ化によるレンダリングの最適化
 	const memoizedSections = useMemo(() => sections, [sections])
@@ -130,53 +136,61 @@ const Resources = ({ initialData, spaceId }: ResourceProps) => {
 
 	return (
 		<div className="flex flex-col flex-grow w-full">
-			<div
-				className={`flex flex-col w-full outline-none transition-opacity duration-300 ${
-					isLoading || isNavigating ? 'opacity-50' : 'opacity-100'
-				}`}
-			>
-				<div className="flex flex-col w-full items-center">
-					<GridList
-						aria-label="Draggable sections"
-						items={memoizedSections}
-						dragAndDropHooks={dragAndDropHooks}
-						className="w-full outline-none"
+			{!hasActiveSpace ? (
+				<div className="flex items-center justify-center h-full text-gray-500">
+					Select a Space to Get Started
+				</div>
+			) : (
+				<>
+					<div
+						className={`flex flex-col w-full outline-none transition-opacity duration-300 ${
+							isLoading || isNavigating ? 'opacity-50' : 'opacity-100'
+						}`}
 					>
-						{(section) => (
-							<GridListItem
-								key={section.id}
-								textValue={section.name}
+						<div className="flex flex-col w-full items-center">
+							<GridList
+								aria-label="Draggable sections"
+								items={memoizedSections}
+								dragAndDropHooks={dragAndDropHooks}
 								className="w-full outline-none"
 							>
-								<SectionComponent
-									id={section.id}
-									name={section.name}
-									onDelete={() => fetchSections(spaceId)}
-								/>
-							</GridListItem>
-						)}
-					</GridList>
-				</div>
-				<div className="flex justify-center">
-					<div className="flex justify-center">
-						<Button
-							className="flex items-center gap-1 px-4 py-2 outline-none text-gray-500"
-							onPress={() => spaceId && fetchSections(spaceId)}
-							isDisabled={isLoading}
-						>
-							<Plus className="w-3 h-3" />
-							<div>RESOURCE SECTION</div>
-						</Button>
+								{(section) => (
+									<GridListItem
+										key={section.id}
+										textValue={section.name}
+										className="w-full outline-none"
+									>
+										<SectionComponent
+											id={section.id}
+											name={section.name}
+											onDelete={() => fetchSections(spaceId)}
+										/>
+									</GridListItem>
+								)}
+							</GridList>
+						</div>
+						<div className="flex justify-center">
+							<div className="flex justify-center">
+								<Button
+									className="flex items-center gap-1 px-4 py-2 outline-none text-gray-500"
+									onPress={() => spaceId && fetchSections(spaceId)}
+									isDisabled={isLoading}
+								>
+									<Plus className="w-3 h-3" />
+									<div>RESOURCE SECTION</div>
+								</Button>
+							</div>
+						</div>
 					</div>
-				</div>
-			</div>
-			{(isLoading || isNavigating) && (
-				<div className="absolute inset-0 flex items-center justify-center bg-white/30 backdrop-blur-[1px] transition-opacity duration-300">
-					<LoadingSpinner />
-				</div>
+					{(isLoading || isNavigating) && (
+						<div className="absolute inset-0 flex items-center justify-center bg-white/30 backdrop-blur-[1px] transition-opacity duration-300">
+							<LoadingSpinner />
+						</div>
+					)}
+				</>
 			)}
 		</div>
 	)
-}
+})
 
 export default Resources

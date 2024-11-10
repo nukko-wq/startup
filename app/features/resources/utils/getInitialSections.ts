@@ -1,16 +1,23 @@
 import { prisma } from '@/lib/prisma'
 import { unstable_cache } from 'next/cache'
+import { ReadonlyURLSearchParams } from 'next/navigation'
 
 export const getInitialSections = unstable_cache(
-	async (userId: string, spaceId?: string) => {
-		console.log('getInitialSections called with userId:', userId)
+	async (
+		userId: string,
+		searchParams: ReadonlyURLSearchParams | { spaceId?: string },
+	) => {
+		const spaceId =
+			searchParams instanceof ReadonlyURLSearchParams
+				? await Promise.resolve(searchParams.get('spaceId'))
+				: await Promise.resolve(searchParams.spaceId)
 
 		if (!userId) {
 			throw new Error('ユーザーIDが必要です')
 		}
 
 		if (!spaceId) {
-			return { sections: [], userId, spaceId: null }
+			return { sections: [], userId, spaceId: null, activeSpace: null }
 		}
 
 		try {
@@ -22,7 +29,7 @@ export const getInitialSections = unstable_cache(
 			})
 
 			if (!space) {
-				return { sections: [], userId, spaceId }
+				return { sections: [], userId, spaceId, activeSpace: null }
 			}
 
 			const sections = await prisma.section.findMany({
@@ -57,7 +64,7 @@ export const getInitialSections = unstable_cache(
 				},
 			})
 
-			return { sections, userId, spaceId }
+			return { sections, userId, spaceId, activeSpace: space }
 		} catch (error) {
 			console.error('Error in getInitialSections:', error)
 			throw error
