@@ -85,15 +85,18 @@ const Resources = memo(({ initialData, spaceId }: ResourceProps) => {
 	}, [initialData, spaceId, setSections, setResources])
 
 	// スペース切り替え時のデータ取得を最適化
-	// biome-ignore lint/correctness/useExhaustiveDependencies: <explanation>
 	useEffect(() => {
 		const cacheKey = `sections-${spaceId}`
 		const cachedData = sessionStorage.getItem(cacheKey)
 
 		if (!isNavigating && spaceId && !cachedData) {
-			fetchSections(spaceId)
+			try {
+				fetchSections(spaceId).catch(console.error)
+			} catch (error) {
+				console.error('Error fetching sections:', error)
+			}
 		}
-	}, [spaceId, isNavigating])
+	}, [spaceId, isNavigating, fetchSections])
 
 	const { dragAndDropHooks } = useDragAndDrop({
 		getItems: (keys) => {

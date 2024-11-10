@@ -3,6 +3,7 @@ import type { Space } from '@/app/types/space'
 import { useResourceStore } from '@/app/store/resourceStore'
 import type { useRouter } from 'next/navigation'
 import type { Section, Resource } from '@/app/types/section'
+import type { SectionData } from '@/app/store/resourceStore'
 
 export interface SpaceStore {
 	spaces: Space[]
@@ -74,74 +75,61 @@ export const useSpaceStore = create<SpaceStore>((set, get) => ({
 	},
 
 	handleSpaceClick: async (spaceId, router) => {
-		const { setIsNavigating, setActiveSpaceId, spaces } = get()
+		const { setIsNavigating, spaces, currentSpace } = get()
 		const resourceStore = useResourceStore.getState()
+
+		if (spaceId === currentSpace?.id || !spaceId) {
+			return
+		}
+
+		const previousState = {
+			currentSpace,
+			activeSpaceId: get().activeSpaceId,
+			sections: resourceStore.sections,
+			resources: resourceStore.resources,
+		}
 
 		try {
 			setIsNavigating(true)
 
-			// 現在のスペースのデータを保存
-			const currentSpaceId = get().activeSpaceId
-			if (currentSpaceId) {
-				queueMicrotask(() => {
-					sessionStorage.setItem(
-						`sections-${currentSpaceId}`,
-						JSON.stringify({
-							sections: resourceStore.sections,
-							resources: resourceStore.resources,
-						}),
-					)
-				})
+			const targetSpace = spaces.find((s) => s.id === spaceId)
+			if (!targetSpace) {
+				throw new Error('Target space not found')
 			}
 
-			// 新しいスペースのデータを事前に準備
-			const cache = resourceStore.resourceCache.get(spaceId)
-			const cachedData = sessionStorage.getItem(`sections-${spaceId}`)
-			const prefetchedData = resourceStore.prefetchedSections[spaceId]
+			set({
+				currentSpace: targetSpace,
+				activeSpaceId: spaceId,
+			})
 
-			// biome-ignore lint/suspicious/noImplicitAnyLet: <explanation>
-			let dataToUse
-			if (cache) {
-				dataToUse = cache
-			} else if (cachedData) {
-				dataToUse = JSON.parse(cachedData)
-			} else if (prefetchedData) {
-				dataToUse = {
-					sections: prefetchedData,
-					resources: resourceStore.prefetchedResources[spaceId],
-				}
+			await router.replace(`/?spaceId=${spaceId}`, { scroll: false })
+
+			const resourceState = useResourceStore.getState()
+			const newData = await resourceState.fetchSections(spaceId)
+
+			if (!newData) {
+				throw new Error('Failed to fetch sections data')
 			}
 
-			// トランザクション的に状態を更新
-			if (dataToUse) {
-				await Promise.resolve() // マイクロタスクを作成して状態更新を同期化
-				resourceStore.setSections(dataToUse.sections)
-				resourceStore.setResources(dataToUse.resources)
-			}
-
-			// スペースの状態を更新
-			const space = spaces.find((s) => s.id === spaceId)
-			if (space) {
-				set({ currentSpace: space })
-				setActiveSpaceId(spaceId)
-			}
-
-			// URLの更新とデータ取得を並行実行
-			const [newData] = await Promise.all([
-				resourceStore.fetchSections(spaceId) as unknown as Promise<{
-					sections: Section[]
-					resources: Resource[]
-				}>,
-				router.replace(`/?spaceId=${spaceId}`, { scroll: false }),
-			])
-
-			// 新しいデータがある場合のみ更新
-			if (newData?.sections && newData?.resources) {
-				resourceStore.setSections(newData.sections)
-				resourceStore.setResources(newData.resources)
+			if (Array.isArray(newData.sections) && Array.isArray(newData.resources)) {
+				resourceState.setSections(newData.sections)
+				resourceState.setResources(newData.resources)
+			} else {
+				throw new Error('Invalid sections data format')
 			}
 		} catch (error) {
-			console.error('Error switching space:', error)
+			console.error('Error in handleSpaceClick:', error)
+
+			set({
+				currentSpace: previousState.currentSpace,
+				activeSpaceId: previousState.activeSpaceId,
+			})
+
+			const resourceState = useResourceStore.getState()
+			resourceState.setSections(previousState.sections)
+			resourceState.setResources(previousState.resources)
+
+			throw error
 		} finally {
 			setIsNavigating(false)
 		}
@@ -151,7 +139,6 @@ export const useSpaceStore = create<SpaceStore>((set, get) => ({
 		const { setSpaces, spaces: previousSpaces } = get()
 
 		try {
-			// 新しい配列を作成して順序を更新
 			const updatedSpaces = [...previousSpaces]
 			for (const newSpace of newSpaces) {
 				const index = updatedSpaces.findIndex((s) => s.id === newSpace.id)
@@ -163,7 +150,6 @@ export const useSpaceStore = create<SpaceStore>((set, get) => ({
 				}
 			}
 
-			// 重複を避けるため、一意のIDでソート
 			const uniqueSpaces = Array.from(
 				new Map(updatedSpaces.map((space) => [space.id, space])).values(),
 			).sort((a, b) => a.order - b.order)
@@ -195,13 +181,11 @@ export const useSpaceStore = create<SpaceStore>((set, get) => ({
 		const previousSpaces = [...spaces]
 
 		try {
-			// 一度に状態を更新
 			const updatedSpaces = spaces
 				.map((space) => {
 					if (space.id === spaceId) {
 						return { ...space, workspaceId, order: newOrder }
 					}
-					// 同じワークスペース内の他のスペースの順序を調整
 					if (space.workspaceId === workspaceId && space.order >= newOrder) {
 						return { ...space, order: space.order + 1 }
 					}
@@ -209,7 +193,6 @@ export const useSpaceStore = create<SpaceStore>((set, get) => ({
 				})
 				.sort((a, b) => a.order - b.order)
 
-			// 重複を避けるため、一意のIDでフィルタリング
 			const uniqueSpaces = Array.from(
 				new Map(updatedSpaces.map((space) => [space.id, space])).values(),
 			)
@@ -240,13 +223,11 @@ export const useSpaceStore = create<SpaceStore>((set, get) => ({
 		const previousCurrentSpace = currentSpace
 
 		try {
-			// 楽観的な更新
 			const updatedSpaces = spaces.map((space) =>
 				space.id === spaceId ? { ...space, name } : space,
 			)
 			setSpaces(updatedSpaces)
 
-			// currentSpaceも更新
 			if (currentSpace && currentSpace.id === spaceId) {
 				setCurrentSpace({ ...currentSpace, name })
 			}
@@ -261,7 +242,6 @@ export const useSpaceStore = create<SpaceStore>((set, get) => ({
 				throw new Error('Failed to update space name')
 			}
 		} catch (error) {
-			// エラー時に元の状態に戻す
 			setSpaces(previousSpaces)
 			setCurrentSpace(previousCurrentSpace)
 			throw error
