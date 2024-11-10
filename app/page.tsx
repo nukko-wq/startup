@@ -4,7 +4,6 @@ import Resources from '@/app/features/resources/components/Resources'
 import { getInitialSections } from '@/app/features/resources/utils/getInitialSections'
 import { getSpaces } from '@/app/features/spaces/utils/getSpaces'
 import { auth } from '@/lib/auth'
-import { prisma } from '@/lib/prisma'
 import Header from '@/app/features/header/Header'
 import { getWorkspaces } from '@/app/features/workspaces/utils/getWorkspaces'
 
@@ -15,19 +14,19 @@ type PageProps = {
 	searchParams: Promise<{ [key: string]: string | string[] | undefined }>
 }
 
-export default async function Index({ params, searchParams }: PageProps) {
+export default async function Index({ searchParams }: PageProps) {
 	const session = await auth()
 	if (!session?.user?.id) {
 		redirect('/login')
 	}
 
-	const resolvedParams = await params
 	const resolvedSearchParams = await searchParams
 	const spaceId = resolvedSearchParams.spaceId?.toString()
 
 	const initialDataPromise = getInitialSections(session.user.id, {
 		spaceId,
 	})
+
 	const spacesPromise = getSpaces(session.user.id)
 	const workspacesPromise = getWorkspaces(session.user.id)
 
@@ -36,6 +35,11 @@ export default async function Index({ params, searchParams }: PageProps) {
 		spacesPromise,
 		workspacesPromise,
 	])
+
+	// activeSpaceがある場合、そのスペースにリダイレクト
+	if (activeSpace && !spaceId) {
+		redirect(`/?spaceId=${activeSpace.id}`)
+	}
 
 	return (
 		<div className="flex flex-col min-h-screen">

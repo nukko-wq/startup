@@ -1,41 +1,46 @@
 import { prisma } from '@/lib/prisma'
 import { unstable_cache } from 'next/cache'
 import { ReadonlyURLSearchParams } from 'next/navigation'
+import type { Section } from '@/app/types/section'
+import type { Space } from '@/app/types/space'
+
+interface InitialSectionsResult {
+	sections: Section[]
+	userId: string
+	spaceId: string | null
+	activeSpace: Space | null
+}
 
 export const getInitialSections = unstable_cache(
 	async (
 		userId: string,
 		searchParams: ReadonlyURLSearchParams | { spaceId?: string },
-	) => {
-		const spaceId =
-			searchParams instanceof ReadonlyURLSearchParams
-				? await Promise.resolve(searchParams.get('spaceId'))
-				: await Promise.resolve(searchParams.spaceId)
-
-		if (!userId) {
-			throw new Error('ユーザーIDが必要です')
-		}
-
-		if (!spaceId) {
-			return { sections: [], userId, spaceId: null, activeSpace: null }
-		}
-
+	): Promise<InitialSectionsResult> => {
 		try {
-			const space = await prisma.space.findUnique({
+			// まず、アクティブなスペースを探す
+			const activeSpace = await prisma.space.findFirst({
 				where: {
-					id: spaceId,
 					userId,
+					isLastActive: true,
 				},
 			})
 
-			if (!space) {
-				return { sections: [], userId, spaceId, activeSpace: null }
+			const spaceId =
+				searchParams instanceof ReadonlyURLSearchParams
+					? searchParams.get('spaceId')
+					: searchParams.spaceId
+
+			// URLにspaceIdがない場合は、アクティブなスペースのIDを使用
+			const targetSpaceId = spaceId || activeSpace?.id
+
+			if (!targetSpaceId) {
+				return { sections: [], userId, spaceId: null, activeSpace: null }
 			}
 
 			const sections = await prisma.section.findMany({
 				where: {
 					userId: userId,
-					spaceId: spaceId,
+					spaceId: targetSpaceId,
 				},
 				select: {
 					id: true,
@@ -64,7 +69,12 @@ export const getInitialSections = unstable_cache(
 				},
 			})
 
-			return { sections, userId, spaceId, activeSpace: space }
+			return {
+				sections,
+				userId,
+				spaceId: targetSpaceId,
+				activeSpace: activeSpace || null,
+			}
 		} catch (error) {
 			console.error('Error in getInitialSections:', error)
 			throw error
