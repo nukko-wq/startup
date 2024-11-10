@@ -6,33 +6,37 @@ import {
 	Modal,
 	ModalOverlay,
 } from 'react-aria-components'
-import SpaceRenameForm from '@/app/features/header/header_menu/SpaceRenameForm'
+import SpaceRenameForm from './SpaceRenameForm'
+import { useSpaceStore } from '@/app/store/spaceStore'
 
 interface SpaceRenameDialogProps {
 	spaceId: string
-	initialName: string
 	isOpen: boolean
 	onOpenChange: (isOpen: boolean) => void
 }
 
 const SpaceRenameDialog = ({
 	spaceId,
-	initialName,
 	isOpen,
 	onOpenChange,
 }: SpaceRenameDialogProps) => {
+	const spaces = useSpaceStore((state) => state.spaces)
+	const currentSpaceName =
+		spaces.find((space) => space.id === spaceId)?.name ?? ''
+
 	return (
 		<DialogTrigger isOpen={isOpen} onOpenChange={onOpenChange}>
-			<ModalOverlay className="fixed inset-0 z-10 overflow-y-auto bg-black/25 flex min-h-full items-center justify-center p-4 text-center backdrop-blur">
+			<ModalOverlay
+				isDismissable
+				className="fixed inset-0 z-10 overflow-y-auto bg-black/25 flex min-h-full items-center justify-center p-4 text-center backdrop-blur"
+			>
 				<Modal className="w-full max-w-md overflow-hidden rounded-2xl bg-white p-6 text-left align-middle shadow-xl">
-					<Dialog className="outline-none relative">
-						{({ close }) => (
-							<SpaceRenameForm
-								spaceId={spaceId}
-								initialName={initialName}
-								onClose={close}
-							/>
-						)}
+					<Dialog className="outline-none">
+						<SpaceRenameForm
+							spaceId={spaceId}
+							initialName={currentSpaceName}
+							onClose={() => onOpenChange(false)}
+						/>
 					</Dialog>
 				</Modal>
 			</ModalOverlay>
