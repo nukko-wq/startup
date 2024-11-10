@@ -33,7 +33,7 @@ export interface ResourceStore {
 	setIsLoading: (loading: boolean) => void
 	fetchSections: (spaceId: string) => Promise<void>
 	createSection: (spaceId: string) => Promise<void>
-	deleteSection: (sectionId: string) => void
+	deleteSection: (sectionId: string) => Promise<void>
 	reorderSections: (items: Section[]) => Promise<void>
 	setResources: (
 		resources:
@@ -88,6 +88,8 @@ export interface ResourceStore {
 			}
 		>,
 	) => void
+
+	updateSection: (sectionId: string, data: { name: string }) => Promise<void>
 }
 
 export const useResourceStore = create<ResourceStore>()(
@@ -131,13 +133,32 @@ export const useResourceStore = create<ResourceStore>()(
 				fetchSections: async (spaceId) => {
 					try {
 						const response = await fetch(`/api/spaces/${spaceId}/sections`)
-						if (!response.ok) return null
+						if (!response.ok) {
+							throw new Error('Failed to fetch sections')
+						}
 
 						const data = await response.json()
 
+						// セクションとリソースの関係を維持しながら更新
+						const sectionsWithResources = data.sections.map(
+							(section: Section) => ({
+								...section,
+								resources: data.resources.filter(
+									(resource: ResourceStore['resources'][0]) =>
+										resource.sectionId === section.id,
+								),
+							}),
+						)
+
+						// データをストアに設定
+						set({
+							sections: sectionsWithResources,
+							resources: data.resources,
+						})
+
 						// キャッシュを更新
 						get().resourceCache.set(spaceId, {
-							sections: data.sections,
+							sections: sectionsWithResources,
 							resources: data.resources,
 							timestamp: Date.now(),
 						})
@@ -145,13 +166,14 @@ export const useResourceStore = create<ResourceStore>()(
 						return data
 					} catch (error) {
 						console.error('Error fetching sections:', error)
-						return null
+						throw error
 					}
 				},
 
 				createSection: async (spaceId) => {
-					const { sections, setIsCreating } = get()
+					const { sections, setIsCreating, setIsLoading } = get()
 					setIsCreating(true)
+					setIsLoading(true)
 
 					try {
 						const response = await fetch('/api/sections', {
@@ -167,29 +189,80 @@ export const useResourceStore = create<ResourceStore>()(
 
 						if (!response.ok) {
 							const error = await response.json()
-							throw new Error(error.message || 'Failed to create section')
+							throw new Error(error.message || 'セクションの作成に失敗しました')
 						}
 
 						const newSection = await response.json()
 						set({ sections: [...sections, newSection] })
+
+						// キャッシュを更新
+						const cacheKey = `sections-${spaceId}`
+						const cachedData = sessionStorage.getItem(cacheKey)
+						if (cachedData) {
+							const parsed = JSON.parse(cachedData)
+							sessionStorage.setItem(
+								cacheKey,
+								JSON.stringify({
+									...parsed,
+									sections: [...parsed.sections, newSection],
+								}),
+							)
+						}
+
+						return newSection
 					} catch (error) {
-						console.error('Section creation error:', error)
+						console.error('セクション作成エラー:', error)
 						if (error instanceof Error && error.message.includes('認証')) {
 							window.location.href = '/login'
 							return
 						}
-						alert('セクションの作成に失敗しました')
+						throw new Error('セクションの作成に失敗しました')
 					} finally {
 						setIsCreating(false)
+						setIsLoading(false)
 					}
 				},
 
-				deleteSection: (sectionId) => {
-					set((state) => ({
-						sections: state.sections.filter(
-							(section) => section.id !== sectionId,
-						),
-					}))
+				deleteSection: async (sectionId: string) => {
+					const { sections, resources } = get()
+					const previousSections = [...sections]
+					const previousResources = [...resources]
+
+					try {
+						// 先に状態を更新
+						set({
+							sections: sections.filter((section) => section.id !== sectionId),
+							// このセクションに属するリソースも削除
+							resources: resources.filter(
+								(resource) => resource.sectionId !== sectionId,
+							),
+						})
+
+						const response = await fetch(`/api/sections/${sectionId}`, {
+							method: 'DELETE',
+							headers: {
+								'Content-Type': 'application/json',
+							},
+							credentials: 'include',
+						})
+
+						if (!response.ok) {
+							// エラーの場合は元の状態に戻す
+							set({
+								sections: previousSections,
+								resources: previousResources,
+							})
+							throw new Error('セクションの削除に失敗しました')
+						}
+					} catch (error) {
+						console.error('セクション削除エラー:', error)
+						// エラーの場合は元の状態に戻す
+						set({
+							sections: previousSections,
+							resources: previousResources,
+						})
+						throw error
+					}
 				},
 
 				reorderSections: async (items) => {
@@ -417,6 +490,91 @@ export const useResourceStore = create<ResourceStore>()(
 				) => {
 					const newMap = new Map(Object.entries(cache))
 					set({ resourceCache: newMap })
+				},
+
+				updateSection: async (sectionId: string, data: { name: string }) => {
+					const { sections, resources } = get()
+					const previousSections = [...sections]
+
+					try {
+						// 更新対象のセクションを見つける
+						const targetSection = sections.find(
+							(section) => section.id === sectionId,
+						)
+						if (!targetSection) {
+							throw new Error('セクションが見つかりません')
+						}
+
+						// 先に状態を更新
+						const updatedSections = sections.map((section) =>
+							section.id === sectionId
+								? {
+										...section,
+										...data,
+										resources: section.resources, // リソースを保持
+									}
+								: section,
+						)
+
+						set({ sections: updatedSections })
+
+						const response = await fetch(`/api/sections/${sectionId}`, {
+							method: 'PATCH',
+							headers: { 'Content-Type': 'application/json' },
+							body: JSON.stringify(data),
+							credentials: 'include',
+						})
+
+						if (!response.ok) {
+							set({ sections: previousSections })
+							throw new Error('セクション名の更新に失敗しました')
+						}
+
+						// キャッシュの更新
+						const spaceId = targetSection.spaceId
+						if (spaceId) {
+							// resourceCacheの更新
+							const cache = get().resourceCache.get(spaceId)
+							if (cache) {
+								get().resourceCache.set(spaceId, {
+									...cache,
+									sections: cache.sections.map((section) =>
+										section.id === sectionId
+											? { ...section, ...data }
+											: section,
+									),
+									timestamp: Date.now(),
+								})
+							}
+
+							// セッションストレージの更新
+							const cacheKey = `sections-${spaceId}`
+							const cachedData = sessionStorage.getItem(cacheKey)
+							if (cachedData) {
+								const parsed = JSON.parse(cachedData)
+								sessionStorage.setItem(
+									cacheKey,
+									JSON.stringify({
+										...parsed,
+										sections: parsed.sections.map((section: Section) =>
+											section.id === sectionId
+												? { ...section, ...data }
+												: section,
+										),
+									}),
+								)
+							}
+						}
+
+						// 必要に応じてセクションデータを再取得
+						if (spaceId) {
+							await get().fetchSections(spaceId)
+						}
+					} catch (error) {
+						console.error('Section update error:', error)
+						set({ sections: previousSections })
+						throw error
+					}
 				},
 			}),
 			{

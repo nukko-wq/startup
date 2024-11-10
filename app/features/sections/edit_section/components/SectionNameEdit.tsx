@@ -8,19 +8,15 @@ import {
 	TextField,
 	Input,
 	DialogTrigger,
-	TooltipTrigger,
-	Tooltip,
-	OverlayArrow,
-	ModalOverlay,
 	Modal,
+	ModalOverlay,
 	Dialog,
 } from 'react-aria-components'
 import { sectionNameSchema } from '@/lib/validations/section'
 import { useState } from 'react'
 import type { z } from 'zod'
 import { useRef, useEffect } from 'react'
-import { Pencil } from 'lucide-react'
-import ResourceEditForm from '@/app/features/resources/edit_resource/components/ResourceEditForm'
+import { useResourceStore } from '@/app/store/resourceStore'
 
 type FormData = z.infer<typeof sectionNameSchema>
 
@@ -37,6 +33,8 @@ const SectionNameEdit = ({
 }: SectionNameEditProps) => {
 	const [isOpen, setIsOpen] = useState(false)
 	const inputRef = useRef<HTMLInputElement>(null)
+	const updateSection = useResourceStore((state) => state.updateSection)
+
 	const { control, handleSubmit, reset } = useForm<FormData>({
 		resolver: zodResolver(sectionNameSchema),
 		defaultValues: {
@@ -57,24 +55,22 @@ const SectionNameEdit = ({
 		}
 
 		try {
-			const response = await fetch(`/api/sections/${sectionId}`, {
-				method: 'PATCH',
-				headers: { 'Content-Type': 'application/json' },
-				body: JSON.stringify(data),
-			})
-
-			if (!response.ok) {
-				const error = await response.json()
-				throw new Error(error.message || '更新に失敗しました')
-			}
-
-			const result = await response.json()
+			await updateSection(sectionId, { name: data.name })
 			onEdit?.(data.name)
 			setIsOpen(false)
 		} catch (error) {
-			console.error('Section name update error:', error)
-			alert('セクション名の更新に失敗しました')
+			if (error instanceof Error) {
+				console.error('Section name update error:', error.message)
+				alert(error.message || 'セクション名の更新に失敗しました')
+			} else {
+				console.error('Unexpected error:', error)
+				alert('セクション名の更新に失敗しました')
+			}
 			reset({ name: initialName })
+		} finally {
+			if (!isOpen) {
+				reset({ name: initialName })
+			}
 		}
 	}
 
