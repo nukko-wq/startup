@@ -92,6 +92,10 @@ export const useSpaceStore = create<SpaceStore>((set, get) => ({
 		try {
 			setIsNavigating(true)
 
+			await fetch(`/api/spaces/${spaceId}/active`, {
+				method: 'PUT',
+			})
+
 			const targetSpace = spaces.find((s) => s.id === spaceId)
 			if (!targetSpace) {
 				throw new Error('Target space not found')
