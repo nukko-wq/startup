@@ -65,16 +65,17 @@ export const useWorkspaceStore = create<WorkspaceStore>((set, get) => ({
 		const { workspaces, setWorkspaces } = get()
 		const previousWorkspaces = [...workspaces]
 
+		setWorkspaces(workspaces.filter((w) => w.id !== workspaceId))
+
 		try {
 			const response = await fetch(`/api/workspaces/${workspaceId}`, {
 				method: 'DELETE',
 			})
 
 			if (!response.ok) {
+				setWorkspaces(previousWorkspaces)
 				throw new Error('ワークスペースの削除に失敗しました')
 			}
-
-			setWorkspaces(workspaces.filter((w) => w.id !== workspaceId))
 		} catch (error) {
 			console.error('Delete error:', error)
 			setWorkspaces(previousWorkspaces)
