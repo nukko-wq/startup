@@ -158,6 +158,7 @@ export const useResourceStore = create<ResourceStore>()(
 					})),
 
 				fetchSections: async (spaceId): Promise<SectionData> => {
+					set({ isLoading: true })
 					try {
 						const response = await fetch(`/api/spaces/${spaceId}/sections`)
 						if (!response.ok) {
@@ -166,48 +167,39 @@ export const useResourceStore = create<ResourceStore>()(
 
 						const data = await response.json()
 
-						// デバッグログを追加
-						console.log('Received data:', data)
+						const sections =
+							data.sections?.map((section: Section) => ({
+								...section,
+								resources: section.resources || [],
+							})) || []
 
-						// データの構造を確認して適切に変換
-						const sections = Array.isArray(data.sections) ? data.sections : []
-						const resources = Array.isArray(data.resources)
-							? data.resources
-							: []
-
-						// 必要なプロパティのみを選択して設定
-						const formattedData: SectionData = {
-							sections,
-							resources: resources.map((resource: Partial<Resource>) => ({
-								id: resource.id || '',
-								title: resource.title || '',
-								description: resource.description || '',
-								url: resource.url || '',
-								faviconUrl: resource.faviconUrl || null,
-								mimeType: resource.mimeType || null,
-								isGoogleDrive: resource.isGoogleDrive || false,
-								position: resource.position || 0,
-								sectionId: resource.sectionId || '',
+						// リソースの型を修正
+						const resources = sections.flatMap((section: Section) =>
+							(section.resources || []).map((resource) => ({
+								id: resource.id,
+								title: resource.title,
+								description: resource.description,
+								url: resource.url,
+								faviconUrl: resource.faviconUrl,
+								mimeType: resource.mimeType,
+								isGoogleDrive: resource.isGoogleDrive,
+								position: resource.position,
+								sectionId: section.id,
 							})),
-						}
+						)
 
-						// 状態を更新
+						const formattedData: SectionData = { sections, resources }
+
 						set({
-							sections: formattedData.sections,
-							resources: formattedData.resources,
+							sections,
+							resources,
+							isLoading: false,
 						})
-
-						// キャッシュを更新
-						get().resourceCache.set(spaceId, {
-							sections: formattedData.sections,
-							resources: formattedData.resources,
-							timestamp: Date.now(),
-						} as ResourceCacheEntry)
 
 						return formattedData
 					} catch (error) {
 						console.error('Error fetching sections:', error)
-						set({ sections: [], resources: [] })
+						set({ sections: [], resources: [], isLoading: false })
 						throw error
 					}
 				},

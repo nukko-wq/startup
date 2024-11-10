@@ -14,6 +14,7 @@ import { GripVertical } from 'lucide-react'
 import { useResourceStore } from '@/app/store/resourceStore'
 import ResourceIcon from '@/app/features/resources/components/ResourceIcon'
 import type { Resource } from '@prisma/client'
+import React from 'react'
 
 interface ResourceItemProps {
 	resources: Pick<
@@ -36,6 +37,25 @@ export default function ResourceItem({
 	sectionId,
 }: ResourceItemProps) {
 	const { reorderResources, resources: allResources } = useResourceStore()
+
+	const sortedResources = React.useMemo(() => {
+		const sectionResources = resources.filter((r) => r.sectionId === sectionId)
+		return [...sectionResources].sort((a, b) => a.position - b.position)
+	}, [resources, sectionId])
+
+	React.useEffect(() => {
+		if (resources.length > 0) {
+			const sectionResources = resources.filter(
+				(r) => r.sectionId === sectionId,
+			)
+			const sorted = [...sectionResources].sort(
+				(a, b) => a.position - b.position,
+			)
+			if (JSON.stringify(sorted) !== JSON.stringify(sortedResources)) {
+				reorderResources(sorted)
+			}
+		}
+	}, [resources, sectionId, sortedResources, reorderResources])
 
 	const { dragAndDropHooks } = useDragAndDrop({
 		getItems(keys) {
@@ -154,7 +174,7 @@ export default function ResourceItem({
 	return (
 		<GridList
 			aria-label="Resources in section"
-			items={resources}
+			items={sortedResources}
 			className="flex flex-col border rounded-md min-h-[50px]"
 			dragAndDropHooks={dragAndDropHooks}
 			renderEmptyState={() => (
