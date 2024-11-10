@@ -16,6 +16,7 @@ import { useRouter } from 'next/navigation'
 import { useMemo, useCallback } from 'react'
 import CreateSpaceInWorkspace from '../workspaces/create_space/CreateSpaceInWorkspace'
 import { useResourceStore } from '@/app/store/resourceStore'
+import debounce from 'lodash/debounce'
 
 interface SpacesProps {
 	workspaceId: string
@@ -43,12 +44,16 @@ const Spaces = ({ workspaceId }: SpacesProps) => {
 
 	// スペースにホバーした時のデータ事前取得を最適化
 	const handleSpaceHover = useCallback(
-		async (spaceId: string) => {
-			if (spaceId !== activeSpaceId && !isNavigating) {
+		debounce(async (spaceId: string) => {
+			if (
+				spaceId !== useSpaceStore.getState().activeSpaceId &&
+				!useSpaceStore.getState().isNavigating &&
+				!useResourceStore.getState().resourceCache.has(spaceId)
+			) {
 				useResourceStore.getState().prefetchNextSpace(spaceId)
 			}
-		},
-		[activeSpaceId, isNavigating],
+		}, 200),
+		[],
 	)
 
 	const { dragAndDropHooks } = useDragAndDrop({

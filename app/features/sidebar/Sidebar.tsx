@@ -4,10 +4,14 @@ import { useEffect } from 'react'
 import { Link } from 'react-aria-components'
 import { useSpaceStore } from '@/app/store/spaceStore'
 import { useWorkspaceStore } from '@/app/store/workspaceStore'
-import SidebarMenu from './SidebarMenu'
-import Workspaces from './Workspaces'
-import type { Space } from '@/app/types/space'
 import type { Workspace } from '@/app/types/workspace'
+import type { Space } from '@/app/types/space'
+import SidebarMenu from './SidebarMenu'
+import dynamic from 'next/dynamic'
+
+const DynamicWorkspaces = dynamic(() => import('./Workspaces'), { ssr: false })
+
+const DynamicSpaces = dynamic(() => import('./Spaces'), { ssr: false })
 
 interface SidebarProps {
 	initialWorkspaces: Workspace[]
@@ -52,7 +56,7 @@ export default function Sidebar({
 				<SidebarMenu />
 			</div>
 			<div className="flex-grow">
-				<Workspaces />
+				<DynamicWorkspaces />
 			</div>
 		</div>
 	)
