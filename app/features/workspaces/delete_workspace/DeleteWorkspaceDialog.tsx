@@ -11,6 +11,7 @@ import {
 } from 'react-aria-components'
 import { useRouter } from 'next/navigation'
 import { useWorkspaceStore } from '@/app/store/workspaceStore'
+import { useState } from 'react'
 
 interface DeleteWorkspaceDialogProps {
 	workspaceId: string
@@ -25,8 +26,12 @@ const DeleteWorkspaceDialog = ({
 }: DeleteWorkspaceDialogProps) => {
 	const router = useRouter()
 	const { deleteWorkspace } = useWorkspaceStore()
+	const [isDeleting, setIsDeleting] = useState(false)
 
 	const handleDelete = async (close: () => void) => {
+		if (isDeleting) return
+		setIsDeleting(true)
+
 		try {
 			await deleteWorkspace(workspaceId)
 			close()
@@ -34,6 +39,8 @@ const DeleteWorkspaceDialog = ({
 		} catch (error) {
 			console.error('Workspace delete error:', error)
 			alert('ワークスペースの削除に失敗しました。')
+		} finally {
+			setIsDeleting(false)
 		}
 	}
 
@@ -61,14 +68,16 @@ const DeleteWorkspaceDialog = ({
 									<Button
 										onPress={close}
 										className="px-4 py-2 bg-slate-200 text-slate-800 rounded-md hover:bg-slate-300 outline-none"
+										isDisabled={isDeleting}
 									>
 										キャンセル
 									</Button>
 									<Button
 										onPress={() => handleDelete(close)}
-										className="px-4 py-2 bg-red-500 text-white rounded-md hover:bg-red-600 outline-none"
+										className="px-4 py-2 bg-red-500 text-white rounded-md hover:bg-red-600 outline-none flex items-center gap-2"
+										isDisabled={isDeleting}
 									>
-										削除
+										{isDeleting ? '削除中...' : '削除'}
 									</Button>
 								</div>
 							</>
