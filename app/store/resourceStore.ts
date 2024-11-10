@@ -11,6 +11,40 @@ export interface DriveFile {
 	mimeType: string
 }
 
+export interface SectionData {
+	sections: Section[]
+	resources: Pick<
+		Resource,
+		| 'id'
+		| 'title'
+		| 'description'
+		| 'url'
+		| 'faviconUrl'
+		| 'mimeType'
+		| 'isGoogleDrive'
+		| 'position'
+		| 'sectionId'
+	>[]
+}
+
+// キャッシュの型を修正
+interface ResourceCacheEntry {
+	sections: Section[]
+	resources: Pick<
+		Resource,
+		| 'id'
+		| 'title'
+		| 'description'
+		| 'url'
+		| 'faviconUrl'
+		| 'mimeType'
+		| 'isGoogleDrive'
+		| 'position'
+		| 'sectionId'
+	>[]
+	timestamp: number
+}
+
 export interface ResourceStore {
 	sections: Section[]
 	resources: Pick<
@@ -31,7 +65,7 @@ export interface ResourceStore {
 	setIsCreating: (creating: boolean) => void
 	setSections: (sections: Section[]) => void
 	setIsLoading: (loading: boolean) => void
-	fetchSections: (spaceId: string) => Promise<void>
+	fetchSections: (spaceId: string) => Promise<SectionData>
 	createSection: (spaceId: string) => Promise<void>
 	deleteSection: (sectionId: string) => Promise<void>
 	reorderSections: (items: Section[]) => Promise<void>
@@ -65,14 +99,7 @@ export interface ResourceStore {
 	clearPrefetchedData: (spaceId: string) => void
 
 	// キャッシュ管理を改善
-	resourceCache: Map<
-		string,
-		{
-			sections: Section[]
-			resources: Resource[]
-			timestamp: number
-		}
-	>
+	resourceCache: Map<string, ResourceCacheEntry>
 
 	// キャッシュ有効期限（例：5分）
 	CACHE_EXPIRY: number
@@ -130,7 +157,7 @@ export const useResourceStore = create<ResourceStore>()(
 						},
 					})),
 
-				fetchSections: async (spaceId) => {
+				fetchSections: async (spaceId): Promise<SectionData> => {
 					try {
 						const response = await fetch(`/api/spaces/${spaceId}/sections`)
 						if (!response.ok) {
@@ -139,33 +166,48 @@ export const useResourceStore = create<ResourceStore>()(
 
 						const data = await response.json()
 
-						// セクションとリソースの関係を維持しながら更新
-						const sectionsWithResources = data.sections.map(
-							(section: Section) => ({
-								...section,
-								resources: data.resources.filter(
-									(resource: ResourceStore['resources'][0]) =>
-										resource.sectionId === section.id,
-								),
-							}),
-						)
+						// デバッグログを追加
+						console.log('Received data:', data)
 
-						// データをストアに設定
+						// データの構造を確認して適切に変換
+						const sections = Array.isArray(data.sections) ? data.sections : []
+						const resources = Array.isArray(data.resources)
+							? data.resources
+							: []
+
+						// 必要なプロパティのみを選択して設定
+						const formattedData: SectionData = {
+							sections,
+							resources: resources.map((resource: Partial<Resource>) => ({
+								id: resource.id || '',
+								title: resource.title || '',
+								description: resource.description || '',
+								url: resource.url || '',
+								faviconUrl: resource.faviconUrl || null,
+								mimeType: resource.mimeType || null,
+								isGoogleDrive: resource.isGoogleDrive || false,
+								position: resource.position || 0,
+								sectionId: resource.sectionId || '',
+							})),
+						}
+
+						// 状態を更新
 						set({
-							sections: sectionsWithResources,
-							resources: data.resources,
+							sections: formattedData.sections,
+							resources: formattedData.resources,
 						})
 
 						// キャッシュを更新
 						get().resourceCache.set(spaceId, {
-							sections: sectionsWithResources,
-							resources: data.resources,
+							sections: formattedData.sections,
+							resources: formattedData.resources,
 							timestamp: Date.now(),
-						})
+						} as ResourceCacheEntry)
 
-						return data
+						return formattedData
 					} catch (error) {
 						console.error('Error fetching sections:', error)
+						set({ sections: [], resources: [] })
 						throw error
 					}
 				},
