@@ -28,6 +28,7 @@ export interface SpaceStore {
 		workspaceId: string,
 		newOrder: number,
 	) => Promise<void>
+	updateSpaceName: (spaceId: string, name: string) => Promise<void>
 }
 
 export const useSpaceStore = create<SpaceStore>((set, get) => ({
@@ -230,6 +231,40 @@ export const useSpaceStore = create<SpaceStore>((set, get) => ({
 		} catch (error) {
 			console.error('Update workspace error:', error)
 			setSpaces(previousSpaces)
+		}
+	},
+
+	updateSpaceName: async (spaceId: string, name: string) => {
+		const { spaces, setSpaces, currentSpace, setCurrentSpace } = get()
+		const previousSpaces = [...spaces]
+		const previousCurrentSpace = currentSpace
+
+		try {
+			// 楽観的な更新
+			const updatedSpaces = spaces.map((space) =>
+				space.id === spaceId ? { ...space, name } : space,
+			)
+			setSpaces(updatedSpaces)
+
+			// currentSpaceも更新
+			if (currentSpace && currentSpace.id === spaceId) {
+				setCurrentSpace({ ...currentSpace, name })
+			}
+
+			const response = await fetch(`/api/spaces/${spaceId}`, {
+				method: 'PATCH',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({ name }),
+			})
+
+			if (!response.ok) {
+				throw new Error('Failed to update space name')
+			}
+		} catch (error) {
+			// エラー時に元の状態に戻す
+			setSpaces(previousSpaces)
+			setCurrentSpace(previousCurrentSpace)
+			throw error
 		}
 	},
 }))

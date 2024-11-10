@@ -58,7 +58,6 @@ const HeaderMenu = ({ spaceId, spaceName }: HeaderMenuProps) => {
 
 			<SpaceRenameDialog
 				spaceId={spaceId}
-				initialName={spaceName}
 				isOpen={isRenameOpen}
 				onOpenChange={setIsRenameOpen}
 			/>

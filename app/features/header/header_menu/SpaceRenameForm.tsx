@@ -6,8 +6,7 @@ import { Button, Form, Input, Label, TextField } from 'react-aria-components'
 import { spaceUpdateSchema } from '@/lib/validations/space'
 import type { z } from 'zod'
 import { useSpaceStore } from '@/app/store/spaceStore'
-import type { Space } from '@/app/types/space'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import LoadingSpinner from '@/app/components/ui/LoadingSpinner'
 
 type FormData = z.infer<typeof spaceUpdateSchema>
@@ -25,43 +24,32 @@ const SpaceRenameForm = ({
 }: SpaceRenameFormProps) => {
 	const { spaces, setSpaces, currentSpace, setCurrentSpace } = useSpaceStore()
 	const [isSubmitting, setIsSubmitting] = useState(false)
-	const { control, handleSubmit } = useForm<FormData>({
+
+	const { control, handleSubmit, reset } = useForm<FormData>({
 		resolver: zodResolver(spaceUpdateSchema),
 		defaultValues: {
 			name: initialName,
 		},
 	})
 
+	// initialNameが変更されたときにフォームをリセット
+	useEffect(() => {
+		reset({ name: initialName })
+	}, [initialName, reset])
+
 	const onSubmit = async (data: FormData) => {
-		if (!currentSpace || !data.name) return
+		if (data.name === initialName) {
+			onClose()
+			return
+		}
+
 		setIsSubmitting(true)
-
 		try {
-			const response = await fetch(`/api/spaces/${spaceId}`, {
-				method: 'PATCH',
-				headers: { 'Content-Type': 'application/json' },
-				body: JSON.stringify({ name: data.name }),
-			})
-
-			if (!response.ok) {
-				throw new Error('スペースの更新に失敗しました')
-			}
-
-			const updatedSpace = await response.json()
-
-			const updatedSpaces = spaces.map((space) =>
-				space.id === spaceId ? { ...space, name: updatedSpace.name } : space,
-			)
-
-			const uniqueSpaces = Array.from(
-				new Map(updatedSpaces.map((space) => [space.id, space])).values(),
-			)
-
-			setSpaces(uniqueSpaces)
-			setCurrentSpace({ ...currentSpace, name: updatedSpace.name })
+			await useSpaceStore.getState().updateSpaceName(spaceId, data.name ?? '')
 			onClose()
 		} catch (error) {
 			console.error('Error updating space:', error)
+			alert('スペース名の更新に失敗しました')
 		} finally {
 			setIsSubmitting(false)
 		}
