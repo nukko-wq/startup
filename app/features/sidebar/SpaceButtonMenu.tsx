@@ -58,7 +58,6 @@ const SpaceButtonMenu = ({ spaceId, spaceName }: SpaceButtonMenuProps) => {
 
 			<SpaceRenameDialog
 				spaceId={spaceId}
-				initialName={spaceName}
 				isOpen={isRenameOpen}
 				onOpenChange={setIsRenameOpen}
 			/>

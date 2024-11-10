@@ -18,7 +18,7 @@ interface HeaderMenuProps {
 	spaceName: string
 }
 
-const HeaderMenu = ({ spaceId, spaceName }: HeaderMenuProps) => {
+const HeaderMenu = ({ spaceId }: HeaderMenuProps) => {
 	const [isRenameOpen, setIsRenameOpen] = useState(false)
 	const [isDeleteOpen, setIsDeleteOpen] = useState(false)
 	const { setSpaces } = useSpaceStore()
