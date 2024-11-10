@@ -3,11 +3,12 @@
 import ResourceCreateButton from '@/app/features/resources/create_resource/components/ResourceCreateButton'
 import ResourceItem from '@/app/features/resources/components/ResourceItem'
 import { File } from 'lucide-react'
-import { useRef, useState } from 'react'
+import { useRef, useState, useMemo } from 'react'
 import SectionMenuButton from '@/app/features/sections/section_menu/SectionMenuButton'
 import SectionNameEdit from '@/app/features/sections/edit_section/components/SectionNameEdit'
 import { Button } from 'react-aria-components'
 import { useResourceStore } from '@/app/store/resourceStore'
+import { memo } from 'react'
 
 interface SectionProps {
 	id: string
@@ -15,15 +16,19 @@ interface SectionProps {
 	onDelete: (sectionId: string) => void
 }
 
-export default function Section({ id, name, onDelete }: SectionProps) {
+export default memo(function Section({ id, name, onDelete }: SectionProps) {
 	const ref = useRef<HTMLDivElement>(null)
 	const [sectionName, setSectionName] = useState(name)
 	const [isResourceCreateOpen, setIsResourceCreateOpen] = useState(false)
 	const { resources = [] } = useResourceStore()
 
-	const sectionResources = (resources || [])
-		.filter((resource) => resource?.sectionId === id)
-		.sort((a, b) => (a?.position || 0) - (b?.position || 0))
+	const sectionResources = useMemo(
+		() =>
+			(resources || [])
+				.filter((resource) => resource?.sectionId === id)
+				.sort((a, b) => (a?.position || 0) - (b?.position || 0)),
+		[resources, id],
+	)
 
 	const handleNameEdit = (newName: string) => {
 		setSectionName(newName)
@@ -65,4 +70,4 @@ export default function Section({ id, name, onDelete }: SectionProps) {
 			<ResourceItem resources={sectionResources} sectionId={id} />
 		</div>
 	)
-}
+})
