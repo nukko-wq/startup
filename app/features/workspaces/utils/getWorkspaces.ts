@@ -8,15 +8,20 @@ export const getWorkspaces = cache(async (userId: string) => {
 	}
 
 	try {
-		// デフォルトワークスペースと通常のワークスペースを一度に取得
+		// ユーザーの存在確認を追加
+		const user = await db.user.findUnique({
+			where: { id: userId },
+		})
+
+		if (!user) {
+			throw new Error('ユーザーが見つかりません')
+		}
+
 		const allWorkspaces = await db.workspace.findMany({
 			where: {
 				userId,
 			},
-			orderBy: [
-				{ isDefault: 'desc' }, // デフォルトワークスペースを先頭に
-				{ order: 'asc' }, // 次に順序で並べ替え
-			],
+			orderBy: [{ isDefault: 'desc' }, { order: 'asc' }],
 			select: {
 				id: true,
 				name: true,
@@ -29,51 +34,28 @@ export const getWorkspaces = cache(async (userId: string) => {
 		})
 
 		if (!allWorkspaces.length) {
-			// ワークスペースが存在しない場合、デフォルトワークスペースを作成
-			const defaultWorkspace = await db.workspace.create({
-				data: {
-					name: 'Default',
-					userId,
-					isDefault: true,
-					order: 0,
-				},
-				select: {
-					id: true,
-					name: true,
-					order: true,
-					userId: true,
-					isDefault: true,
-					createdAt: true,
-					updatedAt: true,
-				},
+			// トランザクションを使用してデフォルトワークスペースを作成
+			const defaultWorkspace = await db.$transaction(async (tx) => {
+				return tx.workspace.create({
+					data: {
+						name: 'Default',
+						userId,
+						isDefault: true,
+						order: 0,
+					},
+					select: {
+						id: true,
+						name: true,
+						order: true,
+						userId: true,
+						isDefault: true,
+						createdAt: true,
+						updatedAt: true,
+					},
+				})
 			})
 
 			return [defaultWorkspace]
-		}
-
-		// デフォルトワークスペースが存在することを確認
-		const hasDefault = allWorkspaces.some((workspace) => workspace.isDefault)
-		if (!hasDefault) {
-			// デフォルトワークスペースが存在しない場合、作成
-			const defaultWorkspace = await db.workspace.create({
-				data: {
-					name: 'Default',
-					userId,
-					isDefault: true,
-					order: 0,
-				},
-				select: {
-					id: true,
-					name: true,
-					order: true,
-					userId: true,
-					isDefault: true,
-					createdAt: true,
-					updatedAt: true,
-				},
-			})
-
-			return [defaultWorkspace, ...allWorkspaces]
 		}
 
 		return allWorkspaces
