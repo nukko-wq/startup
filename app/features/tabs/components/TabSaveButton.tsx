@@ -69,8 +69,11 @@ const TabSaveButton = ({ title, url, faviconUrl }: TabSaveButtonProps) => {
 	};
 
 	return (
-		<Button onPress={handleSave} className="flex items-center gap-2">
-			<Bookmark className="w-5 h-5" />
+		<Button
+			onPress={handleSave}
+			className="outline-none p-2 hover:bg-zinc-200 transition-colors duration-200 rounded-full"
+		>
+			<Bookmark className="w-5 h-5 text-zinc-700" />
 		</Button>
 	);
 };

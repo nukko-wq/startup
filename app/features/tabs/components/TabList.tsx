@@ -97,7 +97,7 @@ export default function TabList() {
 				{tabs.map((tab) => (
 					<div
 						key={tab.id}
-						className="flex flex-grow items-center gap-2 px-10 py-2 hover:bg-gray-100 rounded cursor-pointer"
+						className="flex flex-grow items-center gap-2 px-10 py-2 hover:bg-gray-100 rounded cursor-pointer group"
 						onClick={() => handleTabClick(tab)}
 						onKeyDown={(e) => {
 							if (e.key === "Enter" || e.key === " ") {
@@ -118,11 +118,13 @@ export default function TabList() {
 								)}
 								<span className="truncate">{tab.title}</span>
 							</div>
-							<TabSaveButton
-								title={tab.title}
-								url={tab.url}
-								faviconUrl={tab.faviconUrl}
-							/>
+							<div className="opacity-0 group-hover:opacity-100">
+								<TabSaveButton
+									title={tab.title}
+									url={tab.url}
+									faviconUrl={tab.faviconUrl}
+								/>
+							</div>
 						</div>
 					</div>
 				))}
