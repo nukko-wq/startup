@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { useResourceStore } from '@/app/store/resourceStore'
+import { Diamond } from 'lucide-react'
 
 interface Tab {
   id: number
@@ -74,25 +75,36 @@ export default function TabList() {
   }, [])
 
   if (isLoading) {
-    return <div>タブを読み込み中...</div>
+    return (
+      <div className="flex items-center pl-10 pr-4 py-4">
+        <div>
+          タブを読み込み中...
+        </div>
+      </div>
+    )
   }
 
   if (typeof window === 'undefined' || !window.chrome?.runtime) {
     return (
-      <div className="text-center p-4">
-        Chrome拡張機能をインストールすると、開いているタブを表示できます
+      <div className="flex items-center pl-10 pr-4 py-4">
+        <p>
+          Chrome拡張機能をインストールすると、開いているタブを表示できます
+        </p>
       </div>
     )
   }
 
   return (
-    <div className="p-4">
-      <h2 className="text-lg font-semibold mb-4">開いているタブ</h2>
-      <div className="space-y-2">
+    <div className="p-5 pr-[16px] pl-[32px] max-w-[920px]">
+      <div className="flex items-center gap-2 py-2 ml-4 mb-2">
+        <Diamond className="w-6 h-6" />
+        <div className="text-[17px] text-zinc-700">Tabs</div>
+      </div>
+      <div className="border rounded-md">
         {tabs.map((tab) => (
           <div
             key={tab.id}
-            className="flex items-center gap-2 p-2 hover:bg-gray-100 rounded cursor-pointer"
+            className="flex items-center gap-2 px-10 py-2 hover:bg-gray-100 rounded cursor-pointer"
             onClick={() => handleTabClick(tab)}
           >
             {tab.faviconUrl ? (
