@@ -31,7 +31,10 @@ export default async function Index({ searchParams }: PageProps) {
 			getWorkspaces(session.user.id),
 		]).catch((error) => {
 			console.error('データの取得に失敗しました:', error)
-			throw error
+			if (error.message === 'データベース接続エラー') {
+				return redirect('/maintenance')
+			}
+			return redirect('/error')
 		})
 
 		if (activeSpace && !spaceId) {

@@ -1,6 +1,7 @@
 import { db } from '@/lib/db'
 import { cache } from 'react'
 import type { Workspace } from '@/app/types/workspace'
+import { Prisma } from '@prisma/client'
 
 export const getWorkspaces = cache(async (userId: string) => {
 	if (!userId) {
@@ -61,6 +62,12 @@ export const getWorkspaces = cache(async (userId: string) => {
 		return allWorkspaces
 	} catch (error) {
 		console.error('Error in getWorkspaces:', error)
+		if (
+			error instanceof Prisma.PrismaClientKnownRequestError &&
+			error.code === 'P1001'
+		) {
+			throw new Error('データベース接続エラー')
+		}
 		throw new Error('ワークスペースの取得に失敗しました')
 	}
 })
