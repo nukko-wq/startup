@@ -34,7 +34,7 @@ export default memo(function Section({ id, name, onDelete }: SectionProps) {
 	return (
 		<div
 			ref={ref}
-			className="min-w-[260px] max-w-[920px] w-full mx-auto p-5 outline-none"
+			className="min-w-[260px] max-w-[920px] w-full pl-[16px] pr-[32px] py-5 outline-none"
 		>
 			<div className="flex justify-between items-center mb-2 cursor-grab">
 				<div className="flex items-center ml-4">

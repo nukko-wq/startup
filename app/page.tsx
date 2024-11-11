@@ -53,10 +53,10 @@ export default async function Index({ searchParams }: PageProps) {
 				<main className="flex flex-col flex-grow items-center">
 					<Header spaceName={activeSpace?.name ?? ''} spaceId={spaceId ?? ''} />
 					<div className="flex flex-grow w-full">
-						<div className="w-1/4 border-r">
+						<div className="w-1/2">
 							<TabList />
 						</div>
-						<div className="flex-1">
+						<div className="flex w-1/2">
 							<Resources
 								initialData={{
 									sections,
