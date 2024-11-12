@@ -43,39 +43,37 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
 			}
 
 			try {
+				if (!account || !user.email) {
+					console.error('Required account or user information missing')
+					return false
+				}
+
 				const existingUser = await db.user.findFirst({
 					where: {
-						email: user.email ?? '',
-						accounts: {
-							some: {
-								provider: 'google',
-								providerAccountId: account?.providerAccountId,
-							},
-						},
+						email: user.email,
 					},
 				})
 
 				if (!existingUser) {
-					const newUser = await db.user.create({
+					await db.user.create({
 						data: {
-							email: user.email ?? '',
+							email: user.email,
 							name: user.name,
 							accounts: {
 								create: {
-									type: account?.type ?? 'oauth',
+									type: account.type ?? 'oauth',
 									provider: 'google',
-									providerAccountId: account?.providerAccountId ?? '',
-									access_token: account?.access_token,
-									token_type: account?.token_type,
-									refresh_token: account?.refresh_token,
-									expires_at: account?.expires_at,
-									scope: account?.scope,
-									id_token: account?.id_token,
+									providerAccountId: account.providerAccountId ?? '',
+									access_token: account.access_token,
+									token_type: account.token_type,
+									refresh_token: account.refresh_token,
+									expires_at: account.expires_at,
+									scope: account.scope,
+									id_token: account.id_token,
 								},
 							},
 						},
 					})
-					return true
 				}
 
 				return true
