@@ -14,12 +14,12 @@ export const getWorkspaces = cache(async (userId: string) => {
 
 		if (!user) {
 			console.log('ユーザーが見つかりません。新規作成を試みます:', userId)
-			// セッションからユーザー情報を取得して新規作成
+			// emailフィールドを一意にするため、ユーザーIDを使用
 			user = await db.user.create({
 				data: {
 					id: userId,
-					email: '', // セッションから取得できる場合は設定
-					name: '', // セッションから取得できる場合は設定
+					email: `${userId}@temporary.com`, // 一時的なメールアドレス
+					name: `User-${userId.slice(0, 8)}`, // 一時的な名前
 				},
 			})
 		}
