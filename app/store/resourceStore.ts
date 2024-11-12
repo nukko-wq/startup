@@ -1,8 +1,7 @@
 import { create } from 'zustand'
 import type { Resource } from '@prisma/client'
 import type { Section } from '@/app/types/section'
-import { devtools } from 'zustand/middleware'
-import { persist } from 'zustand/middleware'
+import { devtools, persist } from 'zustand/middleware'
 
 export interface DriveFile {
 	id: string
@@ -209,6 +208,21 @@ export const useResourceStore = create<ResourceStore>()(
 					setIsCreating(true)
 					setIsLoading(true)
 
+					// 楽観的更新のための仮のセクションを作成
+					const optimisticSection: Section = {
+						id: `temp-${Date.now()}`, // 一時的なID
+						name: 'Resources',
+						order: sections.length,
+						spaceId: spaceId,
+						userId: '', // 仮の値
+						createdAt: new Date(),
+						updatedAt: new Date(),
+						resources: [],
+					}
+
+					// 楽観的に状態を更新
+					set({ sections: [...sections, optimisticSection] })
+
 					try {
 						const response = await fetch('/api/sections', {
 							method: 'POST',
@@ -227,7 +241,13 @@ export const useResourceStore = create<ResourceStore>()(
 						}
 
 						const newSection = await response.json()
-						set({ sections: [...sections, newSection] })
+
+						// 一時的なセクションを実際のセクションで置き換え
+						set({
+							sections: sections
+								.filter((s) => s.id !== optimisticSection.id)
+								.concat(newSection),
+						})
 
 						// キャッシュを更新
 						const cacheKey = `sections-${spaceId}`
@@ -238,7 +258,9 @@ export const useResourceStore = create<ResourceStore>()(
 								cacheKey,
 								JSON.stringify({
 									...parsed,
-									sections: [...parsed.sections, newSection],
+									sections: parsed.sections
+										.filter((s: Section) => s.id !== optimisticSection.id)
+										.concat(newSection),
 								}),
 							)
 						}
@@ -246,6 +268,11 @@ export const useResourceStore = create<ResourceStore>()(
 						return newSection
 					} catch (error) {
 						console.error('セクション作成エラー:', error)
+						// エラー時は楽観的に追加したセクションを削除
+						set({
+							sections: sections.filter((s) => s.id !== optimisticSection.id),
+						})
+
 						if (error instanceof Error && error.message.includes('認証')) {
 							window.location.href = '/login'
 							return

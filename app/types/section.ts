@@ -15,6 +15,7 @@ export interface Section {
 	name: string
 	order: number
 	createdAt: Date
+	updatedAt: Date
 	resources: Resource[]
 	userId?: string
 	spaceId?: string | null

@@ -56,7 +56,7 @@ export default async function Index({ searchParams }: PageProps) {
 						<div className="w-1/2">
 							<TabList />
 						</div>
-						<div className="flex w-1/2">
+						<div className="flex w-1/2 justify-center">
 							<Resources
 								initialData={{
 									sections,
