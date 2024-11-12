@@ -175,7 +175,7 @@ export default function ResourceItem({
 		<GridList
 			aria-label="Resources in section"
 			items={sortedResources}
-			className="flex flex-col border rounded-md min-h-[50px]"
+			className="flex flex-col border rounded-md min-h-[50px] outline-none"
 			dragAndDropHooks={dragAndDropHooks}
 			renderEmptyState={() => (
 				<div className="p-4 text-center text-gray-500">Add resources here</div>
