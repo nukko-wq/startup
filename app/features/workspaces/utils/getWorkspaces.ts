@@ -8,15 +8,28 @@ export const getWorkspaces = cache(async (userId: string) => {
 	}
 
 	try {
+		let user = await db.user.findUnique({
+			where: { id: userId },
+		})
+
+		if (!user) {
+			console.log('ユーザーが見つかりません。新規作成を試みます:', userId)
+			// セッションからユーザー情報を取得して新規作成
+			user = await db.user.create({
+				data: {
+					id: userId,
+					email: '', // セッションから取得できる場合は設定
+					name: '', // セッションから取得できる場合は設定
+				},
+			})
+		}
+
 		// デフォルトワークスペースと通常のワークスペースを一度に取得
 		const allWorkspaces = await db.workspace.findMany({
 			where: {
 				userId,
 			},
-			orderBy: [
-				{ isDefault: 'desc' }, // デフォルトワークスペースを先頭に
-				{ order: 'asc' }, // 次に順序で並べ替え
-			],
+			orderBy: [{ isDefault: 'desc' }, { order: 'asc' }],
 			select: {
 				id: true,
 				name: true,
@@ -79,6 +92,9 @@ export const getWorkspaces = cache(async (userId: string) => {
 		return allWorkspaces
 	} catch (error) {
 		console.error('Error in getWorkspaces:', error)
+		if (error instanceof Error) {
+			throw new Error(`ワークスペースの取得に失敗しました: ${error.message}`)
+		}
 		throw new Error('ワークスペースの取得に失敗しました')
 	}
 })
