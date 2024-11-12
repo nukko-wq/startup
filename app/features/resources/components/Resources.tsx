@@ -40,8 +40,10 @@ const Resources = memo(({ initialData, spaceId }: ResourceProps) => {
 
 	// スペースが選択されているかどうかをチェック
 	const hasActiveSpace = useMemo(() => {
-		return spaces.some((space) => space.isLastActive) || activeSpaceId
-	}, [spaces, activeSpaceId])
+		return (
+			spaces.some((space) => space.isLastActive) || activeSpaceId || spaceId
+		)
+	}, [spaces, activeSpaceId, spaceId])
 
 	// メモ化によるレンダリングの最適化
 	const memoizedSections = useMemo(() => sections, [sections])
@@ -138,7 +140,7 @@ const Resources = memo(({ initialData, spaceId }: ResourceProps) => {
 	})
 
 	// ローディング条件を修正
-	if (isSpaceLoading || isNavigating || (isLoading && !sections.length)) {
+	if (isNavigating || (isLoading && hasActiveSpace)) {
 		return (
 			<div className="flex items-center justify-center h-full">
 				<LoadingSpinner className="w-14 h-14" />

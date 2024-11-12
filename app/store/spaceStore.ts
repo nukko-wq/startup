@@ -36,7 +36,7 @@ export const useSpaceStore = create<SpaceStore>((set, get) => ({
 	spaces: [],
 	activeSpaceId: null,
 	currentSpace: null,
-	isLoading: true,
+	isLoading: false,
 	isNavigating: false,
 	isDragging: false,
 
