@@ -47,6 +47,7 @@ export const getInitialSections = unstable_cache(
 					name: true,
 					order: true,
 					createdAt: true,
+					updatedAt: true,
 					resources: {
 						select: {
 							id: true,
