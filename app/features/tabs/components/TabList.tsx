@@ -60,49 +60,66 @@ export default function TabList() {
 	useEffect(() => {
 		const fetchTabs = async () => {
 			try {
-				if (typeof window === 'undefined') {
-					setIsLoading(false)
-					return
-				}
-
 				const extensionId = process.env.NEXT_PUBLIC_EXTENSION_ID
 				if (!extensionId) {
-					console.error('Extension ID not found')
-					setIsLoading(false)
-					return
+					throw new Error('Extension ID not found')
 				}
 
+				// chrome.runtimeの存在確認を修正
 				if (!window.chrome?.runtime?.sendMessage) {
-					console.error('Chrome runtime not available')
-					setIsLoading(false)
-					return
+					throw new Error('Chrome extension API not available')
 				}
 
-				const response = await new Promise((resolve, reject) => {
-					chrome.runtime.sendMessage(
-						extensionId,
-						{ type: 'GET_CURRENT_TABS' },
-						(response) => {
-							if (chrome.runtime.lastError) {
-								reject(chrome.runtime.lastError)
-							} else {
-								resolve(response)
-							}
-						},
-					)
+				const response = await chrome.runtime.sendMessage(extensionId, {
+					type: 'GET_CURRENT_TABS',
 				})
 
 				if (response) {
-					setTabs(response as Tab[])
+					setTabs(response)
 				}
 			} catch (error) {
 				console.error('Failed to fetch tabs:', error)
+				// エラーの種類に応じて適切なメッセージを表示
+				if (error instanceof Error) {
+					if (error.message.includes('Extension ID not found')) {
+						console.error('Extension ID is not configured')
+					} else if (error.message.includes('Extension API not available')) {
+						console.error('Chrome extension is not installed or not accessible')
+					}
+				}
 			} finally {
 				setIsLoading(false)
 			}
 		}
 
 		fetchTabs()
+	}, [])
+
+	useEffect(() => {
+		const checkExtension = async () => {
+			const extensionId = process.env.NEXT_PUBLIC_EXTENSION_ID
+			if (!extensionId) {
+				console.error('Extension ID not found')
+				return false
+			}
+
+			try {
+				// 拡張機能との通信テスト
+				await chrome.runtime.sendMessage(extensionId, {
+					type: 'GET_CURRENT_TABS',
+				})
+				return true
+			} catch (error) {
+				console.error('Extension communication failed:', error)
+				return false
+			}
+		}
+
+		checkExtension().then((isAvailable) => {
+			if (!isAvailable) {
+				setIsLoading(false)
+			}
+		})
 	}, [])
 
 	if (isLoading) {
