@@ -22,63 +22,45 @@ export async function DELETE(request: Request) {
 
 		const { user } = session
 
-		// トランザクションを使用してセクションとそれに関連するリソースを削除
 		await db.$transaction(async (tx) => {
-			// 削除対象のセクションを取得
-			const targetSection = await tx.section.findUnique({
-				where: {
-					id: sectionId,
-					userId: user.id,
-				},
+			const existingSection = await tx.section.findUnique({
+				where: { id: sectionId, userId: user.id },
 			})
 
-			if (!targetSection) {
-				throw new Error('Section not found')
+			if (!existingSection) {
+				return NextResponse.json(
+					{ error: 'Section not found or already deleted' },
+					{ status: 404 },
+				)
 			}
 
-			// 関連リソースを削除
 			await tx.resource.deleteMany({
-				where: {
-					sectionId,
-					userId: user.id,
-				},
+				where: { sectionId, userId: user.id },
 			})
 
-			// セクションを削除
 			await tx.section.delete({
-				where: {
-					id: sectionId,
-					userId: user.id,
-				},
+				where: { id: sectionId, userId: user.id },
 			})
 
-			// 削除したセクションより大きいorderを持つセクションのorderを更新
 			await tx.section.updateMany({
 				where: {
 					userId: user.id,
-					order: {
-						gt: targetSection.order,
-					},
+					order: { gt: existingSection.order },
 				},
-				data: {
-					order: {
-						decrement: 1,
-					},
-				},
+				data: { order: { decrement: 1 } },
 			})
 		})
 
 		return NextResponse.json({
 			success: true,
-			message: 'Section and related resources deleted successfully',
+			message: 'Section deleted successfully',
 		})
 	} catch (error) {
-		console.error('Error deleting section:', error)
+		console.error('Section deletion error:', error)
 		return NextResponse.json(
 			{
-				success: false,
-				message: 'Failed to delete section',
-				error: error instanceof Error ? error.message : 'Unknown error',
+				error:
+					error instanceof Error ? error.message : 'Unknown error occurred',
 			},
 			{ status: 500 },
 		)

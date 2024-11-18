@@ -9,6 +9,7 @@ import SectionNameEdit from '@/app/features/sections/edit_section/components/Sec
 import { Button } from 'react-aria-components'
 import { useResourceStore } from '@/app/store/resourceStore'
 import { memo } from 'react'
+import { useEffect } from 'react'
 
 interface SectionProps {
 	id: string
@@ -45,6 +46,20 @@ export default memo(function Section({
 		setSectionName(newName)
 	}
 
+	const handleDelete = async () => {
+		try {
+			const deletePromise = onDelete(id)
+			await deletePromise
+		} catch (error) {
+			console.error('セクション削除エラー:', error)
+			const message =
+				error instanceof Error
+					? error.message
+					: 'セクションの削除に失敗しました。もう一度お試しください。'
+			alert(message)
+		}
+	}
+
 	return (
 		<div
 			ref={ref}
@@ -73,7 +88,7 @@ export default memo(function Section({
 					/>
 					<SectionMenuButton
 						sectionId={id}
-						onDelete={onDelete}
+						onDelete={handleDelete}
 						onResourceCreate={() => setIsResourceCreateOpen(true)}
 					/>
 				</div>
