@@ -174,6 +174,9 @@ const Resources = memo(({ initialData, spaceId }: ResourceProps) => {
 											id={section.id}
 											name={section.name}
 											onDelete={() => fetchSections(spaceId)}
+											resources={memoizedResources.filter(
+												(resource) => resource.sectionId === section.id,
+											)}
 										/>
 									</GridListItem>
 								)}
