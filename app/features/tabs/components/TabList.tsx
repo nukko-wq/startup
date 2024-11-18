@@ -94,7 +94,7 @@ export default function TabList() {
 			}
 
 			const extensionIds = [
-				process.env.NEXT_PUBLIC_EXTENSION_ID_PROD,
+				...(process.env.NEXT_PUBLIC_EXTENSION_ID_PROD?.split(',') || []),
 				process.env.NEXT_PUBLIC_EXTENSION_ID_DEV,
 			].filter(Boolean)
 
