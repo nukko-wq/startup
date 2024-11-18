@@ -10,6 +10,7 @@ import { auth } from '@/lib/auth'
 import Header from '@/app/features/header/Header'
 import { getWorkspaces } from '@/app/features/workspaces/utils/getWorkspaces'
 import TabList from '@/app/features/tabs/components/TabList'
+import { useResourceStore } from '@/app/store/resourceStore'
 
 export const revalidate = 0
 
@@ -34,11 +35,14 @@ export default async function Index({ searchParams }: PageProps) {
 	const spacesPromise = getSpaces(session.user.id)
 	const workspacesPromise = getWorkspaces(session.user.id)
 
-	const [{ sections, activeSpace }, spaces, workspaces] = await Promise.all([
-		initialDataPromise,
-		spacesPromise,
-		workspacesPromise,
-	])
+	const [{ sections, resources, activeSpace }, spaces, workspaces] =
+		await Promise.all([initialDataPromise, spacesPromise, workspacesPromise])
+
+	// Zustandストアの初期化
+	useResourceStore.setState({
+		sections: sections || [],
+		resources: resources || [],
+	})
 
 	// activeSpaceがある場合、そのスペースにリダイレクト
 	if (activeSpace && !spaceId) {

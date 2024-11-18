@@ -17,18 +17,17 @@ import type { Resource } from '@prisma/client'
 import React from 'react'
 
 interface ResourceItemProps {
-	resources: Pick<
-		Resource,
-		| 'id'
-		| 'title'
-		| 'url'
-		| 'faviconUrl'
-		| 'mimeType'
-		| 'isGoogleDrive'
-		| 'position'
-		| 'description'
-		| 'sectionId'
-	>[]
+	resources: {
+		id: string
+		title: string
+		description: string | null
+		url: string
+		faviconUrl: string | null
+		mimeType: string | null
+		isGoogleDrive: boolean
+		position: number
+		sectionId: string
+	}[]
 	sectionId: string
 }
 

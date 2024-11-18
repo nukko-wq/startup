@@ -15,7 +15,16 @@ export default function ResourceContent({ spaceId }: ResourceContentProps) {
 		useResourceStore()
 
 	useEffect(() => {
-		fetchSections(spaceId)
+		if (spaceId) {
+			const loadSections = async () => {
+				try {
+					await fetchSections(spaceId)
+				} catch (error) {
+					console.error('Failed to fetch sections:', error)
+				}
+			}
+			loadSections()
+		}
 	}, [spaceId, fetchSections])
 
 	return (

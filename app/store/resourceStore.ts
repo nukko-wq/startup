@@ -46,18 +46,17 @@ interface ResourceCacheEntry {
 
 export interface ResourceStore {
 	sections: Section[]
-	resources: Pick<
-		Resource,
-		| 'id'
-		| 'title'
-		| 'description'
-		| 'url'
-		| 'faviconUrl'
-		| 'mimeType'
-		| 'isGoogleDrive'
-		| 'position'
-		| 'sectionId'
-	>[]
+	resources: {
+		id: string
+		title: string
+		description: string | null
+		url: string
+		faviconUrl: string | null
+		mimeType: string | null
+		isGoogleDrive: boolean
+		position: number
+		sectionId: string
+	}[]
 	driveFiles: DriveFile[]
 	isLoading: boolean
 	isCreating: boolean
@@ -159,6 +158,8 @@ export const useResourceStore = create<ResourceStore>()(
 				fetchSections: async (spaceId): Promise<SectionData> => {
 					if (!spaceId) return { sections: [], resources: [] }
 
+					set({ isLoading: true }) // ローディング状態を設定
+
 					const cachedData = get().resourceCache.get(spaceId)
 					if (cachedData) {
 						set({
@@ -172,13 +173,7 @@ export const useResourceStore = create<ResourceStore>()(
 					try {
 						const response = await fetch(`/api/spaces/${spaceId}/sections`)
 						if (!response.ok) {
-							// エラー時は空の配列を返す
-							set({
-								sections: [],
-								resources: [],
-								isLoading: false,
-							})
-							return { sections: [], resources: [] }
+							throw new Error('Failed to fetch sections')
 						}
 
 						const data = await response.json()
@@ -187,11 +182,13 @@ export const useResourceStore = create<ResourceStore>()(
 							resources: data.resources || [],
 						}
 
+						// キャッシュを更新
 						get().resourceCache.set(spaceId, {
 							...formattedData,
 							timestamp: Date.now(),
 						})
 
+						// ストアの状態を更新
 						set({
 							sections: formattedData.sections,
 							resources: formattedData.resources,
@@ -206,7 +203,7 @@ export const useResourceStore = create<ResourceStore>()(
 							resources: [],
 							isLoading: false,
 						})
-						return { sections: [], resources: [] }
+						throw error
 					}
 				},
 

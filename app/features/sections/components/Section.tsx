@@ -20,7 +20,21 @@ export default memo(function Section({ id, name, onDelete }: SectionProps) {
 	const ref = useRef<HTMLDivElement>(null)
 	const [sectionName, setSectionName] = useState(name)
 	const [isResourceCreateOpen, setIsResourceCreateOpen] = useState(false)
-	const { resources = [] } = useResourceStore()
+	const {
+		resources = [],
+	}: {
+		resources: {
+			id: string
+			title: string
+			description: string | null
+			url: string
+			faviconUrl: string | null
+			mimeType: string | null
+			isGoogleDrive: boolean
+			position: number
+			sectionId: string
+		}[]
+	} = useResourceStore()
 
 	const sectionResources = useMemo(() => {
 		const filteredResources = resources.filter((r) => r.sectionId === id)
