@@ -14,9 +14,22 @@ import ResourceEditForm from '@/app/features/resources/edit_resource/components/
 import type { Resource } from '@prisma/client'
 import { Pencil } from 'lucide-react'
 import { useState } from 'react'
-const ResourceEditMenu = ({
-	resource,
-}: { resource: Pick<Resource, 'id' | 'title' | 'description' | 'url'> }) => {
+
+interface ResourceEditMenuProps {
+	resource: {
+		id: string
+		title: string
+		description: string | null
+		url: string
+		faviconUrl: string | null
+		mimeType: string | null
+		isGoogleDrive: boolean
+		position: number
+		sectionId: string
+	}
+}
+
+const ResourceEditMenu = ({ resource }: ResourceEditMenuProps) => {
 	const [isTooltipVisible, setIsTooltipVisible] = useState(false)
 
 	return (

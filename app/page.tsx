@@ -1,12 +1,16 @@
+import { Suspense } from 'react'
 import { redirect } from 'next/navigation'
 import Sidebar from '@/app/features/sidebar/Sidebar'
 import Resources from '@/app/features/resources/components/Resources'
+import ResourceContent from '@/app/features/resources/components/ResourceContent'
+import LoadingSpinner from '@/app/components/ui/LoadingSpinner'
 import { getInitialSections } from '@/app/features/resources/utils/getInitialSections'
 import { getSpaces } from '@/app/features/spaces/utils/getSpaces'
 import { auth } from '@/lib/auth'
 import Header from '@/app/features/header/Header'
 import { getWorkspaces } from '@/app/features/workspaces/utils/getWorkspaces'
 import TabList from '@/app/features/tabs/components/TabList'
+import { useResourceStore } from '@/app/store/resourceStore'
 
 export const revalidate = 0
 
@@ -31,11 +35,32 @@ export default async function Index({ searchParams }: PageProps) {
 	const spacesPromise = getSpaces(session.user.id)
 	const workspacesPromise = getWorkspaces(session.user.id)
 
-	const [{ sections, activeSpace }, spaces, workspaces] = await Promise.all([
-		initialDataPromise,
-		spacesPromise,
-		workspacesPromise,
-	])
+	const [{ sections, resources, activeSpace }, spaces, workspaces] =
+		await Promise.all([initialDataPromise, spacesPromise, workspacesPromise])
+
+	// Zustandストアの初期化
+	if (spaceId) {
+		useResourceStore.setState({
+			sections: sections || [],
+			resources: resources || [],
+			resourceCache: new Map([
+				[
+					spaceId,
+					{
+						sections,
+						resources,
+						timestamp: Date.now(),
+					},
+				],
+			]),
+		})
+	} else {
+		useResourceStore.setState({
+			sections: sections || [],
+			resources: resources || [],
+			resourceCache: new Map(),
+		})
+	}
 
 	// activeSpaceがある場合、そのスペースにリダイレクト
 	if (activeSpace && !spaceId) {
@@ -57,14 +82,15 @@ export default async function Index({ searchParams }: PageProps) {
 							<TabList />
 						</div>
 						<div className="flex w-1/2 justify-center">
-							<Resources
-								initialData={{
-									sections,
-									userId: session.user.id,
-									spaceId: spaceId ?? '',
-								}}
-								spaceId={spaceId ?? ''}
-							/>
+							<Suspense
+								fallback={
+									<div className="flex items-center justify-center h-full">
+										<LoadingSpinner />
+									</div>
+								}
+							>
+								<ResourceContent spaceId={spaceId ?? ''} />
+							</Suspense>
 						</div>
 					</div>
 				</main>

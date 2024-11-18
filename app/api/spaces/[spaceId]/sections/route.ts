@@ -34,7 +34,14 @@ export async function GET(
 			},
 		})
 
-		return NextResponse.json({ sections })
+		const resources = sections.flatMap((section) => section.resources)
+
+		const cleanSections = sections.map(({ resources, ...section }) => section)
+
+		return NextResponse.json({
+			sections: cleanSections,
+			resources: resources,
+		})
 	} catch (error) {
 		console.error('Sections fetch error:', error)
 		return NextResponse.json(

@@ -83,7 +83,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
 			}
 		},
 		async session({ session, token }) {
-			console.log('Session callback:', { session, token })
+			// console.log('Session callback:', { session, token })
 			if (session.user) {
 				session.user.id = token.id
 				session.accessToken = token.accessToken
@@ -93,7 +93,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
 			return session
 		},
 		async jwt({ token, account, user }) {
-			console.log('JWT callback:', { token, account, user })
+			// console.log('JWT callback:', { token, account, user })
 			if (account && user && user.id) {
 				token.id = user.id
 				token.accessToken = account.access_token ?? undefined

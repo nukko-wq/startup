@@ -12,52 +12,49 @@ export interface DriveFile {
 
 export interface SectionData {
 	sections: Section[]
-	resources: Pick<
-		Resource,
-		| 'id'
-		| 'title'
-		| 'description'
-		| 'url'
-		| 'faviconUrl'
-		| 'mimeType'
-		| 'isGoogleDrive'
-		| 'position'
-		| 'sectionId'
-	>[]
+	resources: {
+		id: string
+		title: string
+		description: string | null
+		url: string
+		faviconUrl: string | null
+		mimeType: string | null
+		isGoogleDrive: boolean
+		position: number
+		sectionId: string
+	}[]
 }
 
 // キャッシュの型を修正
 interface ResourceCacheEntry {
 	sections: Section[]
-	resources: Pick<
-		Resource,
-		| 'id'
-		| 'title'
-		| 'description'
-		| 'url'
-		| 'faviconUrl'
-		| 'mimeType'
-		| 'isGoogleDrive'
-		| 'position'
-		| 'sectionId'
-	>[]
+	resources: {
+		id: string
+		title: string
+		description: string | null
+		url: string
+		faviconUrl: string | null
+		mimeType: string | null
+		isGoogleDrive: boolean
+		position: number
+		sectionId: string
+	}[]
 	timestamp: number
 }
 
 export interface ResourceStore {
 	sections: Section[]
-	resources: Pick<
-		Resource,
-		| 'id'
-		| 'title'
-		| 'description'
-		| 'url'
-		| 'faviconUrl'
-		| 'mimeType'
-		| 'isGoogleDrive'
-		| 'position'
-		| 'sectionId'
-	>[]
+	resources: {
+		id: string
+		title: string
+		description: string | null
+		url: string
+		faviconUrl: string | null
+		mimeType: string | null
+		isGoogleDrive: boolean
+		position: number
+		sectionId: string
+	}[]
 	driveFiles: DriveFile[]
 	isLoading: boolean
 	isCreating: boolean
@@ -158,43 +155,20 @@ export const useResourceStore = create<ResourceStore>()(
 
 				fetchSections: async (spaceId): Promise<SectionData> => {
 					set({ isLoading: true })
+					if (!spaceId) return { sections: [], resources: [] }
 					try {
 						const response = await fetch(`/api/spaces/${spaceId}/sections`)
-						if (!response.ok) {
-							throw new Error('Failed to fetch sections')
-						}
-
+						if (!response.ok) throw new Error('Failed to fetch sections')
 						const data = await response.json()
-
-						const sections =
-							data.sections?.map((section: Section) => ({
-								...section,
-								resources: section.resources || [],
-							})) || []
-
-						// リソースの型を修正
-						const resources = sections.flatMap((section: Section) =>
-							(section.resources || []).map((resource) => ({
-								id: resource.id,
-								title: resource.title,
-								description: resource.description,
-								url: resource.url,
-								faviconUrl: resource.faviconUrl,
-								mimeType: resource.mimeType,
-								isGoogleDrive: resource.isGoogleDrive,
-								position: resource.position,
-								sectionId: section.id,
-							})),
-						)
-
-						const formattedData: SectionData = { sections, resources }
-
+						const formattedData = {
+							sections: data.sections || [],
+							resources: data.resources || [],
+						}
 						set({
-							sections,
-							resources,
+							sections: formattedData.sections,
+							resources: formattedData.resources,
 							isLoading: false,
 						})
-
 						return formattedData
 					} catch (error) {
 						console.error('Error fetching sections:', error)
@@ -205,25 +179,11 @@ export const useResourceStore = create<ResourceStore>()(
 
 				createSection: async (spaceId) => {
 					const { sections, setIsCreating, setIsLoading } = get()
-					setIsCreating(true)
-					setIsLoading(true)
-
-					// 楽観的更新のための仮のセクションを作成
-					const optimisticSection: Section = {
-						id: `temp-${Date.now()}`, // 一時的なID
-						name: 'Resources',
-						order: sections.length,
-						spaceId: spaceId,
-						userId: '', // 仮の値
-						createdAt: new Date(),
-						updatedAt: new Date(),
-						resources: [],
-					}
-
-					// 楽観的に状態を更新
-					set({ sections: [...sections, optimisticSection] })
 
 					try {
+						setIsCreating(true)
+						setIsLoading(true)
+
 						const response = await fetch('/api/sections', {
 							method: 'POST',
 							headers: { 'Content-Type': 'application/json' },
@@ -236,48 +196,18 @@ export const useResourceStore = create<ResourceStore>()(
 						})
 
 						if (!response.ok) {
-							const error = await response.json()
-							throw new Error(error.message || 'セクションの作成に失敗しました')
+							throw new Error('セクションの作成に失敗しました')
 						}
 
 						const newSection = await response.json()
-
-						// 一時的なセクションを実際のセクションで置き換え
-						set({
-							sections: sections
-								.filter((s) => s.id !== optimisticSection.id)
-								.concat(newSection),
-						})
-
-						// キャッシュを更新
-						const cacheKey = `sections-${spaceId}`
-						const cachedData = sessionStorage.getItem(cacheKey)
-						if (cachedData) {
-							const parsed = JSON.parse(cachedData)
-							sessionStorage.setItem(
-								cacheKey,
-								JSON.stringify({
-									...parsed,
-									sections: parsed.sections
-										.filter((s: Section) => s.id !== optimisticSection.id)
-										.concat(newSection),
-								}),
-							)
-						}
+						set({ sections: [...sections, newSection] })
 
 						return newSection
 					} catch (error) {
 						console.error('セクション作成エラー:', error)
-						// エラー時は楽観的に追加したセクションを削除
-						set({
-							sections: sections.filter((s) => s.id !== optimisticSection.id),
-						})
-
-						if (error instanceof Error && error.message.includes('認証')) {
-							window.location.href = '/login'
-							return
-						}
-						throw new Error('セクションの作成に失敗しました')
+						throw error instanceof Error
+							? error
+							: new Error('セクションの作成に失敗しました')
 					} finally {
 						setIsCreating(false)
 						setIsLoading(false)
@@ -554,11 +484,10 @@ export const useResourceStore = create<ResourceStore>()(
 				},
 
 				updateSection: async (sectionId: string, data: { name: string }) => {
-					const { sections, resources } = get()
+					const { sections } = get()
 					const previousSections = [...sections]
 
 					try {
-						// 更新対象のセクションを見つける
 						const targetSection = sections.find(
 							(section) => section.id === sectionId,
 						)
@@ -566,15 +495,8 @@ export const useResourceStore = create<ResourceStore>()(
 							throw new Error('セクションが見つかりません')
 						}
 
-						// 先に状態を更新
 						const updatedSections = sections.map((section) =>
-							section.id === sectionId
-								? {
-										...section,
-										...data,
-										resources: section.resources, // リソースを保持
-									}
-								: section,
+							section.id === sectionId ? { ...section, ...data } : section,
 						)
 
 						set({ sections: updatedSections })
@@ -594,42 +516,14 @@ export const useResourceStore = create<ResourceStore>()(
 						// キャッシュの更新
 						const spaceId = targetSection.spaceId
 						if (spaceId) {
-							// resourceCacheの更新
 							const cache = get().resourceCache.get(spaceId)
 							if (cache) {
 								get().resourceCache.set(spaceId, {
 									...cache,
-									sections: cache.sections.map((section) =>
-										section.id === sectionId
-											? { ...section, ...data }
-											: section,
-									),
+									sections: updatedSections,
 									timestamp: Date.now(),
 								})
 							}
-
-							// セッションストレージの更新
-							const cacheKey = `sections-${spaceId}`
-							const cachedData = sessionStorage.getItem(cacheKey)
-							if (cachedData) {
-								const parsed = JSON.parse(cachedData)
-								sessionStorage.setItem(
-									cacheKey,
-									JSON.stringify({
-										...parsed,
-										sections: parsed.sections.map((section: Section) =>
-											section.id === sectionId
-												? { ...section, ...data }
-												: section,
-										),
-									}),
-								)
-							}
-						}
-
-						// 必要に応じてセクションデータを再取得
-						if (spaceId) {
-							await get().fetchSections(spaceId)
 						}
 					} catch (error) {
 						console.error('Section update error:', error)

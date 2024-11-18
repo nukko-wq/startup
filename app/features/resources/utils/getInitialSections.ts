@@ -6,6 +6,17 @@ import type { Space } from '@/app/types/space'
 
 interface InitialSectionsResult {
 	sections: Section[]
+	resources: Array<{
+		id: string
+		title: string
+		url: string
+		faviconUrl: string | null
+		mimeType: string | null
+		isGoogleDrive: boolean
+		position: number
+		description: string | null
+		sectionId: string
+	}>
 	userId: string
 	spaceId: string | null
 	activeSpace: Space | null
@@ -34,7 +45,13 @@ export const getInitialSections = unstable_cache(
 			const targetSpaceId = spaceId || activeSpace?.id
 
 			if (!targetSpaceId) {
-				return { sections: [], userId, spaceId: null, activeSpace: null }
+				return {
+					sections: [],
+					resources: [],
+					userId,
+					spaceId: null,
+					activeSpace: null,
+				}
 			}
 
 			const sections = await prisma.section.findMany({
@@ -42,12 +59,7 @@ export const getInitialSections = unstable_cache(
 					userId: userId,
 					spaceId: targetSpaceId,
 				},
-				select: {
-					id: true,
-					name: true,
-					order: true,
-					createdAt: true,
-					updatedAt: true,
+				include: {
 					resources: {
 						select: {
 							id: true,
@@ -70,8 +82,12 @@ export const getInitialSections = unstable_cache(
 				},
 			})
 
+			// sectionsの取得後、resourcesを抽出して返す
+			const allResources = sections.flatMap((section) => section.resources)
+
 			return {
 				sections,
+				resources: allResources,
 				userId,
 				spaceId: targetSpaceId,
 				activeSpace: activeSpace || null,

@@ -17,7 +17,17 @@ import { Earth } from 'lucide-react'
 import { useResourceStore } from '@/app/store/resourceStore'
 
 interface ResourceEditFormProps {
-	resource: Pick<Resource, 'id' | 'title' | 'url' | 'description'>
+	resource: {
+		id: string
+		title: string
+		description: string | null
+		url: string
+		faviconUrl: string | null
+		mimeType: string | null
+		isGoogleDrive: boolean
+		position: number
+		sectionId: string
+	}
 	onClose: () => void
 }
 
