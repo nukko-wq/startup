@@ -111,16 +111,8 @@ export const useSpaceStore = create<SpaceStore>((set, get) => ({
 			const resourceState = useResourceStore.getState()
 			const newData = await resourceState.fetchSections(spaceId)
 
-			if (!newData) {
-				throw new Error('Failed to fetch sections data')
-			}
-
-			if (Array.isArray(newData.sections) && Array.isArray(newData.resources)) {
-				resourceState.setSections(newData.sections)
-				resourceState.setResources(newData.resources)
-			} else {
-				throw new Error('Invalid sections data format')
-			}
+			resourceState.setSections(newData?.sections || [])
+			resourceState.setResources(newData?.resources || [])
 		} catch (error) {
 			console.error('Error in handleSpaceClick:', error)
 

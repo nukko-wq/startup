@@ -171,15 +171,22 @@ export const useResourceStore = create<ResourceStore>()(
 
 					try {
 						const response = await fetch(`/api/spaces/${spaceId}/sections`)
-						if (!response.ok) throw new Error('Failed to fetch sections')
+						if (!response.ok) {
+							// エラー時は空の配列を返す
+							set({
+								sections: [],
+								resources: [],
+								isLoading: false,
+							})
+							return { sections: [], resources: [] }
+						}
 
 						const data = await response.json()
 						const formattedData = {
-							sections: data.sections,
-							resources: data.resources,
+							sections: data.sections || [],
+							resources: data.resources || [],
 						}
 
-						// キャッシュを更新
 						get().resourceCache.set(spaceId, {
 							...formattedData,
 							timestamp: Date.now(),
@@ -194,7 +201,12 @@ export const useResourceStore = create<ResourceStore>()(
 						return formattedData
 					} catch (error) {
 						console.error('Error fetching sections:', error)
-						throw error
+						set({
+							sections: [],
+							resources: [],
+							isLoading: false,
+						})
+						return { sections: [], resources: [] }
 					}
 				},
 
