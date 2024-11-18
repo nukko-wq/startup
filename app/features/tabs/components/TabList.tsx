@@ -12,6 +12,10 @@ interface Tab {
 	faviconUrl: string
 }
 
+interface PingResponse {
+	success: boolean
+}
+
 export default function TabList() {
 	const [tabs, setTabs] = useState<Tab[]>([])
 	const [isLoading, setIsLoading] = useState(true)
@@ -78,19 +82,22 @@ export default function TabList() {
 				throw new Error('Chrome extension API not available')
 			}
 
-			const extensionId = 'ldjmfilhlnenocddjnibkcglmjmchmhp'
-
 			try {
-				const response = await chrome.runtime.sendMessage(extensionId, {
-					type: 'PING',
+				const message = { type: 'PING' }
+				const response = await new Promise<PingResponse>((resolve) => {
+					chrome.runtime.sendMessage(message, (response) => {
+						resolve(response)
+					})
 				})
-				if (response?.success) {
-					setExtensionId(extensionId)
-					localStorage.setItem('extensionId', extensionId)
-					return extensionId
+
+				if (response?.success && chrome.runtime.id) {
+					const newExtensionId = chrome.runtime.id
+					setExtensionId(newExtensionId)
+					localStorage.setItem('extensionId', newExtensionId)
+					return newExtensionId
 				}
 			} catch (error) {
-				console.log(`Failed to connect to extension: ${error}`)
+				console.log('Failed to get extension ID:', error)
 			}
 
 			console.error('No valid extension found')
