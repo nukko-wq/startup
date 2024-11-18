@@ -14,32 +14,32 @@ interface SectionProps {
 	id: string
 	name: string
 	onDelete: (sectionId: string) => void
+	resources: Array<{
+		id: string
+		title: string
+		description: string | null
+		url: string
+		faviconUrl: string | null
+		mimeType: string | null
+		isGoogleDrive: boolean
+		position: number
+		sectionId: string
+	}>
 }
 
-export default memo(function Section({ id, name, onDelete }: SectionProps) {
+export default memo(function Section({
+	id,
+	name,
+	onDelete,
+	resources,
+}: SectionProps) {
 	const ref = useRef<HTMLDivElement>(null)
 	const [sectionName, setSectionName] = useState(name)
 	const [isResourceCreateOpen, setIsResourceCreateOpen] = useState(false)
-	const {
-		resources = [],
-	}: {
-		resources: {
-			id: string
-			title: string
-			description: string | null
-			url: string
-			faviconUrl: string | null
-			mimeType: string | null
-			isGoogleDrive: boolean
-			position: number
-			sectionId: string
-		}[]
-	} = useResourceStore()
 
 	const sectionResources = useMemo(() => {
-		const filteredResources = resources.filter((r) => r.sectionId === id)
-		return [...filteredResources].sort((a, b) => a.position - b.position)
-	}, [resources, id])
+		return [...resources].sort((a, b) => a.position - b.position)
+	}, [resources])
 
 	const handleNameEdit = (newName: string) => {
 		setSectionName(newName)
