@@ -216,42 +216,39 @@ export const useResourceStore = create<ResourceStore>()(
 
 				deleteSection: async (sectionId: string) => {
 					const { sections, resources } = get()
-					const previousSections = [...sections]
-					const previousResources = [...resources]
 
 					try {
-						// 先に状態を更新
-						set({
-							sections: sections.filter((section) => section.id !== sectionId),
-							// このセクションに属するリソースも削除
-							resources: resources.filter(
-								(resource) => resource.sectionId !== sectionId,
-							),
-						})
-
+						// APIリクエストを実行
 						const response = await fetch(`/api/sections/${sectionId}`, {
 							method: 'DELETE',
-							headers: {
-								'Content-Type': 'application/json',
-							},
 							credentials: 'include',
 						})
 
 						if (!response.ok) {
-							// エラーの場合は元の状態に戻す
-							set({
-								sections: previousSections,
-								resources: previousResources,
-							})
+							if (response.status === 404) {
+								// 既に削除されている場合は、ローカルの状態だけを更新
+								set({
+									sections: sections.filter(
+										(section) => section.id !== sectionId,
+									),
+									resources: resources.filter(
+										(resource) => resource.sectionId !== sectionId,
+									),
+								})
+								return
+							}
 							throw new Error('セクションの削除に失敗しました')
 						}
+
+						// 成功した場合、状態を更新
+						set({
+							sections: sections.filter((section) => section.id !== sectionId),
+							resources: resources.filter(
+								(resource) => resource.sectionId !== sectionId,
+							),
+						})
 					} catch (error) {
 						console.error('セクション削除エラー:', error)
-						// エラーの場合は元の状態に戻す
-						set({
-							sections: previousSections,
-							resources: previousResources,
-						})
 						throw error
 					}
 				},
