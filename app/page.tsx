@@ -1,6 +1,9 @@
+import { Suspense } from 'react'
 import { redirect } from 'next/navigation'
 import Sidebar from '@/app/features/sidebar/Sidebar'
 import Resources from '@/app/features/resources/components/Resources'
+import ResourceContent from '@/app/features/resources/components/ResourceContent'
+import LoadingSpinner from '@/app/components/ui/LoadingSpinner'
 import { getInitialSections } from '@/app/features/resources/utils/getInitialSections'
 import { getSpaces } from '@/app/features/spaces/utils/getSpaces'
 import { auth } from '@/lib/auth'
@@ -57,14 +60,15 @@ export default async function Index({ searchParams }: PageProps) {
 							<TabList />
 						</div>
 						<div className="flex w-1/2 justify-center">
-							<Resources
-								initialData={{
-									sections,
-									userId: session.user.id,
-									spaceId: spaceId ?? '',
-								}}
-								spaceId={spaceId ?? ''}
-							/>
+							<Suspense
+								fallback={
+									<div className="flex items-center justify-center h-full">
+										<LoadingSpinner />
+									</div>
+								}
+							>
+								<ResourceContent spaceId={spaceId ?? ''} />
+							</Suspense>
 						</div>
 					</div>
 				</main>
