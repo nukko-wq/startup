@@ -58,50 +58,71 @@ export default function TabList() {
 	}
 
 	const fetchExtensionId = async () => {
+		if (typeof window === 'undefined' || !window.chrome?.runtime) {
+			console.log('Chrome extension API not available')
+			return null
+		}
+
 		try {
 			const storedExtensionId = localStorage.getItem('extensionId')
 			if (storedExtensionId) {
 				try {
-					const pingResponse = await chrome.runtime.sendMessage(
-						storedExtensionId,
-						{
-							type: 'PING',
+					const response = await new Promise<PingResponse>(
+						(resolve, reject) => {
+							chrome.runtime.sendMessage(
+								storedExtensionId,
+								{ type: 'PING' },
+								(response) => {
+									if (chrome.runtime.lastError) {
+										reject(chrome.runtime.lastError)
+									} else {
+										resolve(response as PingResponse)
+									}
+								},
+							)
 						},
 					)
-					if (pingResponse?.success) {
+
+					if (response?.success) {
 						setExtensionId(storedExtensionId)
 						return storedExtensionId
 					}
 				} catch (error) {
-					console.log('Stored extension ID is invalid, fetching new one')
+					console.log('Stored extension ID is invalid, removing it')
 					localStorage.removeItem('extensionId')
 				}
 			}
 
-			if (!window.chrome?.runtime) {
-				throw new Error('Chrome extension API not available')
-			}
+			const extensionIds = [
+				...(process.env.NEXT_PUBLIC_EXTENSION_ID_PROD?.split(',') || []),
+				process.env.NEXT_PUBLIC_EXTENSION_ID_DEV,
+			].filter(Boolean)
 
-			try {
-				const message = { type: 'PING' }
-				const response = await new Promise<PingResponse>((resolve) => {
-					chrome.runtime.sendMessage(message, (response) => {
-						resolve(response)
-					})
-				})
+			for (const id of extensionIds) {
+				try {
+					const response = await new Promise<PingResponse>(
+						(resolve, reject) => {
+							chrome.runtime.sendMessage(id, { type: 'PING' }, (response) => {
+								if (chrome.runtime.lastError) {
+									reject(chrome.runtime.lastError)
+								} else {
+									resolve(response as PingResponse)
+								}
+							})
+						},
+					)
 
-				if (response?.success && chrome.runtime.id) {
-					const newExtensionId = chrome.runtime.id
-					setExtensionId(newExtensionId)
-					localStorage.setItem('extensionId', newExtensionId)
-					return newExtensionId
+					if (response?.success && id) {
+						setExtensionId(id)
+						localStorage.setItem('extensionId', id)
+						return id
+					}
+				} catch (error) {
+					console.log(`Failed to connect to extension ${id}`)
 				}
-			} catch (error) {
-				console.log('Failed to get extension ID:', error)
 			}
 
-			console.error('No valid extension found')
-			return null
+			throw new Error('No valid extension found')
 		} catch (error) {
 			console.error('拡張機能IDの取得に失敗:', error)
 			return null
