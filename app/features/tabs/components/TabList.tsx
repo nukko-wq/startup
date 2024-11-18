@@ -57,28 +57,43 @@ export default function TabList() {
 		try {
 			const storedExtensionId = localStorage.getItem('extensionId')
 			if (storedExtensionId) {
-				setExtensionId(storedExtensionId)
-				return storedExtensionId
+				try {
+					const pingResponse = await chrome.runtime.sendMessage(
+						storedExtensionId,
+						{
+							type: 'PING',
+						},
+					)
+					if (pingResponse?.success) {
+						setExtensionId(storedExtensionId)
+						return storedExtensionId
+					}
+				} catch (error) {
+					console.log('Stored extension ID is invalid, fetching new one')
+					localStorage.removeItem('extensionId')
+				}
 			}
 
-			if (!window.chrome?.runtime?.sendMessage) {
+			if (!window.chrome?.runtime) {
 				throw new Error('Chrome extension API not available')
 			}
 
+			const extensionId = 'ldjmfilhlnenocddjnibkcglmjmchmhp'
+
 			try {
-				const response = await chrome.runtime.sendMessage(undefined, {
-					type: 'GET_EXTENSION_ID',
+				const response = await chrome.runtime.sendMessage(extensionId, {
+					type: 'PING',
 				})
-				if (response?.success && response.extensionId) {
-					const newExtensionId = response.extensionId
-					setExtensionId(newExtensionId)
-					localStorage.setItem('extensionId', newExtensionId)
-					return newExtensionId
+				if (response?.success) {
+					setExtensionId(extensionId)
+					localStorage.setItem('extensionId', extensionId)
+					return extensionId
 				}
 			} catch (error) {
-				console.error('Failed to get extension ID directly:', error)
+				console.log(`Failed to connect to extension: ${error}`)
 			}
 
+			console.error('No valid extension found')
 			return null
 		} catch (error) {
 			console.error('拡張機能IDの取得に失敗:', error)
