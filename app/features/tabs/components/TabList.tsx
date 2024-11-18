@@ -57,6 +57,39 @@ export default function TabList() {
 		}
 	}
 
+	const fetchExtensionId = async () => {
+		try {
+			// まず、ローカルストレージから拡張機能IDを取得
+			const storedExtensionId = localStorage.getItem('extensionId')
+			if (storedExtensionId) {
+				setExtensionId(storedExtensionId)
+				return
+			}
+
+			// 拡張機能に問い合わせてIDを取得
+			const response = await fetch('http://localhost:3000/api/extension-id', {
+				method: 'GET',
+			})
+
+			if (!response.ok) {
+				throw new Error('拡張機能IDの取得に失敗しました')
+			}
+
+			const data = await response.json()
+			if (data.extensionId) {
+				setExtensionId(data.extensionId)
+				localStorage.setItem('extensionId', data.extensionId)
+			}
+		} catch (error) {
+			console.error('拡張機能IDの取得に失敗:', error)
+		}
+	}
+
+	// biome-ignore lint/correctness/useExhaustiveDependencies: <explanation>
+	useEffect(() => {
+		fetchExtensionId()
+	}, [])
+
 	useEffect(() => {
 		const fetchTabs = async () => {
 			try {
