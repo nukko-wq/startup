@@ -157,48 +157,43 @@ export const useResourceStore = create<ResourceStore>()(
 					})),
 
 				fetchSections: async (spaceId): Promise<SectionData> => {
-					set({ isLoading: true })
+					if (!spaceId) return { sections: [], resources: [] }
+
+					const cachedData = get().resourceCache.get(spaceId)
+					if (cachedData) {
+						set({
+							sections: cachedData.sections,
+							resources: cachedData.resources,
+							isLoading: false,
+						})
+						return cachedData
+					}
+
 					try {
 						const response = await fetch(`/api/spaces/${spaceId}/sections`)
-						if (!response.ok) {
-							throw new Error('Failed to fetch sections')
-						}
+						if (!response.ok) throw new Error('Failed to fetch sections')
 
 						const data = await response.json()
+						const formattedData = {
+							sections: data.sections,
+							resources: data.resources,
+						}
 
-						const sections =
-							data.sections?.map((section: Section) => ({
-								...section,
-								resources: section.resources || [],
-							})) || []
-
-						// リソースの型を修正
-						const resources = sections.flatMap((section: Section) =>
-							(section.resources || []).map((resource) => ({
-								id: resource.id,
-								title: resource.title,
-								description: resource.description,
-								url: resource.url,
-								faviconUrl: resource.faviconUrl,
-								mimeType: resource.mimeType,
-								isGoogleDrive: resource.isGoogleDrive,
-								position: resource.position,
-								sectionId: section.id,
-							})),
-						)
-
-						const formattedData: SectionData = { sections, resources }
+						// キャッシュを更新
+						get().resourceCache.set(spaceId, {
+							...formattedData,
+							timestamp: Date.now(),
+						})
 
 						set({
-							sections,
-							resources,
+							sections: formattedData.sections,
+							resources: formattedData.resources,
 							isLoading: false,
 						})
 
 						return formattedData
 					} catch (error) {
 						console.error('Error fetching sections:', error)
-						set({ sections: [], resources: [], isLoading: false })
 						throw error
 					}
 				},
