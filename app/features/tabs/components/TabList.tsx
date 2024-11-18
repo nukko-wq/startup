@@ -66,8 +66,13 @@ export default function TabList() {
 				return
 			}
 
-			// 拡張機能に問い合わせてIDを取得
-			const response = await fetch('http://localhost:3000/api/extension-id', {
+			// 環境に応じたAPIエンドポイント
+			const apiUrl =
+				process.env.NODE_ENV === 'development'
+					? 'http://localhost:3000/api/extension-id'
+					: 'https://startup.nukko.dev/api/extension-id'
+
+			const response = await fetch(apiUrl, {
 				method: 'GET',
 			})
 
