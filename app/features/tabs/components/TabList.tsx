@@ -98,17 +98,18 @@ export default function TabList() {
 	useEffect(() => {
 		const fetchTabs = async () => {
 			try {
-				const extensionId = process.env.NEXT_PUBLIC_EXTENSION_ID
-				if (!extensionId) {
+				// まず保存されたextensionIdを使用
+				const storedExtensionId = localStorage.getItem('extensionId')
+				if (!storedExtensionId) {
 					throw new Error('Extension ID not found')
 				}
 
-				// chrome.runtimeの存在確認を修正
+				// chrome.runtimeの存在確認
 				if (!window.chrome?.runtime?.sendMessage) {
 					throw new Error('Chrome extension API not available')
 				}
 
-				const response = await chrome.runtime.sendMessage(extensionId, {
+				const response = await chrome.runtime.sendMessage(storedExtensionId, {
 					type: 'GET_CURRENT_TABS',
 				})
 
@@ -117,7 +118,6 @@ export default function TabList() {
 				}
 			} catch (error) {
 				console.error('Failed to fetch tabs:', error)
-				// エラーの種類に応じて適切なメッセージを表示
 				if (error instanceof Error) {
 					if (error.message.includes('Extension ID not found')) {
 						console.error('Extension ID is not configured')
