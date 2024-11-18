@@ -20,37 +20,33 @@ export default function TabList() {
 
 	const handleTabClick = async (tab: Tab) => {
 		try {
-			const extensionId = process.env.NEXT_PUBLIC_EXTENSION_ID
-			if (!extensionId) {
-				console.error('Extension ID not found')
-				return
+			const storedExtensionId = localStorage.getItem('extensionId')
+			if (!storedExtensionId) {
+				throw new Error('Extension ID not found')
 			}
 
-			await chrome.runtime.sendMessage(extensionId, {
+			await chrome.runtime.sendMessage(storedExtensionId, {
 				type: 'ACTIVATE_TAB',
 				tabId: tab.id,
 			})
 		} catch (error) {
 			console.error('Failed to activate tab:', error)
-			// フォールバック：新しいタブで開く
 			window.open(tab.url, '_blank')
 		}
 	}
 
 	const handleDeleteTab = async (tabId: number) => {
 		try {
-			const extensionId = process.env.NEXT_PUBLIC_EXTENSION_ID
-			if (!extensionId) {
-				console.error('Extension ID not found')
-				return
+			const storedExtensionId = localStorage.getItem('extensionId')
+			if (!storedExtensionId) {
+				throw new Error('Extension ID not found')
 			}
 
-			await chrome.runtime.sendMessage(extensionId, {
+			await chrome.runtime.sendMessage(storedExtensionId, {
 				type: 'CLOSE_TAB',
 				tabId: tabId,
 			})
 
-			// ローカルのタブリストを更新
 			setTabs(tabs.filter((tab) => tab.id !== tabId))
 		} catch (error) {
 			console.error('Failed to close tab:', error)
@@ -59,105 +55,75 @@ export default function TabList() {
 
 	const fetchExtensionId = async () => {
 		try {
-			// まず、ローカルストレージから拡張機能IDを取得
 			const storedExtensionId = localStorage.getItem('extensionId')
 			if (storedExtensionId) {
 				setExtensionId(storedExtensionId)
-				return
+				return storedExtensionId
 			}
 
-			// 環境に応じたAPIエンドポイント
-			const apiUrl =
-				process.env.NODE_ENV === 'development'
-					? 'http://localhost:3000/api/extension-id'
-					: 'https://startup.nukko.dev/api/extension-id'
-
-			const response = await fetch(apiUrl, {
-				method: 'GET',
-			})
-
-			if (!response.ok) {
-				throw new Error('拡張機能IDの取得に失敗しました')
+			if (!window.chrome?.runtime?.sendMessage) {
+				throw new Error('Chrome extension API not available')
 			}
 
-			const data = await response.json()
-			if (data.extensionId) {
-				setExtensionId(data.extensionId)
-				localStorage.setItem('extensionId', data.extensionId)
+			try {
+				const response = await chrome.runtime.sendMessage(undefined, {
+					type: 'GET_EXTENSION_ID',
+				})
+				if (response?.success && response.extensionId) {
+					const newExtensionId = response.extensionId
+					setExtensionId(newExtensionId)
+					localStorage.setItem('extensionId', newExtensionId)
+					return newExtensionId
+				}
+			} catch (error) {
+				console.error('Failed to get extension ID directly:', error)
 			}
+
+			return null
 		} catch (error) {
 			console.error('拡張機能IDの取得に失敗:', error)
+			return null
+		}
+	}
+
+	const fetchTabs = async (extensionId: string) => {
+		try {
+			if (!window.chrome?.runtime?.sendMessage) {
+				throw new Error('Chrome extension API not available')
+			}
+
+			const response = await chrome.runtime.sendMessage(extensionId, {
+				type: 'GET_CURRENT_TABS',
+			})
+
+			if (response) {
+				setTabs(response)
+			}
+		} catch (error) {
+			console.error('Failed to fetch tabs:', error)
+		} finally {
+			setIsLoading(false)
 		}
 	}
 
 	// biome-ignore lint/correctness/useExhaustiveDependencies: <explanation>
 	useEffect(() => {
-		fetchExtensionId()
-	}, [])
-
-	useEffect(() => {
-		const fetchTabs = async () => {
+		const initializeTabs = async () => {
 			try {
-				// まず保存されたextensionIdを使用
-				const storedExtensionId = localStorage.getItem('extensionId')
-				if (!storedExtensionId) {
-					throw new Error('Extension ID not found')
-				}
-
-				// chrome.runtimeの存在確認
-				if (!window.chrome?.runtime?.sendMessage) {
-					throw new Error('Chrome extension API not available')
-				}
-
-				const response = await chrome.runtime.sendMessage(storedExtensionId, {
-					type: 'GET_CURRENT_TABS',
-				})
-
-				if (response) {
-					setTabs(response)
+				const extensionId = await fetchExtensionId()
+				if (extensionId) {
+					await fetchTabs(extensionId)
 				}
 			} catch (error) {
-				console.error('Failed to fetch tabs:', error)
-				if (error instanceof Error) {
-					if (error.message.includes('Extension ID not found')) {
-						console.error('Extension ID is not configured')
-					} else if (error.message.includes('Extension API not available')) {
-						console.error('Chrome extension is not installed or not accessible')
-					}
-				}
+				console.error('Failed to initialize tabs:', error)
 			} finally {
 				setIsLoading(false)
 			}
 		}
 
-		fetchTabs()
-	}, [])
-
-	useEffect(() => {
-		const checkExtension = async () => {
-			const extensionId = process.env.NEXT_PUBLIC_EXTENSION_ID
-			if (!extensionId) {
-				console.error('Extension ID not found')
-				return false
-			}
-
-			try {
-				// 拡張機能との通信テスト
-				await chrome.runtime.sendMessage(extensionId, {
-					type: 'GET_CURRENT_TABS',
-				})
-				return true
-			} catch (error) {
-				console.error('Extension communication failed:', error)
-				return false
-			}
+		if (typeof window !== 'undefined') {
+			initializeTabs()
 		}
-
-		checkExtension().then((isAvailable) => {
-			if (!isAvailable) {
-				setIsLoading(false)
-			}
-		})
 	}, [])
 
 	if (isLoading) {
