@@ -14,18 +14,23 @@ export default function ResourceContent({ spaceId }: ResourceContentProps) {
 	const { sections, fetchSections, createSection, isCreating, isLoading } =
 		useResourceStore()
 
+	// biome-ignore lint/correctness/useExhaustiveDependencies: <explanation>
 	useEffect(() => {
 		if (spaceId) {
 			const loadSections = async () => {
 				try {
-					await fetchSections(spaceId)
+					const data = await fetchSections(spaceId)
+					useResourceStore.setState({
+						sections: data.sections,
+						resources: data.resources,
+					})
 				} catch (error) {
 					console.error('Failed to fetch sections:', error)
 				}
 			}
 			loadSections()
 		}
-	}, [spaceId, fetchSections])
+	}, [spaceId])
 
 	return (
 		<div className="flex flex-col w-full max-w-3xl mx-auto p-4">

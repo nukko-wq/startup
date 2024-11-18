@@ -12,35 +12,33 @@ export interface DriveFile {
 
 export interface SectionData {
 	sections: Section[]
-	resources: Pick<
-		Resource,
-		| 'id'
-		| 'title'
-		| 'description'
-		| 'url'
-		| 'faviconUrl'
-		| 'mimeType'
-		| 'isGoogleDrive'
-		| 'position'
-		| 'sectionId'
-	>[]
+	resources: {
+		id: string
+		title: string
+		description: string | null
+		url: string
+		faviconUrl: string | null
+		mimeType: string | null
+		isGoogleDrive: boolean
+		position: number
+		sectionId: string
+	}[]
 }
 
 // キャッシュの型を修正
 interface ResourceCacheEntry {
 	sections: Section[]
-	resources: Pick<
-		Resource,
-		| 'id'
-		| 'title'
-		| 'description'
-		| 'url'
-		| 'faviconUrl'
-		| 'mimeType'
-		| 'isGoogleDrive'
-		| 'position'
-		| 'sectionId'
-	>[]
+	resources: {
+		id: string
+		title: string
+		description: string | null
+		url: string
+		faviconUrl: string | null
+		mimeType: string | null
+		isGoogleDrive: boolean
+		position: number
+		sectionId: string
+	}[]
 	timestamp: number
 }
 
@@ -158,23 +156,11 @@ export const useResourceStore = create<ResourceStore>()(
 				fetchSections: async (spaceId): Promise<SectionData> => {
 					if (!spaceId) return { sections: [], resources: [] }
 
-					set({ isLoading: true }) // ローディング状態を設定
-
-					const cachedData = get().resourceCache.get(spaceId)
-					if (cachedData) {
-						set({
-							sections: cachedData.sections,
-							resources: cachedData.resources,
-							isLoading: false,
-						})
-						return cachedData
-					}
+					set({ isLoading: true })
 
 					try {
 						const response = await fetch(`/api/spaces/${spaceId}/sections`)
-						if (!response.ok) {
-							throw new Error('Failed to fetch sections')
-						}
+						if (!response.ok) throw new Error('Failed to fetch sections')
 
 						const data = await response.json()
 						const formattedData = {
@@ -182,13 +168,6 @@ export const useResourceStore = create<ResourceStore>()(
 							resources: data.resources || [],
 						}
 
-						// キャッシュを更新
-						get().resourceCache.set(spaceId, {
-							...formattedData,
-							timestamp: Date.now(),
-						})
-
-						// ストアの状態を更新
 						set({
 							sections: formattedData.sections,
 							resources: formattedData.resources,
@@ -198,11 +177,7 @@ export const useResourceStore = create<ResourceStore>()(
 						return formattedData
 					} catch (error) {
 						console.error('Error fetching sections:', error)
-						set({
-							sections: [],
-							resources: [],
-							isLoading: false,
-						})
+						set({ sections: [], resources: [], isLoading: false })
 						throw error
 					}
 				},

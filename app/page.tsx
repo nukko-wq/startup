@@ -39,10 +39,28 @@ export default async function Index({ searchParams }: PageProps) {
 		await Promise.all([initialDataPromise, spacesPromise, workspacesPromise])
 
 	// Zustandストアの初期化
-	useResourceStore.setState({
-		sections: sections || [],
-		resources: resources || [],
-	})
+	if (spaceId) {
+		useResourceStore.setState({
+			sections: sections || [],
+			resources: resources || [],
+			resourceCache: new Map([
+				[
+					spaceId,
+					{
+						sections,
+						resources,
+						timestamp: Date.now(),
+					},
+				],
+			]),
+		})
+	} else {
+		useResourceStore.setState({
+			sections: sections || [],
+			resources: resources || [],
+			resourceCache: new Map(),
+		})
+	}
 
 	// activeSpaceがある場合、そのスペースにリダイレクト
 	if (activeSpace && !spaceId) {
