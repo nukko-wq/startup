@@ -15,6 +15,7 @@ import { useResourceStore } from '@/app/store/resourceStore'
 import ResourceIcon from '@/app/features/resources/components/ResourceIcon'
 import type { Resource } from '@prisma/client'
 import React from 'react'
+import { useTabStore } from '@/app/store/tabStore'
 
 interface ResourceItemProps {
 	resources: {
@@ -36,6 +37,7 @@ export default function ResourceItem({
 	sectionId,
 }: ResourceItemProps) {
 	const { reorderResources, resources: allResources } = useResourceStore()
+	const { findTabByUrl, switchToTab } = useTabStore()
 
 	const sortedResources = React.useMemo(() => {
 		const sectionResources = resources.filter((r) => r.sectionId === sectionId)
@@ -170,6 +172,35 @@ export default function ResourceItem({
 		},
 	})
 
+	const handleResourceClick = async () => {
+		const resource = sortedResources.find(
+			(r) => r.id === document.activeElement?.getAttribute('data-key'),
+		)
+		if (!resource) return
+
+		try {
+			console.log('Checking for existing tab with URL:', resource.url)
+			const existingTab = findTabByUrl(resource.url)
+
+			if (existingTab) {
+				console.log('Found existing tab:', existingTab)
+				const success = await switchToTab(existingTab.id)
+				if (success) {
+					console.log('Successfully switched to existing tab')
+					return
+				}
+				console.log('Failed to switch to existing tab, opening new tab')
+			} else {
+				console.log('No existing tab found, opening new tab')
+			}
+
+			window.open(resource.url, '_blank')
+		} catch (error) {
+			console.error('Error handling resource click:', error)
+			window.open(resource.url, '_blank')
+		}
+	}
+
 	return (
 		<GridList
 			aria-label="Resources in section"
@@ -183,8 +214,8 @@ export default function ResourceItem({
 			{(resource) => (
 				<GridListItem
 					textValue={resource.title}
-					href={resource.url}
-					target="_blank"
+					data-resource={JSON.stringify(resource)}
+					onAction={handleResourceClick}
 					className="outline-none cursor-pointer"
 				>
 					<div className="flex justify-between items-center p-1 border-b border-gray-200 last:border-b-0 hover:bg-gray-100 group">

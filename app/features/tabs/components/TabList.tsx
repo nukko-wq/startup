@@ -5,6 +5,8 @@ import { useResourceStore } from '@/app/store/resourceStore'
 import { Diamond } from 'lucide-react'
 import TabSaveButton from '@/app/features/tabs/components/TabSaveButton'
 import TabDeleteButton from '@/app/features/tabs/components/TabDeleteButton'
+import { useTabStore } from '@/app/store/tabStore'
+
 interface Tab {
 	id: number
 	title: string
@@ -23,7 +25,7 @@ interface TabsUpdateMessage {
 }
 
 export default function TabList() {
-	const [tabs, setTabs] = useState<Tab[]>([])
+	const { tabs, setTabs } = useTabStore()
 	const [isLoading, setIsLoading] = useState(true)
 	const [extensionId, setExtensionId] = useState<string>('')
 	const { addResource } = useResourceStore()
