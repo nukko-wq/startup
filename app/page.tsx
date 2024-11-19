@@ -75,10 +75,10 @@ export default async function Index({ searchParams }: PageProps) {
 					initialSpaces={spaces}
 					initialActiveSpaceId={spaceId || undefined}
 				/>
-				<main className="flex flex-col flex-grow items-center">
+				<main className="flex flex-col flex-grow items-center bg-slate-100">
 					<Header spaceName={activeSpace?.name ?? ''} spaceId={spaceId ?? ''} />
 					<div className="flex flex-grow w-full">
-						<div className="w-1/2">
+						<div className="flex justify-center w-1/2">
 							<TabListWrapper />
 						</div>
 						<div className="flex w-1/2 justify-center">

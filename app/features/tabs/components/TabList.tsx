@@ -25,24 +25,22 @@ interface TabsUpdateMessage {
 }
 
 export default function TabList() {
-	const { tabs, setTabs } = useTabStore()
+	const { tabs, setTabs, switchToTab } = useTabStore()
 	const [isLoading, setIsLoading] = useState(true)
 	const [extensionId, setExtensionId] = useState<string>('')
 	const { addResource } = useResourceStore()
 
 	const handleTabClick = async (tab: Tab) => {
 		try {
-			const storedExtensionId = localStorage.getItem('extensionId')
-			if (!storedExtensionId) {
-				throw new Error('Extension ID not found')
-			}
+			console.log('Attempting to switch to tab:', tab)
+			const success = await switchToTab(tab.id)
 
-			await chrome.runtime.sendMessage(storedExtensionId, {
-				type: 'ACTIVATE_TAB',
-				tabId: tab.id,
-			})
+			if (!success) {
+				console.log('Failed to switch tab, falling back to window.open')
+				window.open(tab.url, '_blank')
+			}
 		} catch (error) {
-			console.error('Failed to activate tab:', error)
+			console.error('Error switching tab:', error)
 			window.open(tab.url, '_blank')
 		}
 	}
@@ -185,7 +183,7 @@ export default function TabList() {
 	}
 
 	return (
-		<div className="p-5 pr-[16px] pl-[32px] max-w-[920px]">
+		<div className="flex-grow p-4 pr-[16px] pl-[32px] max-w-[920px]">
 			<div className="flex items-center gap-2 py-2 ml-4 mb-2">
 				<Diamond className="w-6 h-6" />
 				<div className="text-[17px] text-zinc-700">Tabs</div>

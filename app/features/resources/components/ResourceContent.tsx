@@ -32,7 +32,7 @@ export default function ResourceContent({ spaceId }: ResourceContentProps) {
 	}, [spaceId])
 
 	return (
-		<div className="flex flex-col w-full max-w-3xl mx-auto p-4">
+		<div className="flex flex-col flex-grow w-full max-w-[920px]">
 			<div className="flex flex-col w-full">
 				{store.sections.map((section) => (
 					<SectionComponent
