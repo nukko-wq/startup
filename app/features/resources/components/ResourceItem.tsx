@@ -36,7 +36,11 @@ export default function ResourceItem({
 	resources,
 	sectionId,
 }: ResourceItemProps) {
-	const { reorderResources, resources: allResources } = useResourceStore()
+	const {
+		reorderResources,
+		resources: allResources,
+		createResource,
+	} = useResourceStore()
 	const { findTabByUrl, switchToTab } = useTabStore()
 
 	const sortedResources = React.useMemo(() => {
@@ -68,7 +72,7 @@ export default function ResourceItem({
 				},
 			]
 		},
-		acceptedDragTypes: ['resource-item'],
+		acceptedDragTypes: ['resource-item', 'tab-item'],
 		getDropOperation: () => 'move',
 
 		renderDropIndicator(target) {
@@ -85,32 +89,50 @@ export default function ResourceItem({
 		async onInsert(e) {
 			try {
 				const items = await Promise.all(
-					e.items
-						.filter(isTextDropItem)
-						.map(async (item) =>
-							JSON.parse(await item.getText('resource-item')),
-						),
+					e.items.filter(isTextDropItem).map(async (item) => {
+						const types = Array.from(item.types)
+						if (types.includes('tab-item')) {
+							const tabData = JSON.parse(await item.getText('tab-item'))
+							const newPosition =
+								e.target.dropPosition === 'before'
+									? e.target.key
+										? allResources.find((r) => r.id === e.target.key)
+												?.position || 0
+										: 0
+									: e.target.key
+										? (allResources.find((r) => r.id === e.target.key)
+												?.position || 0) + 1
+										: allResources.length
+
+							const newResource = await createResource({
+								title: tabData.title,
+								url: tabData.url,
+								faviconUrl: tabData.faviconUrl,
+								sectionId,
+								position: newPosition,
+							})
+
+							return newResource
+						}
+						return JSON.parse(await item.getText('resource-item'))
+					}),
 				)
 
-				const targetIndex = resources.findIndex((r) => r.id === e.target.key)
-				const newPosition =
-					e.target.dropPosition === 'before'
-						? resources[targetIndex]?.position
-						: resources[targetIndex]?.position + 1
-
-				const updatedResources = allResources.map((r) => {
-					if (items.some((item) => item.id === r.id)) {
-						return { ...r, sectionId, position: newPosition }
+				const updatedResources = allResources.map((resource) => {
+					if (
+						resource.sectionId === sectionId &&
+						resource.position >= items[0].position
+					) {
+						return { ...resource, position: resource.position + 1 }
 					}
-					if (r.sectionId === sectionId && r.position >= newPosition) {
-						return { ...r, position: r.position + 1 }
-					}
-					return r
+					return resource
 				})
+
+				updatedResources.push(...items)
 
 				await reorderResources(updatedResources)
 			} catch (error) {
-				console.error('Failed to insert resources:', error)
+				console.error('Failed to drop resources:', error)
 			}
 		},
 

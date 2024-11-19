@@ -215,7 +215,7 @@ export const useResourceStore = create<ResourceStore>()(
 						console.error('セクション作成エラー:', error)
 						throw error instanceof Error
 							? error
-							: new Error('セクションの作成に失敗しました')
+							: new Error('セクション作成に失敗しました')
 					} finally {
 						setIsCreating(false)
 						setIsLoading(false)
