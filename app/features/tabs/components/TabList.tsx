@@ -135,36 +135,43 @@ export default function TabList() {
 	// 初期化とメッセージリスナーのセットアップ
 	// biome-ignore lint/correctness/useExhaustiveDependencies: <explanation>
 	useEffect(() => {
-		const initialize = async () => {
-			const id = await fetchExtensionId()
-			if (id) {
-				await fetchTabs(id)
+		const handleTabsUpdate = (event: MessageEvent) => {
+			if (
+				event.data &&
+				event.data.source === 'startup-extension' &&
+				event.data.type === 'TABS_UPDATED' &&
+				Array.isArray(event.data.tabs)
+			) {
+				console.log('Received tabs update:', event.data.tabs)
+				setTabs(event.data.tabs)
 			}
 		}
 
-		const handleTabsUpdate = (event: MessageEvent) => {
-			if (event.data?.source !== 'startup-extension') return
-
-			const message = event.data?.payload
-			console.log('Processing extension message:', message)
-
-			if (message?.type === 'TABS_UPDATED' && Array.isArray(message.tabs)) {
-				console.log('Updating tabs with:', message.tabs)
-				setTabs(message.tabs)
+		const initialize = async () => {
+			try {
+				await fetchExtensionId()
+				if (extensionId) {
+					const tabs = await chrome.runtime.sendMessage(extensionId, {
+						type: 'GET_CURRENT_TABS',
+					})
+					setTabs(tabs)
+					setIsLoading(false)
+				}
+			} catch (error) {
+				console.error('Failed to initialize tabs:', error)
 				setIsLoading(false)
 			}
 		}
 
-		if (typeof window !== 'undefined') {
-			initialize()
-			window.addEventListener('message', handleTabsUpdate)
-			console.log('Message listener set up')
-		}
+		initialize()
+
+		// windowのメッセージイベントリスナーのみを使用
+		window.addEventListener('message', handleTabsUpdate)
 
 		return () => {
 			window.removeEventListener('message', handleTabsUpdate)
 		}
-	}, [])
+	}, [extensionId])
 
 	if (isLoading) {
 		return (
