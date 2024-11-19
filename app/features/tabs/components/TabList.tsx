@@ -185,7 +185,7 @@ export default function TabList() {
 	}
 
 	return (
-		<div className="p-5 pr-[16px] pl-[32px] max-w-[920px]">
+		<div className="flex-grow p-4 pr-[16px] pl-[32px] max-w-[920px]">
 			<div className="flex items-center gap-2 py-2 ml-4 mb-2">
 				<Diamond className="w-6 h-6" />
 				<div className="text-[17px] text-zinc-700">Tabs</div>
