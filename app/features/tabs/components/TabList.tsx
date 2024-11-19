@@ -16,6 +16,12 @@ interface PingResponse {
 	success: boolean
 }
 
+// メッセージの型定義を追加
+interface TabsUpdateMessage {
+	type: string
+	tabs: Tab[]
+}
+
 export default function TabList() {
 	const [tabs, setTabs] = useState<Tab[]>([])
 	const [isLoading, setIsLoading] = useState(true)
@@ -60,6 +66,7 @@ export default function TabList() {
 	const fetchExtensionId = async () => {
 		if (typeof window === 'undefined' || !window.chrome?.runtime) {
 			console.log('Chrome extension API not available')
+			setIsLoading(false)
 			return null
 		}
 
@@ -67,32 +74,20 @@ export default function TabList() {
 			const storedExtensionId = localStorage.getItem('extensionId')
 			if (storedExtensionId) {
 				try {
-					const response = await new Promise<PingResponse>(
-						(resolve, reject) => {
-							chrome.runtime.sendMessage(
-								storedExtensionId,
-								{ type: 'PING' },
-								(response) => {
-									if (chrome.runtime.lastError) {
-										reject(chrome.runtime.lastError)
-									} else {
-										resolve(response as PingResponse)
-									}
-								},
-							)
-						},
-					)
-
+					const response = await chrome.runtime.sendMessage(storedExtensionId, {
+						type: 'PING',
+					})
 					if (response?.success) {
 						setExtensionId(storedExtensionId)
 						return storedExtensionId
 					}
 				} catch (error) {
-					console.log('Stored extension ID is invalid, removing it')
+					console.log('Stored extension ID is invalid')
 					localStorage.removeItem('extensionId')
 				}
 			}
 
+			// 拡張機能IDの取得を試みる
 			const extensionIds = [
 				...(process.env.NEXT_PUBLIC_EXTENSION_ID_PROD?.split(',') || []),
 				process.env.NEXT_PUBLIC_EXTENSION_ID_DEV,
@@ -100,18 +95,9 @@ export default function TabList() {
 
 			for (const id of extensionIds) {
 				try {
-					const response = await new Promise<PingResponse>(
-						(resolve, reject) => {
-							chrome.runtime.sendMessage(id, { type: 'PING' }, (response) => {
-								if (chrome.runtime.lastError) {
-									reject(chrome.runtime.lastError)
-								} else {
-									resolve(response as PingResponse)
-								}
-							})
-						},
-					)
-
+					const response = await chrome.runtime.sendMessage(id, {
+						type: 'PING',
+					})
 					if (response?.success && id) {
 						setExtensionId(id)
 						localStorage.setItem('extensionId', id)
@@ -121,25 +107,22 @@ export default function TabList() {
 					console.log(`Failed to connect to extension ${id}`)
 				}
 			}
-
-			throw new Error('No valid extension found')
+			setIsLoading(false)
+			return null
 		} catch (error) {
-			console.error('拡張機能IDの取得に失敗:', error)
+			console.error('Failed to get extension ID:', error)
+			setIsLoading(false)
 			return null
 		}
 	}
 
 	const fetchTabs = async (extensionId: string) => {
 		try {
-			if (!window.chrome?.runtime?.sendMessage) {
-				throw new Error('Chrome extension API not available')
-			}
-
 			const response = await chrome.runtime.sendMessage(extensionId, {
 				type: 'GET_CURRENT_TABS',
 			})
-
 			if (response) {
+				console.log('Received tabs:', response)
 				setTabs(response)
 			}
 		} catch (error) {
@@ -149,23 +132,37 @@ export default function TabList() {
 		}
 	}
 
+	// 初期化とメッセージリスナーのセットアップ
 	// biome-ignore lint/correctness/useExhaustiveDependencies: <explanation>
 	useEffect(() => {
-		const initializeTabs = async () => {
-			try {
-				const extensionId = await fetchExtensionId()
-				if (extensionId) {
-					await fetchTabs(extensionId)
-				}
-			} catch (error) {
-				console.error('Failed to initialize tabs:', error)
-			} finally {
+		const initialize = async () => {
+			const id = await fetchExtensionId()
+			if (id) {
+				await fetchTabs(id)
+			}
+		}
+
+		const handleTabsUpdate = (event: MessageEvent) => {
+			if (event.data?.source !== 'startup-extension') return
+
+			const message = event.data?.payload
+			console.log('Processing extension message:', message)
+
+			if (message?.type === 'TABS_UPDATED' && Array.isArray(message.tabs)) {
+				console.log('Updating tabs with:', message.tabs)
+				setTabs(message.tabs)
 				setIsLoading(false)
 			}
 		}
 
 		if (typeof window !== 'undefined') {
-			initializeTabs()
+			initialize()
+			window.addEventListener('message', handleTabsUpdate)
+			console.log('Message listener set up')
+		}
+
+		return () => {
+			window.removeEventListener('message', handleTabsUpdate)
 		}
 	}, [])
 
