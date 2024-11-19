@@ -2,11 +2,16 @@
 
 import { useEffect, useState } from 'react'
 import { useResourceStore } from '@/app/store/resourceStore'
-import { Diamond } from 'lucide-react'
+import { Diamond, GripVertical } from 'lucide-react'
 import TabSaveButton from '@/app/features/tabs/components/TabSaveButton'
 import TabDeleteButton from '@/app/features/tabs/components/TabDeleteButton'
 import { useTabStore } from '@/app/store/tabStore'
-import { useDragAndDrop, GridList, GridListItem } from 'react-aria-components'
+import {
+	useDragAndDrop,
+	GridList,
+	GridListItem,
+	Button,
+} from 'react-aria-components'
 
 interface Tab {
 	id: number
@@ -222,21 +227,35 @@ export default function TabList() {
 				{(tab) => (
 					<GridListItem
 						textValue={tab.title}
-						className="flex flex-grow items-center gap-2 pl-8 pr-2 py-1 hover:bg-zinc-100 rounded cursor-pointer group"
+						className="flex flex-grow items-center gap-2 pr-2 py-1 hover:bg-zinc-100 rounded cursor-grab group outline-none"
 						onAction={() => handleTabClick(tab)}
 					>
 						<div className="flex flex-1 items-center gap-2 justify-between truncate">
-							<div className="flex items-center gap-2 truncate">
-								{tab.faviconUrl ? (
-									<img
-										src={tab.faviconUrl}
-										alt=""
-										className="w-4 h-4 flex-grow"
-									/>
-								) : (
-									<div className="w-4 h-4 bg-gray-200 rounded-full" />
-								)}
-								<span className="truncate">{tab.title}</span>
+							<div className="flex items-center gap-2">
+								<div
+									className="cursor-grab flex items-center opacity-0 group-hover:opacity-100 pl-4"
+									aria-label="Drag Wrapper"
+								>
+									<Button
+										className="cursor-grab"
+										slot="drag"
+										aria-label="ドラッグハンドル"
+									>
+										<GripVertical className="w-4 h-4 text-zinc-500" />
+									</Button>
+								</div>
+								<div className="flex items-center gap-2 truncate">
+									{tab.faviconUrl ? (
+										<img
+											src={tab.faviconUrl}
+											alt=""
+											className="w-4 h-4 flex-grow"
+										/>
+									) : (
+										<div className="w-4 h-4 bg-gray-200 rounded-full" />
+									)}
+									<span className="truncate">{tab.title}</span>
+								</div>
 							</div>
 							<div className="flex items-center">
 								<div className="opacity-0 group-hover:opacity-100">
