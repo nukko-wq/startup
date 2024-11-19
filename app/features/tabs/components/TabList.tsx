@@ -188,7 +188,7 @@ export default function TabList() {
 				<Diamond className="w-6 h-6" />
 				<div className="text-[17px] text-zinc-700">Tabs</div>
 			</div>
-			<div className="border rounded-md flex flex-col">
+			<div className="border-slate-400 rounded-md flex flex-col bg-white shadow-sm">
 				{tabs.map((tab) => (
 					<div
 						key={tab.id}
