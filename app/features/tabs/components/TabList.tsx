@@ -25,24 +25,22 @@ interface TabsUpdateMessage {
 }
 
 export default function TabList() {
-	const { tabs, setTabs } = useTabStore()
+	const { tabs, setTabs, switchToTab } = useTabStore()
 	const [isLoading, setIsLoading] = useState(true)
 	const [extensionId, setExtensionId] = useState<string>('')
 	const { addResource } = useResourceStore()
 
 	const handleTabClick = async (tab: Tab) => {
 		try {
-			const storedExtensionId = localStorage.getItem('extensionId')
-			if (!storedExtensionId) {
-				throw new Error('Extension ID not found')
-			}
+			console.log('Attempting to switch to tab:', tab)
+			const success = await switchToTab(tab.id)
 
-			await chrome.runtime.sendMessage(storedExtensionId, {
-				type: 'ACTIVATE_TAB',
-				tabId: tab.id,
-			})
+			if (!success) {
+				console.log('Failed to switch tab, falling back to window.open')
+				window.open(tab.url, '_blank')
+			}
 		} catch (error) {
-			console.error('Failed to activate tab:', error)
+			console.error('Error switching tab:', error)
 			window.open(tab.url, '_blank')
 		}
 	}
