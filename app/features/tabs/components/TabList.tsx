@@ -135,36 +135,43 @@ export default function TabList() {
 	// 初期化とメッセージリスナーのセットアップ
 	// biome-ignore lint/correctness/useExhaustiveDependencies: <explanation>
 	useEffect(() => {
-		const initialize = async () => {
-			const id = await fetchExtensionId()
-			if (id) {
-				await fetchTabs(id)
+		const handleTabsUpdate = (event: MessageEvent) => {
+			if (
+				event.data &&
+				event.data.source === 'startup-extension' &&
+				event.data.type === 'TABS_UPDATED' &&
+				Array.isArray(event.data.tabs)
+			) {
+				console.log('Received tabs update:', event.data.tabs)
+				setTabs(event.data.tabs)
 			}
 		}
 
-		const handleTabsUpdate = (event: MessageEvent) => {
-			if (event.data?.source !== 'startup-extension') return
-
-			const message = event.data?.payload
-			console.log('Processing extension message:', message)
-
-			if (message?.type === 'TABS_UPDATED' && Array.isArray(message.tabs)) {
-				console.log('Updating tabs with:', message.tabs)
-				setTabs(message.tabs)
+		const initialize = async () => {
+			try {
+				await fetchExtensionId()
+				if (extensionId) {
+					const tabs = await chrome.runtime.sendMessage(extensionId, {
+						type: 'GET_CURRENT_TABS',
+					})
+					setTabs(tabs)
+					setIsLoading(false)
+				}
+			} catch (error) {
+				console.error('Failed to initialize tabs:', error)
 				setIsLoading(false)
 			}
 		}
 
-		if (typeof window !== 'undefined') {
-			initialize()
-			window.addEventListener('message', handleTabsUpdate)
-			console.log('Message listener set up')
-		}
+		initialize()
+
+		// windowのメッセージイベントリスナーのみを使用
+		window.addEventListener('message', handleTabsUpdate)
 
 		return () => {
 			window.removeEventListener('message', handleTabsUpdate)
 		}
-	}, [])
+	}, [extensionId])
 
 	if (isLoading) {
 		return (
@@ -188,11 +195,11 @@ export default function TabList() {
 				<Diamond className="w-6 h-6" />
 				<div className="text-[17px] text-zinc-700">Tabs</div>
 			</div>
-			<div className="border rounded-md flex flex-col">
+			<div className="border-slate-400 rounded-md flex flex-col bg-white shadow-sm">
 				{tabs.map((tab) => (
 					<div
 						key={tab.id}
-						className="flex flex-grow items-center gap-2 pl-8 pr-2 py-2 hover:bg-gray-100 rounded cursor-pointer group"
+						className="flex flex-grow items-center gap-2 pl-8 pr-2 py-1 hover:bg-zinc-100 rounded cursor-pointer group"
 						onClick={() => handleTabClick(tab)}
 						onKeyDown={(e) => {
 							if (e.key === 'Enter' || e.key === ' ') {

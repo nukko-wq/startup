@@ -11,35 +11,40 @@ interface TabSaveButtonProps {
 }
 
 const TabSaveButton = ({ title, url, faviconUrl }: TabSaveButtonProps) => {
-	const { sections, resources, addResource, setResources } = useResourceStore()
+	const { sections, resources, createSection } = useResourceStore()
 	const { currentSpace } = useSpaceStore()
 
 	const handleSave = async () => {
-		if (!sections.length || !currentSpace) return
-
-		const firstSection = sections[0]
-		const maxPosition = Math.max(
-			0,
-			...resources
-				.filter((r) => r.sectionId === firstSection.id)
-				.map((r) => r.position),
-		)
-
-		const tempId = `temp-${Date.now()}`
-		const newResource = {
-			id: tempId,
-			title,
-			description: '',
-			url,
-			faviconUrl,
-			mimeType: 'text/html',
-			isGoogleDrive: false,
-			position: maxPosition + 1,
-			sectionId: firstSection.id,
-		}
+		if (!currentSpace) return
 
 		try {
-			await addResource(newResource)
+			let targetSectionId: string
+
+			// セクションが存在しない場合、新しいセクションを作成
+			if (!sections.length) {
+				const newSection = await createSection(currentSpace.id)
+				targetSectionId = newSection.id
+			} else {
+				targetSectionId = sections[0].id
+			}
+
+			const maxPosition = Math.max(
+				0,
+				...resources
+					.filter((r) => r.sectionId === targetSectionId)
+					.map((r) => r.position),
+			)
+
+			const newResource = {
+				title,
+				description: '',
+				url,
+				faviconUrl,
+				mimeType: 'text/html',
+				isGoogleDrive: false,
+				position: maxPosition + 1,
+				sectionId: targetSectionId,
+			}
 
 			const response = await fetch('/api/resources', {
 				method: 'POST',
@@ -47,6 +52,7 @@ const TabSaveButton = ({ title, url, faviconUrl }: TabSaveButtonProps) => {
 					'Content-Type': 'application/json',
 				},
 				body: JSON.stringify(newResource),
+				credentials: 'include',
 			})
 
 			if (!response.ok) {
@@ -54,16 +60,11 @@ const TabSaveButton = ({ title, url, faviconUrl }: TabSaveButtonProps) => {
 			}
 
 			const savedResource = await response.json()
-			setResources((prev) =>
-				prev.map((resource) =>
-					resource.id === tempId
-						? { ...resource, id: savedResource.id }
-						: resource,
-				),
-			)
+			useResourceStore.setState((state) => ({
+				resources: [...state.resources, savedResource],
+			}))
 		} catch (error) {
 			console.error('Failed to save resource:', error)
-			setResources((prev) => prev.filter((resource) => resource.id !== tempId))
 			alert('リソースの保存に失敗しました')
 		}
 	}

@@ -62,7 +62,7 @@ export interface ResourceStore {
 	setSections: (sections: Section[]) => void
 	setIsLoading: (loading: boolean) => void
 	fetchSections: (spaceId: string) => Promise<SectionData>
-	createSection: (spaceId: string) => Promise<void>
+	createSection: (spaceId: string) => Promise<Section>
 	deleteSection: (sectionId: string) => Promise<void>
 	reorderSections: (items: Section[]) => Promise<void>
 	setResources: (
@@ -113,6 +113,14 @@ export interface ResourceStore {
 	) => void
 
 	updateSection: (sectionId: string, data: { name: string }) => Promise<void>
+
+	createResource: (data: {
+		title: string
+		url: string
+		faviconUrl: string | null
+		sectionId: string
+		position: number
+	}) => Promise<ResourceStore['resources'][0]>
 }
 
 export const useResourceStore = create<ResourceStore>()(
@@ -199,7 +207,7 @@ export const useResourceStore = create<ResourceStore>()(
 							throw new Error('セクションの作成に失敗しました')
 						}
 
-						const newSection = await response.json()
+						const newSection: Section = await response.json()
 						set({ sections: [...sections, newSection] })
 
 						return newSection
@@ -525,6 +533,35 @@ export const useResourceStore = create<ResourceStore>()(
 					} catch (error) {
 						console.error('Section update error:', error)
 						set({ sections: previousSections })
+						throw error
+					}
+				},
+
+				createResource: async (data: {
+					title: string
+					url: string
+					faviconUrl: string | null
+					sectionId: string
+					position: number
+				}) => {
+					const { resources } = get()
+
+					try {
+						const response = await fetch('/api/resources', {
+							method: 'POST',
+							headers: { 'Content-Type': 'application/json' },
+							body: JSON.stringify(data),
+						})
+
+						if (!response.ok) {
+							throw new Error('Failed to create resource')
+						}
+
+						const newResource = await response.json()
+						set({ resources: [...resources, newResource] })
+						return newResource
+					} catch (error) {
+						console.error('Error creating resource:', error)
 						throw error
 					}
 				},
