@@ -192,7 +192,7 @@ export default function TabList() {
 				{tabs.map((tab) => (
 					<div
 						key={tab.id}
-						className="flex flex-grow items-center gap-2 pl-8 pr-2 py-2 hover:bg-gray-100 rounded cursor-pointer group"
+						className="flex flex-grow items-center gap-2 pl-8 pr-2 py-1 hover:bg-zinc-100 rounded cursor-pointer group"
 						onClick={() => handleTabClick(tab)}
 						onKeyDown={(e) => {
 							if (e.key === 'Enter' || e.key === ' ') {

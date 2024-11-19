@@ -205,10 +205,12 @@ export default function ResourceItem({
 		<GridList
 			aria-label="Resources in section"
 			items={sortedResources}
-			className="flex flex-col border-slate-400 rounded-md min-h-[50px] outline-none bg-white shadow-sm"
+			className="flex flex-col border-slate-400 rounded-md min-h-[52px] outline-none bg-white shadow-sm"
 			dragAndDropHooks={dragAndDropHooks}
 			renderEmptyState={() => (
-				<div className="p-4 text-center text-gray-500">Add resources here</div>
+				<div className="flex flex-col justify-center items-center flex-grow">
+					<div className="text-gray-500">Add resources here</div>
+				</div>
 			)}
 		>
 			{(resource) => (
@@ -218,7 +220,7 @@ export default function ResourceItem({
 					onAction={handleResourceClick}
 					className="outline-none cursor-pointer"
 				>
-					<div className="flex justify-between items-center p-1 border-b border-gray-200 last:border-b-0 hover:bg-gray-100 group">
+					<div className="flex justify-between items-center p-1 border-b border-zinc-200 last:border-b-0 hover:bg-zinc-100 group">
 						<div
 							className="flex flex-grow p-1 ml-1 gap-2 group"
 							aria-label="Resource Item Wrapper"
