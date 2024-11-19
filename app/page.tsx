@@ -9,7 +9,7 @@ import { getSpaces } from '@/app/features/spaces/utils/getSpaces'
 import { auth } from '@/lib/auth'
 import Header from '@/app/features/header/Header'
 import { getWorkspaces } from '@/app/features/workspaces/utils/getWorkspaces'
-import TabList from '@/app/features/tabs/components/TabList'
+import TabListWrapper from '@/app/features/tabs/components/TabListWrapper'
 import { useResourceStore } from '@/app/store/resourceStore'
 
 export const revalidate = 0
@@ -79,7 +79,7 @@ export default async function Index({ searchParams }: PageProps) {
 					<Header spaceName={activeSpace?.name ?? ''} spaceId={spaceId ?? ''} />
 					<div className="flex flex-grow w-full">
 						<div className="w-1/2">
-							<TabList />
+							<TabListWrapper />
 						</div>
 						<div className="flex w-1/2 justify-center">
 							<Suspense
