@@ -24,11 +24,11 @@ export default function Sidebar({
 	initialSpaces,
 	initialActiveSpaceId,
 }: SidebarProps) {
-	const { initializeSpaces } = useSpaceStore()
+	const initializeSpaces = useSpaceStore((state) => state.initializeSpaces)
+	const initializeWorkspaces = useWorkspaceStore(
+		(state) => state.initializeWorkspaces,
+	)
 
-	const { initializeWorkspaces } = useWorkspaceStore()
-
-	// 初期データの読み込み
 	useEffect(() => {
 		if (initialWorkspaces.length > 0) {
 			initializeWorkspaces(initialWorkspaces)

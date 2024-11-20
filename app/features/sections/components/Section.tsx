@@ -37,6 +37,7 @@ export default memo(function Section({
 	const ref = useRef<HTMLDivElement>(null)
 	const [sectionName, setSectionName] = useState(name)
 	const [isResourceCreateOpen, setIsResourceCreateOpen] = useState(false)
+	const deleteSection = useResourceStore((state) => state.deleteSection)
 
 	const sectionResources = useMemo(() => {
 		return [...resources].sort((a, b) => a.position - b.position)
