@@ -1,7 +1,6 @@
 import { Suspense } from 'react'
 import { redirect } from 'next/navigation'
 import Sidebar from '@/app/features/sidebar/Sidebar'
-import Resources from '@/app/features/resources/components/Resources'
 import ResourceContent from '@/app/features/resources/components/ResourceContent'
 import LoadingSpinner from '@/app/components/ui/LoadingSpinner'
 import { getInitialSections } from '@/app/features/resources/utils/getInitialSections'
