@@ -20,9 +20,13 @@ import debounce from 'lodash/debounce'
 
 interface SpacesProps {
 	workspaceId: string
+	onSpaceHover?: (spaceId: string) => void
 }
 
-const Spaces = memo(function Spaces({ workspaceId }: SpacesProps) {
+const Spaces = memo(function Spaces({
+	workspaceId,
+	onSpaceHover,
+}: SpacesProps) {
 	const router = useRouter()
 	const spaces = useSpaceStore((state) => state.spaces)
 	const activeSpaceId = useSpaceStore((state) => state.activeSpaceId)
@@ -38,22 +42,30 @@ const Spaces = memo(function Spaces({ workspaceId }: SpacesProps) {
 	)
 
 	const workspaceSpaces = useMemo(
-		() => spaces.filter((space) => space.workspaceId === workspaceId),
+		() =>
+			Array.from(
+				new Map(
+					spaces
+						.filter((space) => space.workspaceId === workspaceId)
+						.map((space) => [space.id, space]),
+				).values(),
+			).sort((a, b) => a.order - b.order),
 		[spaces, workspaceId],
 	)
 
 	// スペースにホバーした時のデータ事前取得を最適化
+	// biome-ignore lint/correctness/useExhaustiveDependencies: <explanation>
 	const handleSpaceHover = useCallback(
 		debounce(async (spaceId: string) => {
 			if (
 				spaceId !== useSpaceStore.getState().activeSpaceId &&
 				!useSpaceStore.getState().isNavigating &&
-				!useResourceStore.getState().resourceCache.has(spaceId)
+				onSpaceHover
 			) {
-				useResourceStore.getState().prefetchNextSpace(spaceId)
+				onSpaceHover(spaceId)
 			}
 		}, 200),
-		[],
+		[onSpaceHover],
 	)
 
 	const { dragAndDropHooks } = useDragAndDrop({
@@ -260,11 +272,14 @@ const Spaces = memo(function Spaces({ workspaceId }: SpacesProps) {
 					<CreateSpaceInWorkspace
 						workspaceId={workspaceId}
 						onSpaceCreated={(newSpace) => {
-							// 新しいスペースを追加する前に重複チェック
-							const existingSpace = spaces.find((s) => s.id === newSpace.id)
-							if (!existingSpace) {
-								setSpaces([...spaces, newSpace])
+							const currentSpaces = useSpaceStore.getState().spaces
+							const existingSpaceIndex = currentSpaces.findIndex(
+								(s) => s.id === newSpace.id,
+							)
+							if (existingSpaceIndex !== -1) {
+								return
 							}
+							setSpaces([...currentSpaces, newSpace])
 						}}
 					/>
 				</div>
@@ -283,7 +298,7 @@ const Spaces = memo(function Spaces({ workspaceId }: SpacesProps) {
 				>
 					<div
 						className="flex flex-grow items-center justify-between group py-1"
-						onPointerEnter={() => handleSpaceHover(item.id)}
+						onPointerEnter={() => onSpaceHover?.(item.id)}
 					>
 						<div className="flex items-center flex-grow">
 							<div className="flex items-center cursor-grab">
