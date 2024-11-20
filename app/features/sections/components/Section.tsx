@@ -10,12 +10,16 @@ import { Button } from 'react-aria-components'
 import { useResourceStore } from '@/app/store/resourceStore'
 import { memo } from 'react'
 import { useEffect } from 'react'
+import type { Section } from '@/app/types/section'
 
 interface SectionProps {
-	id: string
-	name: string
-	onDelete: (sectionId: string) => void
-	resources: Array<{
+	section: {
+		id: string
+		name: string
+		order: number
+		spaceId?: string | null | undefined
+	}
+	resources: {
 		id: string
 		title: string
 		description: string | null
@@ -25,17 +29,12 @@ interface SectionProps {
 		isGoogleDrive: boolean
 		position: number
 		sectionId: string
-	}>
+	}[]
 }
 
-export default memo(function Section({
-	id,
-	name,
-	onDelete,
-	resources,
-}: SectionProps) {
+export default memo(function Section({ section, resources }: SectionProps) {
 	const ref = useRef<HTMLDivElement>(null)
-	const [sectionName, setSectionName] = useState(name)
+	const [sectionName, setSectionName] = useState(section.name)
 	const [isResourceCreateOpen, setIsResourceCreateOpen] = useState(false)
 	const deleteSection = useResourceStore((state) => state.deleteSection)
 
@@ -49,7 +48,7 @@ export default memo(function Section({
 
 	const handleDelete = useCallback(async () => {
 		try {
-			await onDelete(id)
+			await deleteSection(section.id)
 		} catch (error) {
 			console.error('セクション削除エラー:', error)
 			const message =
@@ -58,7 +57,7 @@ export default memo(function Section({
 					: 'セクションの削除に失敗しました。'
 			alert(message)
 		}
-	}, [id, onDelete])
+	}, [section.id, deleteSection])
 
 	return (
 		<div
@@ -76,24 +75,24 @@ export default memo(function Section({
 					</Button>
 					<SectionNameEdit
 						initialName={sectionName}
-						sectionId={id}
+						sectionId={section.id}
 						onEdit={handleNameEdit}
 					/>
 				</div>
 				<div className="hidden md:flex">
 					<ResourceCreateButton
-						sectionId={id}
+						sectionId={section.id}
 						isOpen={isResourceCreateOpen}
 						onOpenChange={setIsResourceCreateOpen}
 					/>
 					<SectionMenuButton
-						sectionId={id}
+						sectionId={section.id}
 						onDelete={handleDelete}
 						onResourceCreate={() => setIsResourceCreateOpen(true)}
 					/>
 				</div>
 			</div>
-			<ResourceItem resources={sortedResources} sectionId={id} />
+			<ResourceItem resources={sortedResources} sectionId={section.id} />
 		</div>
 	)
 })
