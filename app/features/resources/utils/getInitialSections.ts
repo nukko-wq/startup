@@ -3,20 +3,11 @@ import { unstable_cache } from 'next/cache'
 import { ReadonlyURLSearchParams } from 'next/navigation'
 import type { Section } from '@/app/types/section'
 import type { Space } from '@/app/types/space'
+import type { Resource } from '@/app/types/section'
 
 interface InitialSectionsResult {
 	sections: Section[]
-	resources: Array<{
-		id: string
-		title: string
-		url: string
-		faviconUrl: string | null
-		mimeType: string | null
-		isGoogleDrive: boolean
-		position: number
-		description: string | null
-		sectionId: string
-	}>
+	resources: Resource[]
 	userId: string
 	spaceId: string | null
 	activeSpace: Space | null
