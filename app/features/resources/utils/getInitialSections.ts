@@ -77,8 +77,8 @@ export const getInitialSections = unstable_cache(
 			const allResources = sections.flatMap((section) => section.resources)
 
 			return {
-				sections,
-				resources: allResources,
+				sections: sections || [],
+				resources: allResources || [],
 				userId,
 				spaceId: targetSpaceId,
 				activeSpace: activeSpace || null,
