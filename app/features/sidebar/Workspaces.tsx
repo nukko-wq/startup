@@ -9,7 +9,11 @@ import SpacesMenu from './SpacesMenu'
 import { useWorkspaceStore } from '@/app/store/workspaceStore'
 import WorkspaceLeftMenu from './WorkspaceLeftMenu'
 
-const WorkspaceInSidebar = () => {
+interface WorkspaceProps {
+	onSpaceHover?: (spaceId: string) => void
+}
+
+const WorkspaceInSidebar = ({ onSpaceHover }: WorkspaceProps) => {
 	const { workspaces, defaultWorkspace, reorderWorkspaces, setWorkspaces } =
 		useWorkspaceStore()
 
@@ -104,7 +108,10 @@ const WorkspaceInSidebar = () => {
 								<SpacesMenu />
 							</div>
 							<div className="mt-2 space-y-1">
-								<Spaces workspaceId={defaultWorkspace.id} />
+								<Spaces
+									workspaceId={defaultWorkspace.id}
+									onSpaceHover={onSpaceHover}
+								/>
 							</div>
 						</div>
 					</div>
@@ -152,7 +159,10 @@ const WorkspaceInSidebar = () => {
 									)}
 								</div>
 								<div className="mt-2 space-y-1">
-									<Spaces workspaceId={workspace.id} />
+									<Spaces
+										workspaceId={workspace.id}
+										onSpaceHover={onSpaceHover}
+									/>
 								</div>
 							</div>
 						</div>

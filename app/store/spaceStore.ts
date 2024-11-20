@@ -75,31 +75,23 @@ export const useSpaceStore = create<SpaceStore>((set, get) => ({
 	},
 
 	handleSpaceClick: async (spaceId, router) => {
-		const { setIsNavigating, spaces } = get()
+		const { setIsNavigating } = get()
 		const resourceStore = useResourceStore.getState()
 
 		try {
 			setIsNavigating(true)
 
 			const cachedData = resourceStore.resourceCache.get(spaceId)
-			if (
-				cachedData &&
-				Date.now() - cachedData.timestamp < resourceStore.CACHE_EXPIRY
-			) {
+			if (cachedData) {
 				resourceStore.setSections(cachedData.sections)
 				resourceStore.setResources(cachedData.resources)
+			} else {
+				const data = await resourceStore.fetchSections(spaceId)
+				resourceStore.setSections(data.sections)
+				resourceStore.setResources(data.resources)
 			}
 
-			const [activeResponse, sectionsResponse] = await Promise.all([
-				fetch(`/api/spaces/${spaceId}/active`, { method: 'PUT' }),
-				!cachedData && resourceStore.fetchSections(spaceId),
-			])
-
-			if (!cachedData && sectionsResponse) {
-				resourceStore.setSections(sectionsResponse.sections)
-				resourceStore.setResources(sectionsResponse.resources)
-			}
-
+			await fetch(`/api/spaces/${spaceId}/active`, { method: 'PUT' })
 			await router.replace(`/?spaceId=${spaceId}`, { scroll: false })
 		} catch (error) {
 			console.error('Error in handleSpaceClick:', error)

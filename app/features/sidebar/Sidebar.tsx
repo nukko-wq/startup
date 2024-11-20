@@ -1,9 +1,10 @@
 'use client'
 
-import { useEffect } from 'react'
+import { useEffect, useCallback } from 'react'
 import { Link } from 'react-aria-components'
 import { useSpaceStore } from '@/app/store/spaceStore'
 import { useWorkspaceStore } from '@/app/store/workspaceStore'
+import { useResourceStore } from '@/app/store/resourceStore'
 import type { Workspace } from '@/app/types/workspace'
 import type { Space } from '@/app/types/space'
 import SidebarMenu from './SidebarMenu'
@@ -23,9 +24,20 @@ export default function Sidebar({
 	initialSpaces,
 	initialActiveSpaceId,
 }: SidebarProps) {
+	const workspaces = useWorkspaceStore((state) => state.workspaces)
 	const initializeSpaces = useSpaceStore((state) => state.initializeSpaces)
 	const initializeWorkspaces = useWorkspaceStore(
 		(state) => state.initializeWorkspaces,
+	)
+	const prefetchResourceData = useResourceStore(
+		(state) => state.prefetchResourceData,
+	)
+
+	const handleSpaceHover = useCallback(
+		(spaceId: string) => {
+			prefetchResourceData(spaceId)
+		},
+		[prefetchResourceData],
 	)
 
 	useEffect(() => {
@@ -55,7 +67,7 @@ export default function Sidebar({
 				<SidebarMenu />
 			</div>
 			<div className="flex-grow">
-				<DynamicWorkspaces />
+				<DynamicWorkspaces onSpaceHover={handleSpaceHover} />
 			</div>
 		</div>
 	)

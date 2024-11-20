@@ -1,7 +1,7 @@
 import { create } from 'zustand'
 import type { Resource } from '@prisma/client'
 import type { Section } from '@/app/types/section'
-import { devtools, persist } from 'zustand/middleware'
+import { devtools, persist, createJSONStorage } from 'zustand/middleware'
 
 export interface DriveFile {
 	id: string
@@ -41,6 +41,12 @@ interface ResourceCacheEntry {
 	}[]
 	timestamp: number
 	isPreloaded?: boolean
+}
+
+interface PersistedState {
+	sections: Section[]
+	resources: ResourceStore['resources']
+	resourceCache: Record<string, ResourceCacheEntry>
 }
 
 export interface ResourceStore {
@@ -122,437 +128,462 @@ export interface ResourceStore {
 		sectionId: string
 		position: number
 	}) => Promise<ResourceStore['resources'][0]>
+
+	prefetchResourceData: (spaceId: string) => Promise<void>
 }
 
 export const useResourceStore = create<ResourceStore>()(
-	devtools(
-		persist(
-			(set, get) => ({
-				sections: [],
-				resources: [],
-				driveFiles: [],
-				isLoading: false,
-				isCreating: false,
-				prefetchedSections: {},
-				prefetchedResources: {},
+	persist(
+		devtools((set, get) => ({
+			sections: [],
+			resources: [],
+			driveFiles: [],
+			isLoading: false,
+			isCreating: false,
+			prefetchedSections: {},
+			prefetchedResources: {},
 
-				// キャッシュ管理を改善
-				resourceCache: new Map(),
+			// キャッシュ管理を改善
+			resourceCache: new Map(),
 
-				// キャッシュ有効期限（例：5分）
-				CACHE_EXPIRY: 5 * 60 * 1000,
+			// キャッシュ有効期限（例：5分）
+			CACHE_EXPIRY: 5 * 60 * 1000,
 
-				setIsCreating: (creating) => set({ isCreating: creating }),
-				setSections: (sections) => set({ sections }),
-				setIsLoading: (loading) => set({ isLoading: loading }),
+			setIsCreating: (creating) => set({ isCreating: creating }),
+			setSections: (sections) => set({ sections }),
+			setIsLoading: (loading) => set({ isLoading: loading }),
 
-				setPrefetchedSections: (spaceId, sections) =>
-					set((state) => ({
-						prefetchedSections: {
-							...state.prefetchedSections,
-							[spaceId]: sections,
-						},
-					})),
+			setPrefetchedSections: (spaceId, sections) =>
+				set((state) => ({
+					prefetchedSections: {
+						...state.prefetchedSections,
+						[spaceId]: sections,
+					},
+				})),
 
-				setPrefetchedResources: (spaceId, resources) =>
-					set((state) => ({
-						prefetchedResources: {
-							...state.prefetchedResources,
-							[spaceId]: resources,
-						},
-					})),
+			setPrefetchedResources: (spaceId, resources) =>
+				set((state) => ({
+					prefetchedResources: {
+						...state.prefetchedResources,
+						[spaceId]: resources,
+					},
+				})),
 
-				fetchSections: async (spaceId): Promise<SectionData> => {
-					set({ isLoading: true })
-					if (!spaceId) return { sections: [], resources: [] }
-					try {
-						const response = await fetch(`/api/spaces/${spaceId}/sections`)
-						if (!response.ok) throw new Error('Failed to fetch sections')
-						const data = await response.json()
-						const formattedData = {
-							sections: data.sections || [],
-							resources: data.resources || [],
-						}
-						set({
-							sections: formattedData.sections,
-							resources: formattedData.resources,
-							isLoading: false,
-						})
-						return formattedData
-					} catch (error) {
-						console.error('Error fetching sections:', error)
-						set({ sections: [], resources: [], isLoading: false })
-						throw error
+			fetchSections: async (spaceId): Promise<SectionData> => {
+				set({ isLoading: true })
+				if (!spaceId) return { sections: [], resources: [] }
+				try {
+					const response = await fetch(`/api/spaces/${spaceId}/sections`)
+					if (!response.ok) throw new Error('Failed to fetch sections')
+					const data = await response.json()
+					const formattedData = {
+						sections: data.sections || [],
+						resources: data.resources || [],
 					}
-				},
-
-				createSection: async (spaceId) => {
-					const { sections, setIsCreating, setIsLoading } = get()
-
-					try {
-						setIsCreating(true)
-						setIsLoading(true)
-
-						const response = await fetch('/api/sections', {
-							method: 'POST',
-							headers: { 'Content-Type': 'application/json' },
-							body: JSON.stringify({
-								name: 'Resources',
-								order: sections.length,
-								spaceId: spaceId,
-							}),
-							credentials: 'include',
-						})
-
-						if (!response.ok) {
-							throw new Error('セクションの作成に失敗しました')
-						}
-
-						const newSection: Section = await response.json()
-						set({ sections: [...sections, newSection] })
-
-						return newSection
-					} catch (error) {
-						console.error('セクション作成エラー:', error)
-						throw error instanceof Error
-							? error
-							: new Error('セクション作成に失敗しました')
-					} finally {
-						setIsCreating(false)
-						setIsLoading(false)
-					}
-				},
-
-				deleteSection: async (sectionId: string) => {
-					const { sections, resources } = get()
-
-					try {
-						// APIリクエストを実行
-						const response = await fetch(`/api/sections/${sectionId}`, {
-							method: 'DELETE',
-							credentials: 'include',
-						})
-
-						if (!response.ok) {
-							if (response.status === 404) {
-								// 既に削除されている場合は、ローカルの状態だけを更新
-								set({
-									sections: sections.filter(
-										(section) => section.id !== sectionId,
-									),
-									resources: resources.filter(
-										(resource) => resource.sectionId !== sectionId,
-									),
-								})
-								return
-							}
-							throw new Error('セクションの削除に失敗しました')
-						}
-
-						// 成功した場合、状態を更新
-						set({
-							sections: sections.filter((section) => section.id !== sectionId),
-							resources: resources.filter(
-								(resource) => resource.sectionId !== sectionId,
-							),
-						})
-					} catch (error) {
-						console.error('セクション削除エラー:', error)
-						throw error
-					}
-				},
-
-				reorderSections: async (items) => {
-					const { sections } = get()
-					try {
-						set({ sections: items })
-
-						const updatedItems = items.map((item, index) => ({
-							id: item.id,
-							order: index,
-						}))
-
-						const response = await fetch('/api/sections/reorder', {
-							method: 'PUT',
-							headers: { 'Content-Type': 'application/json' },
-							body: JSON.stringify({ items: updatedItems }),
-						})
-
-						if (!response.ok) {
-							throw new Error('Failed to update order')
-						}
-					} catch (error) {
-						console.error('Failed to update section order:', error)
-						set({ sections }) // 元の状態に戻す
-						alert('セクションの並び順の更新に失敗しました')
-					}
-				},
-
-				setResources: (
-					resources:
-						| ResourceStore['resources']
-						| ((
-								prev: ResourceStore['resources'],
-						  ) => ResourceStore['resources']),
-				) => {
-					if (typeof resources === 'function') {
-						set({ resources: resources(get().resources) })
-					} else {
-						set({ resources })
-					}
-				},
-				setDriveFiles: (files) => set({ driveFiles: files }),
-
-				removeResource: async (id) => {
-					const { resources } = get()
-					const previousResources = [...resources]
-
-					try {
-						set({
-							resources: resources.filter((resource) => resource.id !== id),
-						})
-
-						const response = await fetch(`/api/resources/${id}`, {
-							method: 'DELETE',
-						})
-
-						if (!response.ok) {
-							throw new Error('Failed to delete resource')
-						}
-					} catch (error) {
-						set({ resources: previousResources })
-						throw error
-					}
-				},
-
-				updateResource: async (id, data) => {
-					const { resources } = get()
-					const previousResources = [...resources]
-
-					try {
-						set({
-							resources: resources.map((resource) =>
-								resource.id === id ? { ...resource, ...data } : resource,
-							),
-						})
-
-						const response = await fetch(`/api/resources/${id}`, {
-							method: 'PATCH',
-							headers: { 'Content-Type': 'application/json' },
-							body: JSON.stringify(data),
-						})
-
-						if (!response.ok) {
-							throw new Error('Failed to update resource')
-						}
-					} catch (error) {
-						set({ resources: previousResources })
-						throw error
-					}
-				},
-
-				addResource: async (
-					resourceOrUpdater:
-						| ResourceStore['resources'][0]
-						| ((
-								prev: ResourceStore['resources'],
-						  ) => ResourceStore['resources']),
-				) => {
-					if (typeof resourceOrUpdater === 'function') {
-						const currentResources = get().resources
-						const updatedResources = resourceOrUpdater(currentResources)
-						set({ resources: updatedResources })
-						return Promise.resolve()
-					}
-
-					const { resources } = get()
-					set({ resources: [...resources, resourceOrUpdater] })
-					return Promise.resolve()
-				},
-
-				reorderResources: async (newResources) => {
-					const { resources } = get()
-					const previousResources = [...resources]
-
-					try {
-						set({ resources: newResources })
-
-						const payload = {
-							items: newResources.map((item) => ({
-								id: item.id,
-								position: item.position,
-								sectionId: item.sectionId,
-							})),
-						}
-
-						const response = await fetch('/api/resources/reorder', {
-							method: 'PUT',
-							headers: { 'Content-Type': 'application/json' },
-							body: JSON.stringify(payload),
-						})
-
-						if (!response.ok) {
-							throw new Error('Failed to reorder resources')
-						}
-					} catch (error) {
-						console.error('Reorder error:', error)
-						set({ resources: previousResources })
-						throw error
-					}
-				},
-
-				updateAllResources: (newResources) => {
 					set({
-						resources: newResources.sort((a, b) => {
-							if (a.sectionId === b.sectionId) {
-								return a.position - b.position
-							}
-							return 0
-						}),
+						sections: formattedData.sections,
+						resources: formattedData.resources,
+						isLoading: false,
 					})
-				},
-
-				prefetchNextSpace: async (spaceId: string) => {
-					const cache = get().resourceCache.get(spaceId)
-					if (cache && Date.now() - cache.timestamp < get().CACHE_EXPIRY) {
-						return
-					}
-
-					try {
-						const response = await fetch(`/api/spaces/${spaceId}/sections`)
-						const data = await response.json()
-
-						get().resourceCache.set(spaceId, {
-							sections: data.sections,
-							resources: data.resources,
-							timestamp: Date.now(),
-							isPreloaded: true,
-						})
-					} catch (error) {
-						console.error('Prefetch error:', error)
-					}
-				},
-
-				clearPrefetchedData: (spaceId: string) => {
-					set((state) => {
-						const { [spaceId]: _, ...remainingSections } =
-							state.prefetchedSections
-						const { [spaceId]: __, ...remainingResources } =
-							state.prefetchedResources
-						return {
-							prefetchedSections: remainingSections,
-							prefetchedResources: remainingResources,
-						}
-					})
-				},
-
-				// hydrationのためのメソッドを追加
-				hydrateResourceCache: (
-					cache: Record<
-						string,
-						{
-							sections: Section[]
-							resources: Resource[]
-							timestamp: number
-						}
-					>,
-				) => {
-					const newMap = new Map(Object.entries(cache))
-					set({ resourceCache: newMap })
-				},
-
-				updateSection: async (sectionId: string, data: { name: string }) => {
-					const { sections } = get()
-					const previousSections = [...sections]
-
-					try {
-						const targetSection = sections.find(
-							(section) => section.id === sectionId,
-						)
-						if (!targetSection) {
-							throw new Error('セクションが見つかりません')
-						}
-
-						const updatedSections = sections.map((section) =>
-							section.id === sectionId ? { ...section, ...data } : section,
-						)
-
-						set({ sections: updatedSections })
-
-						const response = await fetch(`/api/sections/${sectionId}`, {
-							method: 'PATCH',
-							headers: { 'Content-Type': 'application/json' },
-							body: JSON.stringify(data),
-							credentials: 'include',
-						})
-
-						if (!response.ok) {
-							set({ sections: previousSections })
-							throw new Error('セクション名の更新に失敗しました')
-						}
-
-						// キャッシュの更新
-						const spaceId = targetSection.spaceId
-						if (spaceId) {
-							const cache = get().resourceCache.get(spaceId)
-							if (cache) {
-								get().resourceCache.set(spaceId, {
-									...cache,
-									sections: updatedSections,
-									timestamp: Date.now(),
-								})
-							}
-						}
-					} catch (error) {
-						console.error('Section update error:', error)
-						set({ sections: previousSections })
-						throw error
-					}
-				},
-
-				createResource: async (data: {
-					title: string
-					url: string
-					faviconUrl: string | null
-					sectionId: string
-					position: number
-				}) => {
-					const { resources } = get()
-
-					try {
-						const response = await fetch('/api/resources', {
-							method: 'POST',
-							headers: { 'Content-Type': 'application/json' },
-							body: JSON.stringify(data),
-						})
-
-						if (!response.ok) {
-							throw new Error('Failed to create resource')
-						}
-
-						const newResource = await response.json()
-						set({ resources: [...resources, newResource] })
-						return newResource
-					} catch (error) {
-						console.error('Error creating resource:', error)
-						throw error
-					}
-				},
-			}),
-			{
-				name: 'resource-storage',
-				partialize: (state) => ({
-					resourceCache: Object.fromEntries(state.resourceCache),
-				}),
-				onRehydrateStorage: () => (state) => {
-					if (state) {
-						// リハイドレート時にMapを再構築
-						state.resourceCache = new Map(
-							Object.entries(state.resourceCache || {}),
-						)
-					}
-				},
+					return formattedData
+				} catch (error) {
+					console.error('Error fetching sections:', error)
+					set({ sections: [], resources: [], isLoading: false })
+					throw error
+				}
 			},
-		),
+
+			createSection: async (spaceId) => {
+				const { sections, setIsCreating, setIsLoading } = get()
+
+				try {
+					setIsCreating(true)
+					setIsLoading(true)
+
+					const response = await fetch('/api/sections', {
+						method: 'POST',
+						headers: { 'Content-Type': 'application/json' },
+						body: JSON.stringify({
+							name: 'Resources',
+							order: sections.length,
+							spaceId: spaceId,
+						}),
+						credentials: 'include',
+					})
+
+					if (!response.ok) {
+						throw new Error('セクションの作成に失敗しました')
+					}
+
+					const newSection: Section = await response.json()
+					set({ sections: [...sections, newSection] })
+
+					return newSection
+				} catch (error) {
+					console.error('セクション作成エラー:', error)
+					throw error instanceof Error
+						? error
+						: new Error('セクション作成に失敗しました')
+				} finally {
+					setIsCreating(false)
+					setIsLoading(false)
+				}
+			},
+
+			deleteSection: async (sectionId: string) => {
+				const { sections, resources } = get()
+
+				try {
+					// APIリクエストを実行
+					const response = await fetch(`/api/sections/${sectionId}`, {
+						method: 'DELETE',
+						credentials: 'include',
+					})
+
+					if (!response.ok) {
+						if (response.status === 404) {
+							// 既に削除されている場合は、ローカルの状態だけを更新
+							set({
+								sections: sections.filter(
+									(section) => section.id !== sectionId,
+								),
+								resources: resources.filter(
+									(resource) => resource.sectionId !== sectionId,
+								),
+							})
+							return
+						}
+						throw new Error('セクションの削除に失敗しました')
+					}
+
+					// 成功した場合、状態を更新
+					set({
+						sections: sections.filter((section) => section.id !== sectionId),
+						resources: resources.filter(
+							(resource) => resource.sectionId !== sectionId,
+						),
+					})
+				} catch (error) {
+					console.error('セクション削除エラー:', error)
+					throw error
+				}
+			},
+
+			reorderSections: async (items) => {
+				const { sections } = get()
+				try {
+					set({ sections: items })
+
+					const updatedItems = items.map((item, index) => ({
+						id: item.id,
+						order: index,
+					}))
+
+					const response = await fetch('/api/sections/reorder', {
+						method: 'PUT',
+						headers: { 'Content-Type': 'application/json' },
+						body: JSON.stringify({ items: updatedItems }),
+					})
+
+					if (!response.ok) {
+						throw new Error('Failed to update order')
+					}
+				} catch (error) {
+					console.error('Failed to update section order:', error)
+					set({ sections }) // 元の状態に戻す
+					alert('セクションの並び順の更新に失敗しました')
+				}
+			},
+
+			setResources: (
+				resources:
+					| ResourceStore['resources']
+					| ((prev: ResourceStore['resources']) => ResourceStore['resources']),
+			) => {
+				if (typeof resources === 'function') {
+					set({ resources: resources(get().resources) })
+				} else {
+					set({ resources })
+				}
+			},
+			setDriveFiles: (files) => set({ driveFiles: files }),
+
+			removeResource: async (id) => {
+				const { resources } = get()
+				const previousResources = [...resources]
+
+				try {
+					set({
+						resources: resources.filter((resource) => resource.id !== id),
+					})
+
+					const response = await fetch(`/api/resources/${id}`, {
+						method: 'DELETE',
+					})
+
+					if (!response.ok) {
+						throw new Error('Failed to delete resource')
+					}
+				} catch (error) {
+					set({ resources: previousResources })
+					throw error
+				}
+			},
+
+			updateResource: async (id, data) => {
+				const { resources } = get()
+				const previousResources = [...resources]
+
+				try {
+					set({
+						resources: resources.map((resource) =>
+							resource.id === id ? { ...resource, ...data } : resource,
+						),
+					})
+
+					const response = await fetch(`/api/resources/${id}`, {
+						method: 'PATCH',
+						headers: { 'Content-Type': 'application/json' },
+						body: JSON.stringify(data),
+					})
+
+					if (!response.ok) {
+						throw new Error('Failed to update resource')
+					}
+				} catch (error) {
+					set({ resources: previousResources })
+					throw error
+				}
+			},
+
+			addResource: async (
+				resourceOrUpdater:
+					| ResourceStore['resources'][0]
+					| ((prev: ResourceStore['resources']) => ResourceStore['resources']),
+			) => {
+				if (typeof resourceOrUpdater === 'function') {
+					const currentResources = get().resources
+					const updatedResources = resourceOrUpdater(currentResources)
+					set({ resources: updatedResources })
+					return Promise.resolve()
+				}
+
+				const { resources } = get()
+				set({ resources: [...resources, resourceOrUpdater] })
+				return Promise.resolve()
+			},
+
+			reorderResources: async (newResources) => {
+				const { resources } = get()
+				const previousResources = [...resources]
+
+				try {
+					set({ resources: newResources })
+
+					const payload = {
+						items: newResources.map((item) => ({
+							id: item.id,
+							position: item.position,
+							sectionId: item.sectionId,
+						})),
+					}
+
+					const response = await fetch('/api/resources/reorder', {
+						method: 'PUT',
+						headers: { 'Content-Type': 'application/json' },
+						body: JSON.stringify(payload),
+					})
+
+					if (!response.ok) {
+						throw new Error('Failed to reorder resources')
+					}
+				} catch (error) {
+					console.error('Reorder error:', error)
+					set({ resources: previousResources })
+					throw error
+				}
+			},
+
+			updateAllResources: (newResources) => {
+				set({
+					resources: newResources.sort((a, b) => {
+						if (a.sectionId === b.sectionId) {
+							return a.position - b.position
+						}
+						return 0
+					}),
+				})
+			},
+
+			prefetchNextSpace: async (spaceId: string) => {
+				const cache = get().resourceCache.get(spaceId)
+				if (cache && Date.now() - cache.timestamp < get().CACHE_EXPIRY) {
+					return
+				}
+
+				try {
+					const response = await fetch(`/api/spaces/${spaceId}/sections`)
+					const data = await response.json()
+
+					get().resourceCache.set(spaceId, {
+						sections: data.sections,
+						resources: data.resources,
+						timestamp: Date.now(),
+						isPreloaded: true,
+					})
+				} catch (error) {
+					console.error('Prefetch error:', error)
+				}
+			},
+
+			clearPrefetchedData: (spaceId: string) => {
+				set((state) => {
+					const { [spaceId]: _, ...remainingSections } =
+						state.prefetchedSections
+					const { [spaceId]: __, ...remainingResources } =
+						state.prefetchedResources
+					return {
+						prefetchedSections: remainingSections,
+						prefetchedResources: remainingResources,
+					}
+				})
+			},
+
+			// hydrationのためのメソッドを追加
+			hydrateResourceCache: (
+				cache: Record<
+					string,
+					{
+						sections: Section[]
+						resources: Resource[]
+						timestamp: number
+					}
+				>,
+			) => {
+				const newMap = new Map(Object.entries(cache))
+				set({ resourceCache: newMap })
+			},
+
+			updateSection: async (sectionId: string, data: { name: string }) => {
+				const { sections } = get()
+				const previousSections = [...sections]
+
+				try {
+					const targetSection = sections.find(
+						(section) => section.id === sectionId,
+					)
+					if (!targetSection) {
+						throw new Error('セクションが見つかりません')
+					}
+
+					const updatedSections = sections.map((section) =>
+						section.id === sectionId ? { ...section, ...data } : section,
+					)
+
+					set({ sections: updatedSections })
+
+					const response = await fetch(`/api/sections/${sectionId}`, {
+						method: 'PATCH',
+						headers: { 'Content-Type': 'application/json' },
+						body: JSON.stringify(data),
+						credentials: 'include',
+					})
+
+					if (!response.ok) {
+						set({ sections: previousSections })
+						throw new Error('セクション名の更新に失敗しました')
+					}
+
+					// キャッシュの更新
+					const spaceId = targetSection.spaceId
+					if (spaceId) {
+						const cache = get().resourceCache.get(spaceId)
+						if (cache) {
+							get().resourceCache.set(spaceId, {
+								...cache,
+								sections: updatedSections,
+								timestamp: Date.now(),
+							})
+						}
+					}
+				} catch (error) {
+					console.error('Section update error:', error)
+					set({ sections: previousSections })
+					throw error
+				}
+			},
+
+			createResource: async (data: {
+				title: string
+				url: string
+				faviconUrl: string | null
+				sectionId: string
+				position: number
+			}) => {
+				const { resources } = get()
+
+				try {
+					const response = await fetch('/api/resources', {
+						method: 'POST',
+						headers: { 'Content-Type': 'application/json' },
+						body: JSON.stringify(data),
+					})
+
+					if (!response.ok) {
+						throw new Error('Failed to create resource')
+					}
+
+					const newResource = await response.json()
+					set({ resources: [...resources, newResource] })
+					return newResource
+				} catch (error) {
+					console.error('Error creating resource:', error)
+					throw error
+				}
+			},
+
+			prefetchResourceData: async (spaceId: string) => {
+				const cache = get().resourceCache.get(spaceId)
+				if (cache && Date.now() - cache.timestamp < get().CACHE_EXPIRY) {
+					return // キャッシュが有効な場合は早期リターン
+				}
+
+				try {
+					const response = await fetch(`/api/spaces/${spaceId}/sections`)
+					if (!response.ok) throw new Error('Failed to fetch resources')
+
+					const data = await response.json()
+
+					// キャッシュのみを更新し、現在の表示は変更しない
+					get().resourceCache.set(spaceId, {
+						sections: data.sections,
+						resources: data.resources,
+						timestamp: Date.now(),
+					})
+				} catch (error) {
+					console.error('Error prefetching resources:', error)
+				}
+			},
+		})),
+
+		{
+			name: 'resource-storage',
+			storage: createJSONStorage(() => sessionStorage),
+			partialize: (state) => ({
+				sections: state.sections,
+				resources: state.resources,
+				resourceCache: Object.fromEntries(state.resourceCache),
+			}),
+			merge: (persistedState: unknown, currentState: ResourceStore) => {
+				const typedState = persistedState as PersistedState
+				return {
+					...currentState,
+					...typedState,
+					resourceCache: new Map(
+						Object.entries(typedState.resourceCache || {}),
+					),
+				}
+			},
+		},
 	),
 )
