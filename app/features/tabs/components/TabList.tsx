@@ -2,10 +2,16 @@
 
 import { useEffect, useState } from 'react'
 import { useResourceStore } from '@/app/store/resourceStore'
-import { Diamond } from 'lucide-react'
+import { Diamond, GripVertical } from 'lucide-react'
 import TabSaveButton from '@/app/features/tabs/components/TabSaveButton'
 import TabDeleteButton from '@/app/features/tabs/components/TabDeleteButton'
 import { useTabStore } from '@/app/store/tabStore'
+import {
+	useDragAndDrop,
+	GridList,
+	GridListItem,
+	Button,
+} from 'react-aria-components'
 
 interface Tab {
 	id: number
@@ -173,6 +179,23 @@ export default function TabList() {
 		}
 	}, [extensionId])
 
+	// タブアイテムをドラッグ可能にする
+	const { dragAndDropHooks } = useDragAndDrop({
+		getItems(keys) {
+			const tab = tabs.find((t) => t.id === Array.from(keys)[0])
+			return [
+				{
+					'tab-item': JSON.stringify({
+						title: tab?.title,
+						url: tab?.url,
+						faviconUrl: tab?.faviconUrl,
+					}),
+					'text/plain': tab?.title || '',
+				},
+			]
+		},
+	})
+
 	if (isLoading) {
 		return (
 			<div className="flex items-center pl-10 pr-4 py-4">
@@ -195,30 +218,44 @@ export default function TabList() {
 				<Diamond className="w-6 h-6" />
 				<div className="text-[17px] text-zinc-700">Tabs</div>
 			</div>
-			<div className="border-slate-400 rounded-md flex flex-col bg-white shadow-sm">
-				{tabs.map((tab) => (
-					<div
-						key={tab.id}
-						className="flex flex-grow items-center gap-2 pl-8 pr-2 py-1 hover:bg-zinc-100 rounded cursor-pointer group"
-						onClick={() => handleTabClick(tab)}
-						onKeyDown={(e) => {
-							if (e.key === 'Enter' || e.key === ' ') {
-								handleTabClick(tab)
-							}
-						}}
+			<GridList
+				aria-label="Tabs"
+				items={tabs}
+				dragAndDropHooks={dragAndDropHooks}
+				className="border-slate-400 rounded-md flex flex-col bg-white shadow-sm"
+			>
+				{(tab) => (
+					<GridListItem
+						textValue={tab.title}
+						className="flex flex-grow items-center gap-2 pr-2 py-1 hover:bg-zinc-100 rounded cursor-grab group outline-none"
+						onAction={() => handleTabClick(tab)}
 					>
 						<div className="flex flex-1 items-center gap-2 justify-between truncate">
-							<div className="flex items-center gap-2 truncate">
-								{tab.faviconUrl ? (
-									<img
-										src={tab.faviconUrl}
-										alt=""
-										className="w-4 h-4 flex-grow"
-									/>
-								) : (
-									<div className="w-4 h-4 bg-gray-200 rounded-full" />
-								)}
-								<span className="truncate">{tab.title}</span>
+							<div className="flex items-center gap-2">
+								<div
+									className="cursor-grab flex items-center opacity-0 group-hover:opacity-100 pl-4"
+									aria-label="Drag Wrapper"
+								>
+									<Button
+										className="cursor-grab"
+										slot="drag"
+										aria-label="ドラッグハンドル"
+									>
+										<GripVertical className="w-4 h-4 text-zinc-500" />
+									</Button>
+								</div>
+								<div className="flex items-center gap-2 truncate">
+									{tab.faviconUrl ? (
+										<img
+											src={tab.faviconUrl}
+											alt=""
+											className="w-4 h-4 flex-grow"
+										/>
+									) : (
+										<div className="w-4 h-4 bg-gray-200 rounded-full" />
+									)}
+									<span className="truncate">{tab.title}</span>
+								</div>
 							</div>
 							<div className="flex items-center">
 								<div className="opacity-0 group-hover:opacity-100">
@@ -233,9 +270,9 @@ export default function TabList() {
 								</div>
 							</div>
 						</div>
-					</div>
-				))}
-			</div>
+					</GridListItem>
+				)}
+			</GridList>
 		</div>
 	)
 }

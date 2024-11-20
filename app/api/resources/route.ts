@@ -51,46 +51,63 @@ export async function POST(req: NextRequest) {
 				? Math.max(...section.resources.map((r) => r.position))
 				: -1
 
-		const {
-			title,
-			description = '',
-			url,
-			faviconUrl = '',
-			mimeType,
-			isGoogleDrive = false,
-			sectionId,
-		} = body
+		const newPosition =
+			body.position <= maxPosition + 1 ? body.position : maxPosition + 1
 
-		const resource = await db.resource.create({
-			data: {
-				title,
-				description,
-				url,
-				faviconUrl,
-				position: maxPosition + 1,
-				mimeType,
-				isGoogleDrive,
-				user: {
-					connect: {
-						id: userId,
+		await db.$transaction([
+			db.resource.updateMany({
+				where: {
+					sectionId: body.sectionId,
+					position: {
+						gte: newPosition,
 					},
 				},
-				section: {
-					connect: {
-						id: sectionId,
+				data: {
+					position: {
+						increment: 1,
 					},
 				},
-			},
-			select: {
-				id: true,
-				title: true,
-				description: true,
-				url: true,
-				faviconUrl: true,
-				position: true,
-				mimeType: true,
-				isGoogleDrive: true,
-				sectionId: true,
+			}),
+			db.resource.create({
+				data: {
+					title: body.title,
+					description: body.description,
+					url: body.url,
+					faviconUrl: body.faviconUrl,
+					position: newPosition,
+					mimeType: body.mimeType,
+					isGoogleDrive: body.isGoogleDrive,
+					user: {
+						connect: {
+							id: userId,
+						},
+					},
+					section: {
+						connect: {
+							id: body.sectionId,
+						},
+					},
+				},
+				select: {
+					id: true,
+					title: true,
+					description: true,
+					url: true,
+					faviconUrl: true,
+					position: true,
+					mimeType: true,
+					isGoogleDrive: true,
+					sectionId: true,
+				},
+			}),
+		])
+
+		const resource = await db.resource.findFirst({
+			where: {
+				title: body.title,
+				url: body.url,
+				sectionId: body.sectionId,
+				position: newPosition,
 			},
 		})
 
