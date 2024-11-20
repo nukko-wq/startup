@@ -18,5 +18,5 @@ export interface Section {
 	updatedAt: Date
 	resources: Resource[]
 	userId?: string
-	spaceId?: string | null
+	spaceId?: string | null | undefined
 }
