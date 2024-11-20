@@ -24,7 +24,7 @@ const WorkspaceButtonMenu = ({
 }: WorkspaceButtonMenuProps) => {
 	const [isRenameOpen, setIsRenameOpen] = useState(false)
 	const [isDeleteOpen, setIsDeleteOpen] = useState(false)
-	const { setWorkspaces } = useWorkspaceStore()
+	const setWorkspaces = useWorkspaceStore((state) => state.setWorkspaces)
 
 	return (
 		<>

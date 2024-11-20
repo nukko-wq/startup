@@ -24,18 +24,18 @@ interface SpacesProps {
 
 const Spaces = ({ workspaceId }: SpacesProps) => {
 	const router = useRouter()
-	const {
-		spaces,
-		activeSpaceId,
-		isNavigating,
-		isDragging,
-		setSpaces,
-		handleSpaceClick,
-		reorderSpaces,
-		setIsDragging,
-		updateSpaceWorkspace,
-	} = useSpaceStore()
-	const { fetchSections, prefetchedSections } = useResourceStore()
+	const spaces = useSpaceStore((state) => state.spaces)
+	const activeSpaceId = useSpaceStore((state) => state.activeSpaceId)
+	const isNavigating = useSpaceStore((state) => state.isNavigating)
+	const isDragging = useSpaceStore((state) => state.isDragging)
+	const setSpaces = useSpaceStore((state) => state.setSpaces)
+	const handleSpaceClick = useSpaceStore((state) => state.handleSpaceClick)
+	const reorderSpaces = useSpaceStore((state) => state.reorderSpaces)
+	const setIsDragging = useSpaceStore((state) => state.setIsDragging)
+	const fetchSections = useResourceStore((state) => state.fetchSections)
+	const prefetchedSections = useResourceStore(
+		(state) => state.prefetchedSections,
+	)
 
 	const workspaceSpaces = useMemo(
 		() => spaces.filter((space) => space.workspaceId === workspaceId),

@@ -20,7 +20,8 @@ interface WorkspaceLeftMenuProps {
 
 const WorkspaceLeftMenu = ({ workspaceId }: WorkspaceLeftMenuProps) => {
 	const [isOpen, setIsOpen] = useState(false)
-	const { spaces, setSpaces } = useSpaceStore()
+	const spaces = useSpaceStore((state) => state.spaces)
+	const setSpaces = useSpaceStore((state) => state.setSpaces)
 
 	const handleCreateSpace = async (
 		data: { name: string; workspaceId: string },

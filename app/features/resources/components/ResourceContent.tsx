@@ -2,7 +2,7 @@
 
 import { useResourceStore } from '@/app/store/resourceStore'
 import SectionComponent from '@/app/features/sections/components/Section'
-import { useEffect } from 'react'
+import { useEffect, useCallback } from 'react'
 import { Button } from 'react-aria-components'
 import { Plus } from 'lucide-react'
 
@@ -19,8 +19,14 @@ export default function ResourceContent({ spaceId }: ResourceContentProps) {
 	const isLoading = useResourceStore((state) => state.isLoading)
 	const isCreating = useResourceStore((state) => state.isCreating)
 	const deleteSection = useResourceStore((state) => state.deleteSection)
+	const createSection = useResourceStore((state) => state.createSection)
 
-	// biome-ignore lint/correctness/useExhaustiveDependencies: <explanation>
+	const handleCreateSection = useCallback(() => {
+		if (spaceId) {
+			createSection(spaceId)
+		}
+	}, [spaceId, createSection])
+
 	useEffect(() => {
 		const loadData = async () => {
 			if (spaceId) {
@@ -36,7 +42,7 @@ export default function ResourceContent({ spaceId }: ResourceContentProps) {
 			}
 		}
 		loadData()
-	}, [spaceId])
+	}, [spaceId, fetchSections, setSections, setResources])
 
 	return (
 		<div className="flex flex-col flex-grow w-full max-w-[920px]">
@@ -54,9 +60,7 @@ export default function ResourceContent({ spaceId }: ResourceContentProps) {
 			<div className="flex justify-center mt-4">
 				<Button
 					className="flex items-center gap-1 px-4 py-2 outline-none text-gray-500 hover:text-gray-700 transition-colors"
-					onPress={() =>
-						spaceId && useResourceStore((state) => state.createSection(spaceId))
-					}
+					onPress={handleCreateSection}
 					isDisabled={isLoading || isCreating}
 				>
 					<Plus className="w-3 h-3" />

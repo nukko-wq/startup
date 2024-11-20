@@ -25,13 +25,11 @@ const DeleteSpaceDialog = ({
 	onOpenChange,
 }: DeleteSpaceDialogProps) => {
 	const router = useRouter()
-	const {
-		spaces,
-		setSpaces,
-		activeSpaceId,
-		setActiveSpaceId,
-		setCurrentSpace,
-	} = useSpaceStore()
+	const spaces = useSpaceStore((state) => state.spaces)
+	const setSpaces = useSpaceStore((state) => state.setSpaces)
+	const activeSpaceId = useSpaceStore((state) => state.activeSpaceId)
+	const setActiveSpaceId = useSpaceStore((state) => state.setActiveSpaceId)
+	const setCurrentSpace = useSpaceStore((state) => state.setCurrentSpace)
 
 	const handleDelete = async (close: () => void) => {
 		try {

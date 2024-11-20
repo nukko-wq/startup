@@ -47,7 +47,7 @@ export default function CreateSpaceInWorkspace({
 			const newSpace = await response.json()
 
 			// 新しいスペースを追加する前に重複チェック
-			const existingSpaces = useSpaceStore.getState().spaces
+			const existingSpaces = useSpaceStore((state) => state.spaces)
 			const isDuplicate = existingSpaces.some(
 				(space) => space.id === newSpace.id,
 			)

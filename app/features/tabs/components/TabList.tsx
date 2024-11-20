@@ -31,10 +31,12 @@ interface TabsUpdateMessage {
 }
 
 export default function TabList() {
-	const { tabs, setTabs, switchToTab } = useTabStore()
+	const tabs = useTabStore((state) => state.tabs)
+	const setTabs = useTabStore((state) => state.setTabs)
+	const switchToTab = useTabStore((state) => state.switchToTab)
 	const [isLoading, setIsLoading] = useState(true)
 	const [extensionId, setExtensionId] = useState<string>('')
-	const { addResource } = useResourceStore()
+	const addResource = useResourceStore((state) => state.addResource)
 
 	const handleTabClick = async (tab: Tab) => {
 		try {

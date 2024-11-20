@@ -21,7 +21,7 @@ interface SpaceButtonMenuProps {
 const SpaceButtonMenu = ({ spaceId, spaceName }: SpaceButtonMenuProps) => {
 	const [isRenameOpen, setIsRenameOpen] = useState(false)
 	const [isDeleteOpen, setIsDeleteOpen] = useState(false)
-	const { currentSpace } = useSpaceStore()
+	const currentSpace = useSpaceStore((state) => state.currentSpace)
 
 	return (
 		<>

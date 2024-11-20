@@ -22,7 +22,10 @@ const SpaceRenameForm = ({
 	initialName,
 	onClose,
 }: SpaceRenameFormProps) => {
-	const { spaces, setSpaces, currentSpace, setCurrentSpace } = useSpaceStore()
+	const spaces = useSpaceStore((state) => state.spaces)
+	const setSpaces = useSpaceStore((state) => state.setSpaces)
+	const currentSpace = useSpaceStore((state) => state.currentSpace)
+	const setCurrentSpace = useSpaceStore((state) => state.setCurrentSpace)
 	const [isSubmitting, setIsSubmitting] = useState(false)
 
 	const { control, handleSubmit, reset } = useForm<FormData>({

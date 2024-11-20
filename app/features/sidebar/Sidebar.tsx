@@ -10,7 +10,6 @@ import SidebarMenu from './SidebarMenu'
 import dynamic from 'next/dynamic'
 
 const DynamicWorkspaces = dynamic(() => import('./Workspaces'), { ssr: false })
-
 const DynamicSpaces = dynamic(() => import('./Spaces'), { ssr: false })
 
 interface SidebarProps {

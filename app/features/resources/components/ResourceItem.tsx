@@ -36,12 +36,11 @@ export default function ResourceItem({
 	resources,
 	sectionId,
 }: ResourceItemProps) {
-	const {
-		reorderResources,
-		resources: allResources,
-		createResource,
-	} = useResourceStore()
-	const { findTabByUrl, switchToTab } = useTabStore()
+	const reorderResources = useResourceStore((state) => state.reorderResources)
+	const allResources = useResourceStore((state) => state.resources)
+	const createResource = useResourceStore((state) => state.createResource)
+	const findTabByUrl = useTabStore((state) => state.findTabByUrl)
+	const switchToTab = useTabStore((state) => state.switchToTab)
 
 	const sortedResources = React.useMemo(() => {
 		const sectionResources = resources.filter((r) => r.sectionId === sectionId)
