@@ -2,15 +2,18 @@
 
 import { useResourceStore } from '@/app/store/resourceStore'
 import SectionComponent from '@/app/features/sections/components/Section'
-import { useEffect, useCallback } from 'react'
+import { useEffect, useCallback, useMemo } from 'react'
 import { Button } from 'react-aria-components'
 import { Plus } from 'lucide-react'
+import { memo } from 'react'
 
 interface ResourceContentProps {
 	spaceId: string
 }
 
-export default function ResourceContent({ spaceId }: ResourceContentProps) {
+export default memo(function ResourceContent({
+	spaceId,
+}: ResourceContentProps) {
 	const sections = useResourceStore((state) => state.sections)
 	const resources = useResourceStore((state) => state.resources)
 	const fetchSections = useResourceStore((state) => state.fetchSections)
@@ -21,9 +24,11 @@ export default function ResourceContent({ spaceId }: ResourceContentProps) {
 	const deleteSection = useResourceStore((state) => state.deleteSection)
 	const createSection = useResourceStore((state) => state.createSection)
 
-	const handleCreateSection = useCallback(() => {
-		if (spaceId) {
-			createSection(spaceId)
+	const handleCreateSection = useMemo(() => {
+		return () => {
+			if (spaceId) {
+				createSection(spaceId)
+			}
 		}
 	}, [spaceId, createSection])
 
@@ -69,4 +74,4 @@ export default function ResourceContent({ spaceId }: ResourceContentProps) {
 			</div>
 		</div>
 	)
-}
+})

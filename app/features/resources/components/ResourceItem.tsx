@@ -14,7 +14,7 @@ import { GripVertical } from 'lucide-react'
 import { useResourceStore } from '@/app/store/resourceStore'
 import ResourceIcon from '@/app/features/resources/components/ResourceIcon'
 import type { Resource } from '@prisma/client'
-import React from 'react'
+import React, { useMemo, useCallback } from 'react'
 import { useTabStore } from '@/app/store/tabStore'
 
 interface ResourceItemProps {
@@ -42,9 +42,10 @@ export default function ResourceItem({
 	const findTabByUrl = useTabStore((state) => state.findTabByUrl)
 	const switchToTab = useTabStore((state) => state.switchToTab)
 
-	const sortedResources = React.useMemo(() => {
-		const sectionResources = resources.filter((r) => r.sectionId === sectionId)
-		return [...sectionResources].sort((a, b) => a.position - b.position)
+	const sortedResources = useMemo(() => {
+		return [...resources]
+			.filter((r) => r.sectionId === sectionId)
+			.sort((a, b) => a.position - b.position)
 	}, [resources, sectionId])
 
 	React.useEffect(() => {
@@ -228,34 +229,24 @@ export default function ResourceItem({
 		},
 	})
 
-	const handleResourceClick = async () => {
+	const handleResourceClick = useCallback(async () => {
 		const resource = sortedResources.find(
 			(r) => r.id === document.activeElement?.getAttribute('data-key'),
 		)
 		if (!resource) return
 
 		try {
-			console.log('Checking for existing tab with URL:', resource.url)
 			const existingTab = findTabByUrl(resource.url)
-
 			if (existingTab) {
-				console.log('Found existing tab:', existingTab)
 				const success = await switchToTab(existingTab.id)
-				if (success) {
-					console.log('Successfully switched to existing tab')
-					return
-				}
-				console.log('Failed to switch to existing tab, opening new tab')
-			} else {
-				console.log('No existing tab found, opening new tab')
+				if (success) return
 			}
-
 			window.open(resource.url, '_blank')
 		} catch (error) {
 			console.error('Error handling resource click:', error)
 			window.open(resource.url, '_blank')
 		}
-	}
+	}, [sortedResources, findTabByUrl, switchToTab])
 
 	return (
 		<GridList

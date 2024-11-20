@@ -9,14 +9,17 @@ interface Tab {
 
 interface TabStore {
 	tabs: Tab[]
-	setTabs: (tabs: Tab[]) => void
+	setTabs: (tabs: Tab[] | ((prev: Tab[]) => Tab[])) => void
 	findTabByUrl: (url: string) => Tab | undefined
 	switchToTab: (tabId: number) => Promise<boolean>
 }
 
 export const useTabStore = create<TabStore>((set, get) => ({
 	tabs: [],
-	setTabs: (tabs) => set({ tabs }),
+	setTabs: (tabs) =>
+		set((state) => ({
+			tabs: typeof tabs === 'function' ? tabs(state.tabs) : tabs,
+		})),
 	findTabByUrl: (url) => {
 		const { tabs } = get()
 		return tabs.find((tab) => {

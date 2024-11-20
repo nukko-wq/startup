@@ -13,7 +13,7 @@ import {
 } from 'react-aria-components'
 import SpaceButtonMenu from './SpaceButtonMenu'
 import { useRouter } from 'next/navigation'
-import { useMemo, useCallback } from 'react'
+import { useMemo, useCallback, memo } from 'react'
 import CreateSpaceInWorkspace from '../workspaces/create_space/CreateSpaceInWorkspace'
 import { useResourceStore } from '@/app/store/resourceStore'
 import debounce from 'lodash/debounce'
@@ -22,7 +22,7 @@ interface SpacesProps {
 	workspaceId: string
 }
 
-const Spaces = ({ workspaceId }: SpacesProps) => {
+const Spaces = memo(function Spaces({ workspaceId }: SpacesProps) {
 	const router = useRouter()
 	const spaces = useSpaceStore((state) => state.spaces)
 	const activeSpaceId = useSpaceStore((state) => state.activeSpaceId)
@@ -311,6 +311,6 @@ const Spaces = ({ workspaceId }: SpacesProps) => {
 			)}
 		</GridList>
 	)
-}
+})
 
 export default Spaces

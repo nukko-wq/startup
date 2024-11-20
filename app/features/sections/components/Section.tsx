@@ -3,7 +3,7 @@
 import ResourceCreateButton from '@/app/features/resources/create_resource/components/ResourceCreateButton'
 import ResourceItem from '@/app/features/resources/components/ResourceItem'
 import { File } from 'lucide-react'
-import { useRef, useState, useMemo } from 'react'
+import { useRef, useState, useMemo, useCallback } from 'react'
 import SectionMenuButton from '@/app/features/sections/section_menu/SectionMenuButton'
 import SectionNameEdit from '@/app/features/sections/edit_section/components/SectionNameEdit'
 import { Button } from 'react-aria-components'
@@ -39,7 +39,7 @@ export default memo(function Section({
 	const [isResourceCreateOpen, setIsResourceCreateOpen] = useState(false)
 	const deleteSection = useResourceStore((state) => state.deleteSection)
 
-	const sectionResources = useMemo(() => {
+	const sortedResources = useMemo(() => {
 		return [...resources].sort((a, b) => a.position - b.position)
 	}, [resources])
 
@@ -47,19 +47,18 @@ export default memo(function Section({
 		setSectionName(newName)
 	}
 
-	const handleDelete = async () => {
+	const handleDelete = useCallback(async () => {
 		try {
-			const deletePromise = onDelete(id)
-			await deletePromise
+			await onDelete(id)
 		} catch (error) {
 			console.error('セクション削除エラー:', error)
 			const message =
 				error instanceof Error
 					? error.message
-					: 'セクションの削除に失敗しました。もう一度お試しください。'
+					: 'セクションの削除に失敗しました。'
 			alert(message)
 		}
-	}
+	}, [id, onDelete])
 
 	return (
 		<div
@@ -94,7 +93,7 @@ export default memo(function Section({
 					/>
 				</div>
 			</div>
-			<ResourceItem resources={sectionResources} sectionId={id} />
+			<ResourceItem resources={sortedResources} sectionId={id} />
 		</div>
 	)
 })

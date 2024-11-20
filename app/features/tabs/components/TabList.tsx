@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback, memo } from 'react'
 import { useResourceStore } from '@/app/store/resourceStore'
 import { Diamond, GripVertical } from 'lucide-react'
 import TabSaveButton from '@/app/features/tabs/components/TabSaveButton'
@@ -38,38 +38,38 @@ export default function TabList() {
 	const [extensionId, setExtensionId] = useState<string>('')
 	const addResource = useResourceStore((state) => state.addResource)
 
-	const handleTabClick = async (tab: Tab) => {
-		try {
-			console.log('Attempting to switch to tab:', tab)
-			const success = await switchToTab(tab.id)
-
-			if (!success) {
-				console.log('Failed to switch tab, falling back to window.open')
+	const handleTabClick = useCallback(
+		async (tab: Tab) => {
+			try {
+				const success = await switchToTab(tab.id)
+				if (!success) {
+					window.open(tab.url, '_blank')
+				}
+			} catch (error) {
+				console.error('Error switching tab:', error)
 				window.open(tab.url, '_blank')
 			}
-		} catch (error) {
-			console.error('Error switching tab:', error)
-			window.open(tab.url, '_blank')
-		}
-	}
+		},
+		[switchToTab],
+	)
 
-	const handleDeleteTab = async (tabId: number) => {
-		try {
-			const storedExtensionId = localStorage.getItem('extensionId')
-			if (!storedExtensionId) {
-				throw new Error('Extension ID not found')
+	const handleDeleteTab = useCallback(
+		async (tabId: number) => {
+			try {
+				const storedExtensionId = localStorage.getItem('extensionId')
+				if (!storedExtensionId) throw new Error('Extension ID not found')
+
+				await chrome.runtime.sendMessage(storedExtensionId, {
+					type: 'CLOSE_TAB',
+					tabId: tabId,
+				})
+				setTabs((prev: Tab[]) => prev.filter((tab) => tab.id !== tabId))
+			} catch (error) {
+				console.error('Failed to close tab:', error)
 			}
-
-			await chrome.runtime.sendMessage(storedExtensionId, {
-				type: 'CLOSE_TAB',
-				tabId: tabId,
-			})
-
-			setTabs(tabs.filter((tab) => tab.id !== tabId))
-		} catch (error) {
-			console.error('Failed to close tab:', error)
-		}
-	}
+		},
+		[setTabs],
+	)
 
 	const fetchExtensionId = async () => {
 		if (typeof window === 'undefined' || !window.chrome?.runtime) {
