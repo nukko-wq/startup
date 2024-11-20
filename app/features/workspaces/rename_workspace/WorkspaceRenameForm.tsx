@@ -20,7 +20,7 @@ const WorkspaceRenameForm = ({
 	initialName,
 	onClose,
 }: WorkspaceRenameFormProps) => {
-	const { renameWorkspace } = useWorkspaceStore()
+	const renameWorkspace = useWorkspaceStore((state) => state.renameWorkspace)
 
 	const { control, handleSubmit } = useForm<FormData>({
 		resolver: zodResolver(workspaceUpdateSchema),

@@ -25,7 +25,7 @@ const DeleteWorkspaceDialog = ({
 	onOpenChange,
 }: DeleteWorkspaceDialogProps) => {
 	const router = useRouter()
-	const { deleteWorkspace } = useWorkspaceStore()
+	const deleteWorkspace = useWorkspaceStore((state) => state.deleteWorkspace)
 	const [isDeleting, setIsDeleting] = useState(false)
 
 	const handleDelete = async (close: () => void) => {
