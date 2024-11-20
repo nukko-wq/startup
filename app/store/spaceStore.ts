@@ -75,57 +75,34 @@ export const useSpaceStore = create<SpaceStore>((set, get) => ({
 	},
 
 	handleSpaceClick: async (spaceId, router) => {
-		const { setIsNavigating, spaces, currentSpace } = get()
+		const { setIsNavigating, spaces } = get()
 		const resourceStore = useResourceStore.getState()
-
-		if (spaceId === currentSpace?.id || !spaceId) {
-			return
-		}
-
-		const previousState = {
-			currentSpace,
-			activeSpaceId: get().activeSpaceId,
-			sections: resourceStore.sections,
-			resources: resourceStore.resources,
-		}
 
 		try {
 			setIsNavigating(true)
 
-			await fetch(`/api/spaces/${spaceId}/active`, {
-				method: 'PUT',
-			})
-
-			const targetSpace = spaces.find((s) => s.id === spaceId)
-			if (!targetSpace) {
-				throw new Error('Target space not found')
+			const cachedData = resourceStore.resourceCache.get(spaceId)
+			if (
+				cachedData &&
+				Date.now() - cachedData.timestamp < resourceStore.CACHE_EXPIRY
+			) {
+				resourceStore.setSections(cachedData.sections)
+				resourceStore.setResources(cachedData.resources)
 			}
 
-			set({
-				currentSpace: targetSpace,
-				activeSpaceId: spaceId,
-			})
+			const [activeResponse, sectionsResponse] = await Promise.all([
+				fetch(`/api/spaces/${spaceId}/active`, { method: 'PUT' }),
+				!cachedData && resourceStore.fetchSections(spaceId),
+			])
+
+			if (!cachedData && sectionsResponse) {
+				resourceStore.setSections(sectionsResponse.sections)
+				resourceStore.setResources(sectionsResponse.resources)
+			}
 
 			await router.replace(`/?spaceId=${spaceId}`, { scroll: false })
-
-			const resourceState = useResourceStore.getState()
-			const newData = await resourceState.fetchSections(spaceId)
-
-			resourceState.setSections(newData?.sections || [])
-			resourceState.setResources(newData?.resources || [])
 		} catch (error) {
 			console.error('Error in handleSpaceClick:', error)
-
-			set({
-				currentSpace: previousState.currentSpace,
-				activeSpaceId: previousState.activeSpaceId,
-			})
-
-			const resourceState = useResourceStore.getState()
-			resourceState.setSections(previousState.sections)
-			resourceState.setResources(previousState.resources)
-
-			throw error
 		} finally {
 			setIsNavigating(false)
 		}
