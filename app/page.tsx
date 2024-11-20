@@ -88,7 +88,11 @@ export default async function Index({ searchParams }: PageProps) {
 									</div>
 								}
 							>
-								<ResourceContent spaceId={spaceId ?? ''} />
+								<ResourceContent
+									spaceId={spaceId ?? ''}
+									initialSections={sections}
+									initialResources={resources}
+								/>
 							</Suspense>
 						</div>
 					</div>

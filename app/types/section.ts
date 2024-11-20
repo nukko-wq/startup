@@ -1,12 +1,12 @@
 export interface Resource {
 	id: string
 	title: string
-	description: string
 	url: string
 	faviconUrl: string | null
-	position: number
 	mimeType: string | null
 	isGoogleDrive: boolean
+	position: number
+	description: string | null
 	sectionId: string
 }
 
