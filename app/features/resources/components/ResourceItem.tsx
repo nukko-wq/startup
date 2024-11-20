@@ -88,21 +88,30 @@ export default function ResourceItem({
 
 		async onInsert(e) {
 			try {
+				console.log('Drop Target Key:', e.target.key)
+				console.log('Drop Position:', e.target.dropPosition)
+
 				const items = await Promise.all(
 					e.items.filter(isTextDropItem).map(async (item) => {
 						const types = Array.from(item.types)
 						if (types.includes('tab-item')) {
 							const tabData = JSON.parse(await item.getText('tab-item'))
+
+							const targetIndex = sortedResources.findIndex(
+								(r) => r.id === e.target.key,
+							)
+							console.log('Target Index:', targetIndex)
+
 							const newPosition =
 								e.target.dropPosition === 'before'
-									? e.target.key
-										? allResources.find((r) => r.id === e.target.key)
-												?.position || 0
+									? targetIndex !== -1
+										? sortedResources[targetIndex].position
 										: 0
-									: e.target.key
-										? (allResources.find((r) => r.id === e.target.key)
-												?.position || 0) + 1
-										: allResources.length
+									: targetIndex !== -1
+										? sortedResources[targetIndex].position + 1
+										: sortedResources.length
+
+							console.log('New Position:', newPosition)
 
 							const newResource = await createResource({
 								title: tabData.title,
@@ -118,19 +127,45 @@ export default function ResourceItem({
 					}),
 				)
 
+				if (items.length === 0) return
+
+				// 新しく作成されたリソースの位置を取得
+				const newResource = items[0]
+				const newPosition = newResource.position
+				console.log('New Position after creation:', newPosition)
+
 				const updatedResources = allResources.map((resource) => {
 					if (
 						resource.sectionId === sectionId &&
-						resource.position >= items[0].position
+						resource.position >= newPosition
 					) {
+						console.log(`Incrementing position for resource ID: ${resource.id}`)
 						return { ...resource, position: resource.position + 1 }
 					}
 					return resource
 				})
 
-				updatedResources.push(...items)
+				// 新しいリソースを追加
+				updatedResources.push(newResource)
 
-				await reorderResources(updatedResources)
+				console.log('Updated Resources before sorting:', updatedResources)
+
+				// 全リソースを位置順にソート
+				const sortedUpdatedResources = updatedResources
+					.filter((r) => r.sectionId === sectionId)
+					.sort((a, b) => a.position - b.position)
+
+				console.log('Sorted Updated Resources:', sortedUpdatedResources)
+
+				// 位置を再割り当て
+				const reassignedResources = sortedUpdatedResources.map((r, index) => ({
+					...r,
+					position: index + 1, // 1から開始する場合
+				}))
+
+				console.log('Reassigned Resources:', reassignedResources)
+
+				await reorderResources(reassignedResources)
 			} catch (error) {
 				console.error('Failed to drop resources:', error)
 			}
