@@ -3,7 +3,7 @@
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import HeaderMenu from '@/app/features/header/header_menu/HeaderMenu'
 import { useSpaceStore } from '@/app/store/spaceStore'
 import { Button, Input, Text } from 'react-aria-components'
@@ -34,7 +34,10 @@ export default function Header({
 	const spaces = useSpaceStore((state) => state.spaces)
 	const setSpaces = useSpaceStore((state) => state.setSpaces)
 
-	const displayName = currentSpace?.name || initialSpaceName
+	const displayName = useMemo(
+		() => currentSpace?.name || initialSpaceName,
+		[currentSpace?.name, initialSpaceName],
+	)
 
 	const {
 		register,
@@ -44,9 +47,6 @@ export default function Header({
 	} = useForm<SpaceFormData>({
 		resolver: zodResolver(spaceSchema),
 		defaultValues: {
-			name: displayName,
-		},
-		values: {
 			name: displayName,
 		},
 	})
