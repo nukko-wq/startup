@@ -41,8 +41,11 @@ const ResourceCreateForm = ({
 	const { data: session } = useSession()
 	const [activeTab, setActiveTab] = useState<'url' | 'drive'>('url')
 
-	const { resources, driveFiles, setDriveFiles, addResource, setResources } =
-		useResourceStore()
+	const resources = useResourceStore((state) => state.resources)
+	const driveFiles = useResourceStore((state) => state.driveFiles)
+	const setDriveFiles = useResourceStore((state) => state.setDriveFiles)
+	const addResource = useResourceStore((state) => state.addResource)
+	const setResources = useResourceStore((state) => state.setResources)
 
 	// Google Drive のファイル一覧を取得
 	const fetchDriveFiles = useCallback(async () => {

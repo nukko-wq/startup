@@ -11,8 +11,10 @@ interface TabSaveButtonProps {
 }
 
 const TabSaveButton = ({ title, url, faviconUrl }: TabSaveButtonProps) => {
-	const { sections, resources, createSection } = useResourceStore()
-	const { currentSpace } = useSpaceStore()
+	const sections = useResourceStore((state) => state.sections)
+	const resources = useResourceStore((state) => state.resources)
+	const createSection = useResourceStore((state) => state.createSection)
+	const currentSpace = useSpaceStore((state) => state.currentSpace)
 
 	const handleSave = async () => {
 		if (!currentSpace) return

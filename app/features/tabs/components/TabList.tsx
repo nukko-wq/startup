@@ -34,7 +34,7 @@ export default function TabList() {
 	const { tabs, setTabs, switchToTab } = useTabStore()
 	const [isLoading, setIsLoading] = useState(true)
 	const [extensionId, setExtensionId] = useState<string>('')
-	const { addResource } = useResourceStore()
+	const addResource = useResourceStore((state) => state.addResource)
 
 	const handleTabClick = async (tab: Tab) => {
 		try {

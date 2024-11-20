@@ -22,9 +22,12 @@ export default function SpacesMenu() {
 	const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false)
 	const [isCreatingWorkspace, setIsCreatingWorkspace] = useState(false)
 
-	const { defaultWorkspace, workspaces, setWorkspaces } = useWorkspaceStore()
+	const defaultWorkspace = useWorkspaceStore((state) => state.defaultWorkspace)
+	const workspaces = useWorkspaceStore((state) => state.workspaces)
+	const setWorkspaces = useWorkspaceStore((state) => state.setWorkspaces)
 
-	const { spaces, setSpaces } = useSpaceStore()
+	const spaces = useSpaceStore((state) => state.spaces)
+	const setSpaces = useSpaceStore((state) => state.setSpaces)
 
 	const handleCreateSpace = async (
 		data: { name: string; workspaceId: string },

@@ -29,7 +29,10 @@ export default function Header({
 	spaceId,
 }: HeaderProps) {
 	const [isEditing, setIsEditing] = useState(false)
-	const { currentSpace, setCurrentSpace, spaces, setSpaces } = useSpaceStore()
+	const currentSpace = useSpaceStore((state) => state.currentSpace)
+	const setCurrentSpace = useSpaceStore((state) => state.setCurrentSpace)
+	const spaces = useSpaceStore((state) => state.spaces)
+	const setSpaces = useSpaceStore((state) => state.setSpaces)
 
 	const displayName = currentSpace?.name || initialSpaceName
 
