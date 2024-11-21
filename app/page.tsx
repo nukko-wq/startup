@@ -76,11 +76,11 @@ export default async function Index({ searchParams }: PageProps) {
 				/>
 				<main className="flex flex-col flex-grow items-center bg-slate-100">
 					<Header spaceName={activeSpace?.name ?? ''} spaceId={spaceId ?? ''} />
-					<div className="grid grid-cols-[repeat(2,minmax(0,920px))] place-content-around w-full">
-						<div className="flex justify-center">
+					<div className="flex flex-grow w-full">
+						<div className="flex justify-center w-1/2">
 							<TabListWrapper />
 						</div>
-						<div className="flex justify-center">
+						<div className="flex justify-center w-1/2">
 							<Suspense
 								fallback={
 									<div className="flex items-center justify-center h-full">

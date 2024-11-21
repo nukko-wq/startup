@@ -215,7 +215,7 @@ export default function TabList() {
 	}
 
 	return (
-		<div className="flex-grow p-4 pr-[16px] pl-[32px] max-w-full">
+		<div className="flex-grow p-4 pr-[16px] pl-[32px] max-w-[920px]">
 			<div className="flex items-center gap-2 py-2 ml-4 mb-2">
 				<Diamond className="w-6 h-6" />
 				<div className="text-[17px] text-zinc-700">Tabs</div>
@@ -229,11 +229,11 @@ export default function TabList() {
 				{(tab) => (
 					<GridListItem
 						textValue={tab.title}
-						className="flex flex-grow items-center gap-2 pr-2 py-1 hover:bg-zinc-100 rounded cursor-grab group outline-none"
+						className="block items-center gap-2 pr-2 py-1 truncate hover:bg-zinc-100 rounded cursor-grab group outline-none"
 						onAction={() => handleTabClick(tab)}
 					>
-						<div className="flex flex-1 items-center gap-2 justify-between truncate">
-							<div className="flex items-center gap-2">
+						<div className="grid grid-cols-[1fr_72px] items-center gap-2">
+							<div className="flex items-center gap-2 truncate">
 								<div
 									className="cursor-grab flex items-center opacity-0 group-hover:opacity-100 pl-4"
 									aria-label="Drag Wrapper"
