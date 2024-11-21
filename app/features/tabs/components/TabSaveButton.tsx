@@ -1,6 +1,11 @@
 import { Bookmark } from 'lucide-react'
-import React from 'react'
-import { Button } from 'react-aria-components'
+import React, { useState } from 'react'
+import {
+	Button,
+	OverlayArrow,
+	Tooltip,
+	TooltipTrigger,
+} from 'react-aria-components'
 import { useResourceStore } from '@/app/store/resourceStore'
 import { useSpaceStore } from '@/app/store/spaceStore'
 
@@ -15,6 +20,7 @@ const TabSaveButton = ({ title, url, faviconUrl }: TabSaveButtonProps) => {
 	const resources = useResourceStore((state) => state.resources)
 	const createSection = useResourceStore((state) => state.createSection)
 	const currentSpace = useSpaceStore((state) => state.currentSpace)
+	const [isTooltipVisible, setIsTooltipVisible] = useState(false)
 
 	const handleSave = async () => {
 		if (!currentSpace) return
@@ -72,12 +78,28 @@ const TabSaveButton = ({ title, url, faviconUrl }: TabSaveButtonProps) => {
 	}
 
 	return (
-		<Button
-			onPress={handleSave}
-			className="outline-none p-2 hover:bg-gray-200 transition-colors duration-200 rounded-full"
+		<TooltipTrigger
+			isOpen={isTooltipVisible}
+			onOpenChange={setIsTooltipVisible}
+			delay={700}
+			closeDelay={0}
 		>
-			<Bookmark className="w-5 h-5 text-gray-700" />
-		</Button>
+			<Button
+				onPress={handleSave}
+				className="outline-none p-2 hover:bg-gray-200 transition-colors duration-200 rounded-full"
+			>
+				<Bookmark className="w-5 h-5 text-gray-700" />
+			</Button>
+			<Tooltip className="bg-gray-800 text-gray-300 text-sm shadow-md rounded-lg px-2 py-1">
+				<OverlayArrow>
+					{/* biome-ignore lint/a11y/noSvgWithoutTitle: <explanation> */}
+					<svg width={8} height={8} viewBox="0 0 8 8" className="fill-gray-800">
+						<path d="M0 0 L4 4 L8 0" />
+					</svg>
+				</OverlayArrow>
+				Save to space
+			</Tooltip>
+		</TooltipTrigger>
 	)
 }
 
