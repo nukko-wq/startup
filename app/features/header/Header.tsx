@@ -77,9 +77,10 @@ export default function Header({
 				spaces.map((space) => (space.id === spaceId ? updatedSpace : space)),
 			)
 
+			setIsEditing(false)
+
 			// APIリクエストを非同期で実行
 			await useSpaceStore.getState().updateSpaceName(spaceId, data.name)
-			setIsEditing(false)
 		} catch (error) {
 			console.error('Error updating space name:', error)
 			reset({ name: displayName })

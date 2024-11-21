@@ -210,6 +210,15 @@ export const useSpaceStore = create<SpaceStore>((set, get) => ({
 				setCurrentSpace({ ...currentSpace, name })
 			}
 
+			const resourceStore = useResourceStore.getState()
+			const cache = resourceStore.resourceCache.get(spaceId)
+			if (cache) {
+				resourceStore.resourceCache.set(spaceId, {
+					...cache,
+					timestamp: Date.now(),
+				})
+			}
+
 			const response = await fetch(`/api/spaces/${spaceId}`, {
 				method: 'PATCH',
 				headers: { 'Content-Type': 'application/json' },
@@ -218,15 +227,6 @@ export const useSpaceStore = create<SpaceStore>((set, get) => ({
 
 			if (!response.ok) {
 				throw new Error('Failed to update space name')
-			}
-
-			const resourceStore = useResourceStore.getState()
-			const cache = resourceStore.resourceCache.get(spaceId)
-			if (cache) {
-				resourceStore.resourceCache.set(spaceId, {
-					...cache,
-					timestamp: Date.now(),
-				})
 			}
 		} catch (error) {
 			setSpaces(previousSpaces)
