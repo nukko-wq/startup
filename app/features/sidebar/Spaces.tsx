@@ -10,6 +10,7 @@ import {
 	useDragAndDrop,
 	DropIndicator,
 	isTextDropItem,
+	type Selection,
 } from 'react-aria-components'
 import SpaceButtonMenu from './SpaceButtonMenu'
 import { useRouter } from 'next/navigation'
@@ -66,6 +67,18 @@ const Spaces = memo(function Spaces({
 			}
 		}, 200),
 		[onSpaceHover],
+	)
+
+	const handleSpaceSelection = useCallback(
+		(keys: Selection) => {
+			if (typeof keys === 'string') {
+				if (keys && keys !== activeSpaceId && !isNavigating) {
+					useSpaceStore.setState({ activeSpaceId: keys })
+					handleSpaceClick(keys, router)
+				}
+			}
+		},
+		[activeSpaceId, isNavigating, handleSpaceClick, router],
 	)
 
 	const { dragAndDropHooks } = useDragAndDrop({
@@ -261,12 +274,7 @@ const Spaces = memo(function Spaces({
 			className="flex flex-col outline-none"
 			selectionMode="single"
 			selectedKeys={activeSpaceId ? [activeSpaceId] : []}
-			onSelectionChange={(keys) => {
-				const selectedKey = Array.from(keys)[0] as string
-				if (selectedKey && selectedKey !== activeSpaceId && !isNavigating) {
-					handleSpaceClick(selectedKey, router)
-				}
-			}}
+			onSelectionChange={handleSpaceSelection}
 			renderEmptyState={() => (
 				<div data-drop-target className="ml-11 mr-4">
 					<CreateSpaceInWorkspace
