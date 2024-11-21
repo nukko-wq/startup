@@ -34,10 +34,11 @@ export default function Header({
 	const spaces = useSpaceStore((state) => state.spaces)
 	const setSpaces = useSpaceStore((state) => state.setSpaces)
 
-	const displayName = useMemo(
-		() => currentSpace?.name || initialSpaceName,
-		[currentSpace?.name, initialSpaceName],
-	)
+	const displayName = useMemo(() => {
+		if (currentSpace?.name) return currentSpace.name
+		const space = spaces.find((s) => s.id === spaceId)
+		return space?.name || initialSpaceName
+	}, [currentSpace?.name, spaces, spaceId, initialSpaceName])
 
 	const {
 		register,
