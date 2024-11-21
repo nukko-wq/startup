@@ -54,6 +54,16 @@ const TabSaveButton = ({ title, url, faviconUrl }: TabSaveButtonProps) => {
 				sectionId: targetSectionId,
 			}
 
+			// 即座にUIを更新
+			const optimisticResource = {
+				...newResource,
+				id: `temp-${Date.now()}`, // 一時的なID
+			}
+			useResourceStore.setState((state) => ({
+				resources: [...state.resources, optimisticResource],
+			}))
+
+			// APIリクエストを非同期で実行
 			const response = await fetch('/api/resources', {
 				method: 'POST',
 				headers: {
@@ -68,10 +78,29 @@ const TabSaveButton = ({ title, url, faviconUrl }: TabSaveButtonProps) => {
 			}
 
 			const savedResource = await response.json()
+
+			// 一時的なリソースを実際のリソースで置き換え
 			useResourceStore.setState((state) => ({
-				resources: [...state.resources, savedResource],
+				resources: state.resources.map((r) =>
+					r.id === optimisticResource.id ? savedResource : r,
+				),
 			}))
+
+			// キャッシュの更新
+			const resourceStore = useResourceStore.getState()
+			const cache = resourceStore.resourceCache.get(currentSpace.id)
+			if (cache) {
+				resourceStore.resourceCache.set(currentSpace.id, {
+					...cache,
+					resources: [...cache.resources, savedResource],
+					timestamp: Date.now(),
+				})
+			}
 		} catch (error) {
+			// エラー時は一時的なリソースを削除
+			useResourceStore.setState((state) => ({
+				resources: state.resources.filter((r) => r.id !== `temp-${Date.now()}`),
+			}))
 			console.error('Failed to save resource:', error)
 			alert('リソースの保存に失敗しました')
 		}

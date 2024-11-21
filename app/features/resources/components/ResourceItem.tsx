@@ -13,8 +13,7 @@ import {
 import { GripVertical } from 'lucide-react'
 import { useResourceStore } from '@/app/store/resourceStore'
 import ResourceIcon from '@/app/features/resources/components/ResourceIcon'
-import type { Resource } from '@prisma/client'
-import React, { useMemo, useCallback } from 'react'
+import React, { useMemo, useCallback, memo } from 'react'
 import { useTabStore } from '@/app/store/tabStore'
 
 interface ResourceItemProps {
@@ -32,7 +31,19 @@ interface ResourceItemProps {
 	sectionId: string
 }
 
-export default function ResourceItem({
+interface Resource {
+	id: string
+	title: string
+	description: string | null
+	url: string
+	faviconUrl: string | null
+	mimeType: string | null
+	isGoogleDrive: boolean
+	position: number
+	sectionId: string
+}
+
+export default memo(function ResourceItem({
 	resources,
 	sectionId,
 }: ResourceItemProps) {
@@ -229,24 +240,22 @@ export default function ResourceItem({
 		},
 	})
 
-	const handleResourceClick = useCallback(async () => {
-		const resource = sortedResources.find(
-			(r) => r.id === document.activeElement?.getAttribute('data-key'),
-		)
-		if (!resource) return
-
-		try {
-			const existingTab = findTabByUrl(resource.url)
-			if (existingTab) {
-				const success = await switchToTab(existingTab.id)
-				if (success) return
+	const handleResourceClick = useCallback(
+		async (resource: Resource) => {
+			try {
+				const existingTab = findTabByUrl(resource.url)
+				if (existingTab) {
+					const success = await switchToTab(existingTab.id)
+					if (success) return
+				}
+				window.open(resource.url, '_blank')
+			} catch (error) {
+				console.error('Error handling resource click:', error)
+				window.open(resource.url, '_blank')
 			}
-			window.open(resource.url, '_blank')
-		} catch (error) {
-			console.error('Error handling resource click:', error)
-			window.open(resource.url, '_blank')
-		}
-	}, [sortedResources, findTabByUrl, switchToTab])
+		},
+		[findTabByUrl, switchToTab],
+	)
 
 	return (
 		<GridList
@@ -264,7 +273,7 @@ export default function ResourceItem({
 				<GridListItem
 					textValue={resource.title}
 					data-resource={JSON.stringify(resource)}
-					onAction={handleResourceClick}
+					onAction={() => handleResourceClick(resource)}
 					className="outline-none cursor-pointer"
 				>
 					<div className="flex justify-between items-center p-1 border-b border-zinc-200 last:border-b-0 hover:bg-zinc-100 group">
@@ -311,4 +320,4 @@ export default function ResourceItem({
 			)}
 		</GridList>
 	)
-}
+})
