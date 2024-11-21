@@ -63,30 +63,22 @@ export default function Header({
 		}
 
 		try {
-			const response = await fetch(`/api/spaces/${spaceId}`, {
-				method: 'PATCH',
-				headers: { 'Content-Type': 'application/json' },
-				body: JSON.stringify({ name: data.name }),
-			})
-
-			if (!response.ok) {
-				throw new Error('Failed to update space name')
-			}
-
 			if (!currentSpace) {
 				throw new Error('Current space not found')
 			}
 
+			// 即座にUI状態を更新
 			const updatedSpace: Space = {
 				...currentSpace,
 				name: data.name,
 			}
-
 			setCurrentSpace(updatedSpace)
 			setSpaces(
 				spaces.map((space) => (space.id === spaceId ? updatedSpace : space)),
 			)
 
+			// APIリクエストを非同期で実行
+			await useSpaceStore.getState().updateSpaceName(spaceId, data.name)
 			setIsEditing(false)
 		} catch (error) {
 			console.error('Error updating space name:', error)

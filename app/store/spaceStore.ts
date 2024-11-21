@@ -219,6 +219,15 @@ export const useSpaceStore = create<SpaceStore>((set, get) => ({
 			if (!response.ok) {
 				throw new Error('Failed to update space name')
 			}
+
+			const resourceStore = useResourceStore.getState()
+			const cache = resourceStore.resourceCache.get(spaceId)
+			if (cache) {
+				resourceStore.resourceCache.set(spaceId, {
+					...cache,
+					timestamp: Date.now(),
+				})
+			}
 		} catch (error) {
 			setSpaces(previousSpaces)
 			setCurrentSpace(previousCurrentSpace)

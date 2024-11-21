@@ -48,6 +48,19 @@ const SpaceRenameForm = ({
 
 		setIsSubmitting(true)
 		try {
+			if (!currentSpace) {
+				throw new Error('Current space not found')
+			}
+
+			// 即座にUI状態を更新
+			const updatedSpace = {
+				...currentSpace,
+				name: data.name ?? currentSpace.name,
+			}
+			setCurrentSpace(updatedSpace)
+			setSpaces(spaces.map((s) => (s.id === spaceId ? updatedSpace : s)))
+
+			// APIリクエストを非同期で実行
 			await useSpaceStore.getState().updateSpaceName(spaceId, data.name ?? '')
 			onClose()
 		} catch (error) {
