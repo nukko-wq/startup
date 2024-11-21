@@ -84,7 +84,11 @@ export const useSpaceStore = create<SpaceStore>((set, get) => ({
 		try {
 			setIsNavigating(true)
 
-			setActiveSpaceId(spaceId)
+			const targetSpace = spaces.find((space) => space.id === spaceId)
+			if (targetSpace) {
+				setCurrentSpace(targetSpace)
+				setActiveSpaceId(spaceId)
+			}
 
 			const cache = resourceStore.resourceCache.get(spaceId)
 			if (cache) {
