@@ -264,27 +264,20 @@ export const useResourceStore = create<ResourceStore>()(
 				const { sections, resources } = get()
 
 				try {
-					// APIリクエストを実行
 					const response = await fetch(`/api/sections/${sectionId}`, {
 						method: 'DELETE',
 						credentials: 'include',
+						headers: {
+							'Content-Type': 'application/json',
+						},
 					})
 
 					if (!response.ok) {
-						if (response.status === 404) {
-							// 既に削除されている場合は、ローカルの状態だけを更新
-							set({
-								sections: sections.filter(
-									(section) => section.id !== sectionId,
-								),
-								resources: resources.filter(
-									(resource) => resource.sectionId !== sectionId,
-								),
-							})
-							return
-						}
-						throw new Error('セクションの削除に失敗しました')
+						const errorData = await response.json()
+						throw new Error(errorData.error || 'セクションの削除に失敗しました')
 					}
+
+					const data = await response.json()
 
 					// 成功した場合、状態を更新
 					set({
@@ -293,6 +286,24 @@ export const useResourceStore = create<ResourceStore>()(
 							(resource) => resource.sectionId !== sectionId,
 						),
 					})
+
+					// キャッシュの更新
+					const targetSection = sections.find((s) => s.id === sectionId)
+					if (targetSection?.spaceId) {
+						const cache = get().resourceCache.get(targetSection.spaceId)
+						if (cache) {
+							get().resourceCache.set(targetSection.spaceId, {
+								...cache,
+								sections: cache.sections.filter((s) => s.id !== sectionId),
+								resources: cache.resources.filter(
+									(r) => r.sectionId !== sectionId,
+								),
+								timestamp: Date.now(),
+							})
+						}
+					}
+
+					return data
 				} catch (error) {
 					console.error('セクション削除エラー:', error)
 					throw error

@@ -25,6 +25,7 @@ export async function DELETE(request: Request) {
 		await db.$transaction(async (tx) => {
 			const existingSection = await tx.section.findUnique({
 				where: { id: sectionId, userId: user.id },
+				include: { resources: true },
 			})
 
 			if (!existingSection) {
@@ -51,17 +52,11 @@ export async function DELETE(request: Request) {
 			})
 		})
 
-		return NextResponse.json({
-			success: true,
-			message: 'Section deleted successfully',
-		})
+		return NextResponse.json({ success: true, sectionId })
 	} catch (error) {
 		console.error('Section deletion error:', error)
 		return NextResponse.json(
-			{
-				error:
-					error instanceof Error ? error.message : 'Unknown error occurred',
-			},
+			{ error: error instanceof Error ? error.message : '削除に失敗しました' },
 			{ status: 500 },
 		)
 	}
