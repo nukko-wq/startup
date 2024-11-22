@@ -25,13 +25,39 @@ const DeleteSectionDialog = ({
 	const deleteSection = useResourceStore((state) => state.deleteSection)
 
 	const handleDelete = async (close: () => void) => {
+		const { sections, resources } = useResourceStore.getState()
+
+		// 現在の状態をバックアップ
+		const previousSections = [...sections]
+		const previousResources = [...resources]
+
 		try {
+			// 楽観的に画面を更新
+			useResourceStore.setState({
+				sections: sections.filter((section) => section.id !== sectionId),
+				resources: resources.filter(
+					(resource) => resource.sectionId !== sectionId,
+				),
+			})
+
+			// UIを閉じる
+			close()
+
+			// APIリクエストを実行
 			await deleteSection(sectionId)
 			onDelete?.(sectionId)
-			close()
 		} catch (error) {
+			// エラー時は元の状態に戻す
+			useResourceStore.setState({
+				sections: previousSections,
+				resources: previousResources,
+			})
 			console.error('Section delete error:', error)
-			alert('セクションの削除に失敗しました。')
+			alert(
+				error instanceof Error
+					? error.message
+					: 'セクションの削除に失敗しました。',
+			)
 		}
 	}
 
