@@ -397,6 +397,9 @@ export const useResourceStore = create<ResourceStore>()(
 					if (!response.ok) {
 						throw new Error('Failed to reorder resources')
 					}
+
+					// キャッシュを無効化
+					await fetch('/api/revalidate?tag=resources', { method: 'POST' })
 				} catch (error) {
 					console.error('Reorder error:', error)
 					set({ resources: previousResources })

@@ -11,7 +11,7 @@ import { getWorkspaces } from '@/app/features/workspaces/utils/getWorkspaces'
 import TabListWrapper from '@/app/features/tabs/components/TabListWrapper'
 import { useResourceStore } from '@/app/store/resourceStore'
 
-export const revalidate = 0
+export const dynamic = 'force-dynamic'
 
 type PageProps = {
 	params: Promise<{ [key: string]: string }>
