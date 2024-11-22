@@ -200,6 +200,20 @@ export const useResourceStore = create<ResourceStore>()(
 					setIsCreating(true)
 					setIsLoading(true)
 
+					const tempSection: Section = {
+						id: `temp-${Date.now()}`,
+						name: 'Resources',
+						order: sections.length,
+						spaceId: spaceId,
+						createdAt: new Date(),
+						updatedAt: new Date(),
+						resources: [],
+					}
+
+					// 楽観的更新
+					const updatedSections = [...sections, tempSection]
+					set({ sections: updatedSections })
+
 					const response = await fetch('/api/sections', {
 						method: 'POST',
 						headers: { 'Content-Type': 'application/json' },
@@ -212,11 +226,27 @@ export const useResourceStore = create<ResourceStore>()(
 					})
 
 					if (!response.ok) {
+						// エラー時は元の状態に戻す
+						set({ sections: sections })
 						throw new Error('セクションの作成に失敗しました')
 					}
 
-					const newSection: Section = await response.json()
-					set({ sections: [...sections, newSection] })
+					const newSection = await response.json()
+
+					// 新しいセクションで状態を更新
+					const finalSections = sections.filter((s) => s.id !== tempSection.id)
+					const finalUpdatedSections = [...finalSections, newSection]
+					set({ sections: finalUpdatedSections })
+
+					// キャッシュの更新
+					const cache = get().resourceCache.get(spaceId)
+					if (cache) {
+						get().resourceCache.set(spaceId, {
+							...cache,
+							sections: finalUpdatedSections,
+							timestamp: Date.now(),
+						})
+					}
 
 					return newSection
 				} catch (error) {
