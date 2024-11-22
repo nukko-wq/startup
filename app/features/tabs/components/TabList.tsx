@@ -12,6 +12,7 @@ import {
 	GridListItem,
 	Button,
 } from 'react-aria-components'
+import TabsMenuButton from '@/app/features/tabs/components/TabsMenuButton'
 
 interface Tab {
 	id: number
@@ -215,10 +216,13 @@ export default function TabList() {
 	}
 
 	return (
-		<div className="flex-grow p-4 pr-[16px] pl-[32px] max-w-[920px]">
-			<div className="flex items-center gap-2 py-2 ml-4 mb-2">
-				<Diamond className="w-6 h-6" />
-				<div className="text-[17px] text-zinc-700">Tabs</div>
+		<div className="flex-grow py-5 pr-[16px] pl-[32px] max-w-[920px]">
+			<div className="flex items-center justify-between gap-2 ml-4 mb-2">
+				<div className="flex items-center gap-2">
+					<Diamond className="w-6 h-6" />
+					<div className="text-[17px] text-zinc-700">Tabs</div>
+				</div>
+				<TabsMenuButton />
 			</div>
 			<GridList
 				aria-label="Tabs"
@@ -235,7 +239,7 @@ export default function TabList() {
 						<div className="grid grid-cols-[1fr_72px] items-center gap-2">
 							<div className="flex items-center gap-2 truncate">
 								<div
-									className="cursor-grab flex items-center opacity-0 group-hover:opacity-100 pl-4"
+									className="cursor-grab flex items-center opacity-0 group-hover:opacity-100 pl-3"
 									aria-label="Drag Wrapper"
 								>
 									<Button
