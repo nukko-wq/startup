@@ -52,7 +52,7 @@ export async function POST(req: NextRequest) {
 				: -1
 
 		const newPosition =
-			body.position <= maxPosition + 1 ? body.position : maxPosition + 1
+			body.position <= maxPosition ? body.position : maxPosition + 1
 
 		await db.$transaction([
 			db.resource.updateMany({

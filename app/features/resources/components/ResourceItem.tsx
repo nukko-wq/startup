@@ -171,7 +171,7 @@ export default memo(function ResourceItem({
 				// 位置を再割り当て
 				const reassignedResources = sortedUpdatedResources.map((r, index) => ({
 					...r,
-					position: index + 1, // 1から開始する場合
+					position: index, // 1から開始する代わりに0から開始
 				}))
 
 				console.log('Reassigned Resources:', reassignedResources)
