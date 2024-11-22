@@ -311,6 +311,7 @@ export const useResourceStore = create<ResourceStore>()(
 			removeResource: async (id) => {
 				const { resources } = get()
 				const previousResources = [...resources]
+				const targetResource = resources.find((r) => r.id === id)
 
 				try {
 					set({
@@ -323,6 +324,27 @@ export const useResourceStore = create<ResourceStore>()(
 
 					if (!response.ok) {
 						throw new Error('Failed to delete resource')
+					}
+
+					// キャッシュの無効化
+					if (targetResource?.sectionId) {
+						const section = get().sections.find(
+							(s) => s.id === targetResource.sectionId,
+						)
+						if (section?.spaceId) {
+							// キャッシュの更新
+							const cache = get().resourceCache.get(section.spaceId)
+							if (cache) {
+								get().resourceCache.set(section.spaceId, {
+									...cache,
+									resources: cache.resources.filter((r) => r.id !== id),
+									timestamp: Date.now(),
+								})
+							}
+
+							// サーバーサイドのキャッシュも無効化
+							await fetch('/api/revalidate?tag=resources', { method: 'POST' })
+						}
 					}
 				} catch (error) {
 					set({ resources: previousResources })

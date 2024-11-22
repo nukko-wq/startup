@@ -27,6 +27,7 @@ export default memo(function ResourceContent({
 	const createSection = useResourceStore((state) => state.createSection)
 	const isLoading = useResourceStore((state) => state.isLoading)
 	const isCreating = useResourceStore((state) => state.isCreating)
+	const resourceCache = useResourceStore((state) => state.resourceCache)
 
 	useEffect(() => {
 		if (initialSections && initialResources) {
@@ -53,6 +54,28 @@ export default memo(function ResourceContent({
 			}
 		}
 	}, [spaceId, createSection])
+
+	// biome-ignore lint/correctness/useExhaustiveDependencies: <explanation>
+	useEffect(() => {
+		const fetchLatestData = async () => {
+			if (spaceId) {
+				const cache = resourceCache.get(spaceId)
+				if (cache && Date.now() - cache.timestamp > 1000) {
+					// 1秒以上経過している場合
+					try {
+						const response = await fetch(`/api/spaces/${spaceId}/sections`)
+						const data = await response.json()
+						setSections(data.sections)
+						setResources(data.resources)
+					} catch (error) {
+						console.error('Error fetching latest data:', error)
+					}
+				}
+			}
+		}
+
+		fetchLatestData()
+	}, [spaceId, resourceCache])
 
 	return (
 		<div className="flex flex-col flex-grow w-full max-w-[920px]">

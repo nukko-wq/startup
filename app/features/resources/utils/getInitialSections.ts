@@ -90,7 +90,7 @@ export const getInitialSections = unstable_cache(
 	},
 	['sections'],
 	{
-		revalidate: false,
+		revalidate: 1,
 		tags: ['sections', 'resources'],
 	},
 )
