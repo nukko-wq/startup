@@ -276,39 +276,30 @@ export default memo(function ResourceItem({
 					onAction={() => handleResourceClick(resource)}
 					className="outline-none cursor-pointer"
 				>
-					<div className="flex justify-between items-center p-1 border-b border-zinc-200 last:border-b-0 hover:bg-zinc-100 group">
+					<div className="grid grid-cols-[32px_1fr_74px] items-center p-1 border-b border-zinc-200 last:border-b-0 hover:bg-zinc-100 group">
 						<div
-							className="flex flex-grow p-1 ml-1 gap-2 group"
-							aria-label="Resource Item Wrapper"
+							className="cursor-grab flex items-center opacity-0 group-hover:opacity-100 p-2"
+							aria-label="Drag Wrapper"
 						>
-							<div
-								className="cursor-grab flex items-center opacity-0 group-hover:opacity-100"
-								aria-label="Drag Wrapper"
+							<Button
+								className="cursor-grab"
+								slot="drag"
+								aria-label="ドラッグハンドル"
 							>
-								<Button
-									className="cursor-grab"
-									slot="drag"
-									aria-label="ドラッグハンドル"
-								>
-									<GripVertical className="w-4 h-4 text-zinc-500" />
-								</Button>
-							</div>
-							<div className="flex flex-grow">
-								<div className="outline-none flex flex-grow">
-									<div className="flex items-end gap-2">
-										<ResourceIcon
-											faviconUrl={resource.faviconUrl}
-											mimeType={resource.mimeType}
-											isGoogleDrive={resource.isGoogleDrive}
-										/>
-										<div className="flex flex-col">
-											<div>{resource.title}</div>
-											<div className="text-xs text-muted-foreground">
-												{resource.description || 'Webpage'}
-											</div>
-										</div>
-									</div>
-								</div>
+								<GripVertical className="w-4 h-4 text-zinc-500" />
+							</Button>
+						</div>
+						<div className="flex items-end gap-2 truncate">
+							<ResourceIcon
+								faviconUrl={resource.faviconUrl}
+								mimeType={resource.mimeType}
+								isGoogleDrive={resource.isGoogleDrive}
+							/>
+							<div className="flex flex-col truncate">
+								<span className="truncate">{resource.title}</span>
+								<span className="text-xs text-muted-foreground">
+									{resource.description || 'Webpage'}
+								</span>
 							</div>
 						</div>
 						<div className="flex items-center opacity-0 group-hover:opacity-100">

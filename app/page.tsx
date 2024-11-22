@@ -68,7 +68,7 @@ export default async function Index({ searchParams }: PageProps) {
 
 	return (
 		<div className="flex flex-col min-h-screen">
-			<div className="flex bg-slate-50 flex-grow">
+			<div className="grid grid-cols-[260px_1fr] min-[1921px]:grid-cols-[320px_1fr] bg-slate-50">
 				<Sidebar
 					initialWorkspaces={workspaces}
 					initialSpaces={spaces}
