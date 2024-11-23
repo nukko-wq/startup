@@ -444,11 +444,25 @@ export const useResourceStore = create<ResourceStore>()(
 					// 楽観的更新
 					set({ resources: newResources })
 
-					const itemsToUpdate = newResources.map((resource) => ({
-						id: resource.id,
-						position: resource.position,
-						sectionId: resource.sectionId,
-					}))
+					// セクションごとにリソースをグループ化し、positionを0から振り直す
+					const resourcesBySection = newResources.reduce((acc, resource) => {
+						const sectionResources = acc.get(resource.sectionId) || []
+						sectionResources.push(resource)
+						acc.set(resource.sectionId, sectionResources)
+						return acc
+					}, new Map<string, typeof newResources>())
+
+					const itemsToUpdate = Array.from(
+						resourcesBySection.entries(),
+					).flatMap(([sectionId, sectionResources]) =>
+						sectionResources
+							.sort((a, b) => a.position - b.position)
+							.map((resource, index) => ({
+								id: resource.id,
+								position: index,
+								sectionId: sectionId,
+							})),
+					)
 
 					const response = await fetch('/api/resources/reorder', {
 						method: 'PUT',

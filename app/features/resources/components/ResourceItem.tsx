@@ -76,26 +76,16 @@ export default memo(function ResourceItem({
 	const { dragAndDropHooks } = useDragAndDrop({
 		getItems(keys) {
 			const resource = allResources.find((r) => r.id === Array.from(keys)[0])
+			if (!resource) return []
 			return [
 				{
 					'resource-item': JSON.stringify(resource),
-					'text/plain': resource?.title || '',
+					'text/plain': resource.title || '',
 				},
 			]
 		},
 		acceptedDragTypes: ['resource-item', 'tab-item'],
 		getDropOperation: () => 'move',
-
-		renderDropIndicator(target) {
-			return (
-				<DropIndicator
-					target={target}
-					className={({ isDropTarget }) =>
-						`drop-indicator ${isDropTarget ? 'active' : ''}`
-					}
-				/>
-			)
-		},
 
 		async onInsert(e) {
 			try {
@@ -103,7 +93,25 @@ export default memo(function ResourceItem({
 					e.items.filter(isTextDropItem).map(async (item) => {
 						const types = Array.from(item.types)
 						if (types.includes('resource-item')) {
-							return JSON.parse(await item.getText('resource-item'))
+							const resourceData = JSON.parse(
+								await item.getText('resource-item'),
+							)
+							return {
+								...resourceData,
+								sectionId: sectionId,
+							}
+						}
+						if (types.includes('tab-item')) {
+							const tabData = JSON.parse(await item.getText('tab-item'))
+							return {
+								title: tabData.title,
+								url: tabData.url,
+								faviconUrl: tabData.faviconUrl,
+								sectionId: sectionId,
+								description: null,
+								mimeType: null,
+								isGoogleDrive: false,
+							}
 						}
 						return null
 					}),
@@ -114,101 +122,146 @@ export default memo(function ResourceItem({
 				)
 				if (validItems.length === 0) return
 
-				// ドロップ先のセクションのリソースを取得
 				const targetSectionResources = allResources
 					.filter((r) => r.sectionId === sectionId)
 					.sort((a, b) => a.position - b.position)
 
-				// ドロップ位置の計算
-				let dropIndex = targetSectionResources.length // デフォルトは最後
-				if (e.target) {
-					const targetIndex = targetSectionResources.findIndex(
-						(r) => r.id === e.target.key,
-					)
-					if (targetIndex !== -1) {
-						dropIndex =
-							e.target.dropPosition === 'before' ? targetIndex : targetIndex + 1
-					}
-				}
+				const dropIndex =
+					e.target.dropPosition === 'before'
+						? targetSectionResources.findIndex((r) => r.id === e.target.key)
+						: targetSectionResources.findIndex((r) => r.id === e.target.key) + 1
 
-				// 元のセクションのリソースを更新
-				const originalSectionIds = new Set(
-					validItems.map((item) => item.sectionId),
+				// 他のセクションのリソースを取得
+				const otherSectionResources = allResources
+					.filter((r) => r.sectionId !== sectionId)
+					.reduce((acc, resource) => {
+						const sectionResources = acc.get(resource.sectionId) || []
+						sectionResources.push(resource)
+						acc.set(resource.sectionId, sectionResources)
+						return acc
+					}, new Map<string, typeof allResources>())
+
+				// 新しいリソースを作成または移動
+				const newResources = await Promise.all(
+					validItems.map(async (item, index) => {
+						if (!item.id) {
+							return await createResource({
+								title: item.title,
+								url: item.url,
+								faviconUrl: item.faviconUrl,
+								sectionId: sectionId,
+								position: dropIndex + index,
+							})
+						}
+						return {
+							...item,
+							position: dropIndex + index,
+						}
+					}),
 				)
-				const originalSectionResources = allResources
-					.filter((r) => originalSectionIds.has(r.sectionId))
-					.filter((r) => !validItems.some((item) => item.id === r.id))
-					.map((r, index) => ({
-						...r,
-						position: index,
-					}))
 
-				// ドロップ先のセクションのリソースを更新
-				const updatedTargetResources = [
+				// 現在のセクションのリソースを更新
+				const updatedCurrentSectionResources = [
 					...targetSectionResources.slice(0, dropIndex),
-					...validItems.map((item) => ({
-						...item,
-						sectionId: sectionId,
-					})),
+					...newResources,
 					...targetSectionResources.slice(dropIndex),
 				].map((r, index) => ({
 					...r,
 					position: index,
 				}))
 
-				// 他のセクションのリソースを取得
-				const otherSectionResources = allResources.filter(
-					(r) =>
-						!originalSectionIds.has(r.sectionId) && r.sectionId !== sectionId,
+				// 他のセクションのリソースのpositionを0から振り直す
+				const updatedOtherSectionResources = Array.from(
+					otherSectionResources.entries(),
+				).flatMap(([_, resources]) =>
+					resources
+						.filter((r) => !validItems.some((item) => item.id === r.id))
+						.sort((a, b) => a.position - b.position)
+						.map((r, index) => ({
+							...r,
+							position: index,
+						})),
 				)
 
 				// 全てのリソースを結合
 				const finalResources = [
-					...otherSectionResources,
-					...originalSectionResources,
-					...updatedTargetResources,
+					...updatedCurrentSectionResources,
+					...updatedOtherSectionResources,
 				]
 
 				await reorderResources(finalResources)
 			} catch (error) {
-				console.error('Failed to drop resources:', error)
+				console.error('Failed to handle drop:', error)
 			}
 		},
 
 		onReorder(e) {
-			try {
-				const draggedResource = allResources.find(
-					(r) => r.id === Array.from(e.keys)[0],
-				)
-				if (!draggedResource) return
+			const draggedResource = allResources.find(
+				(r) => r.id === Array.from(e.keys)[0],
+			)
+			if (!draggedResource) return
 
-				const targetIndex = sortedResources.findIndex(
-					(r) => r.id === e.target.key,
-				)
-				if (targetIndex === -1) return
+			const targetSectionResources = allResources
+				.filter((r) => r.sectionId === sectionId)
+				.sort((a, b) => a.position - b.position)
 
-				// 新しい配列を作成し、ドラッグされたアイテムを除外
-				const updatedResources = sortedResources
-					.filter((r) => r.id !== draggedResource.id)
-					.map((r) => ({ ...r }))
+			const dropIndex =
+				e.target.dropPosition === 'before'
+					? targetSectionResources.findIndex((r) => r.id === e.target.key)
+					: targetSectionResources.findIndex((r) => r.id === e.target.key) + 1
 
-				// ドロップ位置を計算
-				const dropIndex =
-					e.target.dropPosition === 'before' ? targetIndex : targetIndex + 1
+			// 各セクションのリソースを分離して処理
+			const otherSectionResources = allResources
+				.filter((r) => r.sectionId !== sectionId)
+				.reduce((acc, resource) => {
+					const sectionResources = acc.get(resource.sectionId) || []
+					sectionResources.push(resource)
+					acc.set(resource.sectionId, sectionResources)
+					return acc
+				}, new Map<string, typeof allResources>())
 
-				// ドラッグされたアイテムを新しい位置に挿入
-				updatedResources.splice(dropIndex, 0, { ...draggedResource })
+			// 現在のセクションのリソースを更新
+			const updatedCurrentSectionResources = [
+				...targetSectionResources.slice(0, dropIndex),
+				{ ...draggedResource, sectionId },
+				...targetSectionResources.slice(dropIndex),
+			].map((r, index) => ({
+				...r,
+				position: index,
+			}))
 
-				// positionを0から順番に振り直し
-				const reorderedResources = updatedResources.map((r, index) => ({
-					...r,
-					position: index,
-				}))
+			// 他のセクションのリソースのpositionを0から振り直す
+			const updatedOtherSectionResources = Array.from(
+				otherSectionResources.entries(),
+			).flatMap(([_, resources]) =>
+				resources
+					.sort((a, b) => a.position - b.position)
+					.map((r, index) => ({
+						...r,
+						position: index,
+					})),
+			)
 
-				reorderResources(reorderedResources)
-			} catch (error) {
+			// 全てのリソースを結合
+			const finalResources = [
+				...updatedCurrentSectionResources,
+				...updatedOtherSectionResources,
+			]
+
+			reorderResources(finalResources).catch((error) => {
 				console.error('Failed to reorder resources:', error)
-			}
+			})
+		},
+
+		renderDropIndicator(target) {
+			return (
+				<DropIndicator
+					target={target}
+					className={({ isDropTarget }) =>
+						`drop-indicator ${isDropTarget ? 'active' : ''}`
+					}
+				/>
+			)
 		},
 	})
 
