@@ -99,84 +99,77 @@ export default memo(function ResourceItem({
 
 		async onInsert(e) {
 			try {
-				console.log('Drop Target Key:', e.target.key)
-				console.log('Drop Position:', e.target.dropPosition)
-
 				const items = await Promise.all(
 					e.items.filter(isTextDropItem).map(async (item) => {
 						const types = Array.from(item.types)
-						if (types.includes('tab-item')) {
-							const tabData = JSON.parse(await item.getText('tab-item'))
-
-							const targetIndex = sortedResources.findIndex(
-								(r) => r.id === e.target.key,
-							)
-							console.log('Target Index:', targetIndex)
-
-							const newPosition =
-								e.target.dropPosition === 'before'
-									? targetIndex !== -1
-										? sortedResources[targetIndex].position
-										: 0
-									: targetIndex !== -1
-										? sortedResources[targetIndex].position + 1
-										: sortedResources.length
-
-							console.log('New Position:', newPosition)
-
-							const newResource = await createResource({
-								title: tabData.title,
-								url: tabData.url,
-								faviconUrl: tabData.faviconUrl,
-								sectionId,
-								position: newPosition,
-							})
-
-							return newResource
+						if (types.includes('resource-item')) {
+							return JSON.parse(await item.getText('resource-item'))
 						}
-						return JSON.parse(await item.getText('resource-item'))
+						return null
 					}),
 				)
 
-				if (items.length === 0) return
+				const validItems = items.filter(
+					(item): item is Resource => item !== null,
+				)
+				if (validItems.length === 0) return
 
-				// 新しく作成されたリソースの位置を取得
-				const newResource = items[0]
-				const newPosition = newResource.position
-				console.log('New Position after creation:', newPosition)
-
-				const updatedResources = allResources.map((resource) => {
-					if (
-						resource.sectionId === sectionId &&
-						resource.position >= newPosition
-					) {
-						console.log(`Incrementing position for resource ID: ${resource.id}`)
-						return { ...resource, position: resource.position + 1 }
-					}
-					return resource
-				})
-
-				// 新しいリソースを追加
-				updatedResources.push(newResource)
-
-				console.log('Updated Resources before sorting:', updatedResources)
-
-				// 全リソースを位置順にソート
-				const sortedUpdatedResources = updatedResources
+				// ドロップ先のセクションのリソースを取得
+				const targetSectionResources = allResources
 					.filter((r) => r.sectionId === sectionId)
 					.sort((a, b) => a.position - b.position)
 
-				console.log('Sorted Updated Resources:', sortedUpdatedResources)
+				// ドロップ位置の計算
+				let dropIndex = targetSectionResources.length // デフォルトは最後
+				if (e.target) {
+					const targetIndex = targetSectionResources.findIndex(
+						(r) => r.id === e.target.key,
+					)
+					if (targetIndex !== -1) {
+						dropIndex =
+							e.target.dropPosition === 'before' ? targetIndex : targetIndex + 1
+					}
+				}
 
-				// 位置を再割り当て
-				const reassignedResources = sortedUpdatedResources.map((r, index) => ({
+				// 元のセクションのリソースを更新
+				const originalSectionIds = new Set(
+					validItems.map((item) => item.sectionId),
+				)
+				const originalSectionResources = allResources
+					.filter((r) => originalSectionIds.has(r.sectionId))
+					.filter((r) => !validItems.some((item) => item.id === r.id))
+					.map((r, index) => ({
+						...r,
+						position: index,
+					}))
+
+				// ドロップ先のセクションのリソースを更新
+				const updatedTargetResources = [
+					...targetSectionResources.slice(0, dropIndex),
+					...validItems.map((item) => ({
+						...item,
+						sectionId: sectionId,
+					})),
+					...targetSectionResources.slice(dropIndex),
+				].map((r, index) => ({
 					...r,
-					position: index, // 1から開始する代わりに0から開始
+					position: index,
 				}))
 
-				console.log('Reassigned Resources:', reassignedResources)
+				// 他のセクションのリソースを取得
+				const otherSectionResources = allResources.filter(
+					(r) =>
+						!originalSectionIds.has(r.sectionId) && r.sectionId !== sectionId,
+				)
 
-				await reorderResources(reassignedResources)
+				// 全てのリソースを結合
+				const finalResources = [
+					...otherSectionResources,
+					...originalSectionResources,
+					...updatedTargetResources,
+				]
+
+				await reorderResources(finalResources)
 			} catch (error) {
 				console.error('Failed to drop resources:', error)
 			}
@@ -189,53 +182,32 @@ export default memo(function ResourceItem({
 				)
 				if (!draggedResource) return
 
-				const targetIndex = resources.findIndex((r) => r.id === e.target.key)
-				const newPosition =
-					e.target.dropPosition === 'before'
-						? resources[targetIndex]?.position
-						: resources[targetIndex]?.position + 1
+				const targetIndex = sortedResources.findIndex(
+					(r) => r.id === e.target.key,
+				)
+				if (targetIndex === -1) return
 
-				const updatedResources = allResources.map((r) => {
-					if (r.id === draggedResource.id) {
-						return { ...r, position: newPosition }
-					}
-					if (r.sectionId === sectionId && r.position >= newPosition) {
-						return { ...r, position: r.position + 1 }
-					}
-					return r
-				})
+				// 新しい配列を作成し、ドラッグされたアイテムを除外
+				const updatedResources = sortedResources
+					.filter((r) => r.id !== draggedResource.id)
+					.map((r) => ({ ...r }))
 
-				reorderResources(updatedResources)
+				// ドロップ位置を計算
+				const dropIndex =
+					e.target.dropPosition === 'before' ? targetIndex : targetIndex + 1
+
+				// ドラッグされたアイテムを新しい位置に挿入
+				updatedResources.splice(dropIndex, 0, { ...draggedResource })
+
+				// positionを0から順番に振り直し
+				const reorderedResources = updatedResources.map((r, index) => ({
+					...r,
+					position: index,
+				}))
+
+				reorderResources(reorderedResources)
 			} catch (error) {
 				console.error('Failed to reorder resources:', error)
-			}
-		},
-
-		async onRootDrop(e) {
-			try {
-				const items = await Promise.all(
-					e.items
-						.filter(isTextDropItem)
-						.map(async (item) =>
-							JSON.parse(await item.getText('resource-item')),
-						),
-				)
-
-				const newPosition = 0
-
-				const updatedResources = allResources.map((r) => {
-					if (items.some((item) => item.id === r.id)) {
-						return { ...r, sectionId, position: newPosition }
-					}
-					if (r.sectionId === sectionId && r.position >= newPosition) {
-						return { ...r, position: r.position + 1 }
-					}
-					return r
-				})
-
-				await reorderResources(updatedResources)
-			} catch (error) {
-				console.error('Failed to drop resources:', error)
 			}
 		},
 	})

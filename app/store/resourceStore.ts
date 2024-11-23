@@ -441,30 +441,34 @@ export const useResourceStore = create<ResourceStore>()(
 				const previousResources = [...resources]
 
 				try {
+					// 楽観的更新
 					set({ resources: newResources })
 
-					const payload = {
-						items: newResources.map((item) => ({
-							id: item.id,
-							position: item.position,
-							sectionId: item.sectionId,
-						})),
-					}
+					const itemsToUpdate = newResources.map((resource) => ({
+						id: resource.id,
+						position: resource.position,
+						sectionId: resource.sectionId,
+					}))
 
 					const response = await fetch('/api/resources/reorder', {
 						method: 'PUT',
-						headers: { 'Content-Type': 'application/json' },
-						body: JSON.stringify(payload),
+						headers: {
+							'Content-Type': 'application/json',
+						},
+						body: JSON.stringify({ items: itemsToUpdate }),
+						credentials: 'include',
 					})
 
 					if (!response.ok) {
 						throw new Error('Failed to reorder resources')
 					}
 
-					// キャッシュを無効化
-					await fetch('/api/revalidate?tag=resources', { method: 'POST' })
+					const result = await response.json()
+					if (!result.success) {
+						throw new Error(result.message || 'Failed to reorder resources')
+					}
 				} catch (error) {
-					console.error('Reorder error:', error)
+					console.error('並び替えエラー:', error)
 					set({ resources: previousResources })
 					throw error
 				}
