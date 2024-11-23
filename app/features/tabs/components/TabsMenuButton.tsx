@@ -6,8 +6,19 @@ import {
 	MenuTrigger,
 	Popover,
 } from 'react-aria-components'
+import { useTabStore } from '@/app/store/tabStore'
 
 const TabsMenuButton = () => {
+	const closeAllTabs = useTabStore((state) => state.closeAllTabs)
+
+	const handleCloseAllTabs = async () => {
+		try {
+			await closeAllTabs()
+		} catch (error) {
+			console.error('タブを閉じる際にエラーが発生しました:', error)
+		}
+	}
+
 	return (
 		<>
 			<MenuTrigger>
@@ -29,7 +40,7 @@ const TabsMenuButton = () => {
 							</div>
 						</MenuItem>
 						<MenuItem
-							onAction={() => {}}
+							onAction={handleCloseAllTabs}
 							className="p-2 outline-none hover:bg-zinc-200 text-red-600 cursor-pointer"
 						>
 							<div className="flex items-center gap-2">
