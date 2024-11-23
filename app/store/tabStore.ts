@@ -12,6 +12,7 @@ interface TabStore {
 	setTabs: (tabs: Tab[] | ((prev: Tab[]) => Tab[])) => void
 	findTabByUrl: (url: string) => Tab | undefined
 	switchToTab: (tabId: number) => Promise<boolean>
+	closeAllTabs: () => Promise<boolean>
 }
 
 export const useTabStore = create<TabStore>((set, get) => ({
@@ -99,6 +100,20 @@ export const useTabStore = create<TabStore>((set, get) => ({
 			return response?.success ?? false
 		} catch (error) {
 			console.error('Failed to switch tab:', error)
+			return false
+		}
+	},
+	closeAllTabs: async () => {
+		try {
+			const extensionId = localStorage.getItem('extensionId')
+			if (!extensionId) return false
+
+			const response = await chrome.runtime.sendMessage(extensionId, {
+				type: 'CLOSE_ALL_TABS',
+			})
+			return response?.success ?? false
+		} catch (error) {
+			console.error('Failed to close all tabs:', error)
 			return false
 		}
 	},
