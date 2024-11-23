@@ -2,6 +2,16 @@ import { db } from '@/lib/db'
 import { getCurrentUser } from '@/lib/session'
 import { NextResponse } from 'next/server'
 
+interface ResourceItem {
+	id: string
+	position: number
+	sectionId: string
+}
+
+interface RequestBody {
+	items: ResourceItem[]
+}
+
 export async function PUT(req: Request) {
 	try {
 		const user = await getCurrentUser()
@@ -12,11 +22,37 @@ export async function PUT(req: Request) {
 			)
 		}
 
-		const { items } = await req.json()
+		const body = (await req.json()) as RequestBody
+
+		if (!body || !body.items || !Array.isArray(body.items)) {
+			return NextResponse.json(
+				{ success: false, message: 'Invalid request body' },
+				{ status: 400 },
+			)
+		}
+
+		// バリデーション
+		const isValidItem = (item: unknown): item is ResourceItem => {
+			if (!item || typeof item !== 'object') return false
+
+			const typedItem = item as Record<string, unknown>
+			return (
+				typeof typedItem.id === 'string' &&
+				typeof typedItem.position === 'number' &&
+				typeof typedItem.sectionId === 'string'
+			)
+		}
+
+		if (!body.items.every(isValidItem)) {
+			return NextResponse.json(
+				{ success: false, message: 'Invalid item format' },
+				{ status: 400 },
+			)
+		}
 
 		// トランザクションを使用して一括更新
 		await db.$transaction(
-			items.map((item: { id: string; position: number; sectionId: string }) =>
+			body.items.map((item: ResourceItem) =>
 				db.resource.update({
 					where: {
 						id: item.id,
@@ -32,7 +68,7 @@ export async function PUT(req: Request) {
 
 		return NextResponse.json({
 			success: true,
-			message: 'Positions updated successfully',
+			message: 'Resources reordered successfully',
 		})
 	} catch (error) {
 		console.error('Error updating positions:', error)

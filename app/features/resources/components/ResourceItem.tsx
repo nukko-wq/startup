@@ -76,15 +76,182 @@ export default memo(function ResourceItem({
 	const { dragAndDropHooks } = useDragAndDrop({
 		getItems(keys) {
 			const resource = allResources.find((r) => r.id === Array.from(keys)[0])
+			if (!resource) return []
 			return [
 				{
 					'resource-item': JSON.stringify(resource),
-					'text/plain': resource?.title || '',
+					'text/plain': resource.title || '',
 				},
 			]
 		},
 		acceptedDragTypes: ['resource-item', 'tab-item'],
 		getDropOperation: () => 'move',
+
+		async onInsert(e) {
+			try {
+				const items = await Promise.all(
+					e.items.filter(isTextDropItem).map(async (item) => {
+						const types = Array.from(item.types)
+						if (types.includes('resource-item')) {
+							const resourceData = JSON.parse(
+								await item.getText('resource-item'),
+							)
+							return {
+								...resourceData,
+								sectionId: sectionId,
+							}
+						}
+						if (types.includes('tab-item')) {
+							const tabData = JSON.parse(await item.getText('tab-item'))
+							return {
+								title: tabData.title,
+								url: tabData.url,
+								faviconUrl: tabData.faviconUrl,
+								sectionId: sectionId,
+								description: null,
+								mimeType: null,
+								isGoogleDrive: false,
+							}
+						}
+						return null
+					}),
+				)
+
+				const validItems = items.filter(
+					(item): item is Resource => item !== null,
+				)
+				if (validItems.length === 0) return
+
+				const targetSectionResources = allResources
+					.filter((r) => r.sectionId === sectionId)
+					.sort((a, b) => a.position - b.position)
+
+				const dropIndex =
+					e.target.dropPosition === 'before'
+						? targetSectionResources.findIndex((r) => r.id === e.target.key)
+						: targetSectionResources.findIndex((r) => r.id === e.target.key) + 1
+
+				// 他のセクションのリソースを取得
+				const otherSectionResources = allResources
+					.filter((r) => r.sectionId !== sectionId)
+					.reduce((acc, resource) => {
+						const sectionResources = acc.get(resource.sectionId) || []
+						sectionResources.push(resource)
+						acc.set(resource.sectionId, sectionResources)
+						return acc
+					}, new Map<string, typeof allResources>())
+
+				// 新しいリソースを作成または移動
+				const newResources = await Promise.all(
+					validItems.map(async (item, index) => {
+						if (!item.id) {
+							return await createResource({
+								title: item.title,
+								url: item.url,
+								faviconUrl: item.faviconUrl,
+								sectionId: sectionId,
+								position: dropIndex + index,
+							})
+						}
+						return {
+							...item,
+							position: dropIndex + index,
+						}
+					}),
+				)
+
+				// 現在のセクションのリソースを更新
+				const updatedCurrentSectionResources = [
+					...targetSectionResources.slice(0, dropIndex),
+					...newResources,
+					...targetSectionResources.slice(dropIndex),
+				].map((r, index) => ({
+					...r,
+					position: index,
+				}))
+
+				// 他のセクションのリソースのpositionを0から振り直す
+				const updatedOtherSectionResources = Array.from(
+					otherSectionResources.entries(),
+				).flatMap(([_, resources]) =>
+					resources
+						.filter((r) => !validItems.some((item) => item.id === r.id))
+						.sort((a, b) => a.position - b.position)
+						.map((r, index) => ({
+							...r,
+							position: index,
+						})),
+				)
+
+				// 全てのリソースを結合
+				const finalResources = [
+					...updatedCurrentSectionResources,
+					...updatedOtherSectionResources,
+				]
+
+				await reorderResources(finalResources)
+			} catch (error) {
+				console.error('Failed to handle drop:', error)
+			}
+		},
+
+		onReorder(e) {
+			const draggedResource = allResources.find(
+				(r) => r.id === Array.from(e.keys)[0],
+			)
+			if (!draggedResource) return
+
+			const targetSectionResources = allResources
+				.filter((r) => r.sectionId === sectionId)
+				.sort((a, b) => a.position - b.position)
+
+			const dropIndex =
+				e.target.dropPosition === 'before'
+					? targetSectionResources.findIndex((r) => r.id === e.target.key)
+					: targetSectionResources.findIndex((r) => r.id === e.target.key) + 1
+
+			// 各セクションのリソースを分離して処理
+			const otherSectionResources = allResources
+				.filter((r) => r.sectionId !== sectionId)
+				.reduce((acc, resource) => {
+					const sectionResources = acc.get(resource.sectionId) || []
+					sectionResources.push(resource)
+					acc.set(resource.sectionId, sectionResources)
+					return acc
+				}, new Map<string, typeof allResources>())
+
+			// 現在のセクションのリソースを更新
+			const updatedCurrentSectionResources = [
+				...targetSectionResources.slice(0, dropIndex),
+				{ ...draggedResource, sectionId },
+				...targetSectionResources.slice(dropIndex),
+			].map((r, index) => ({
+				...r,
+				position: index,
+			}))
+
+			// 他のセクションのリソースのpositionを0から振り直す
+			const updatedOtherSectionResources = Array.from(
+				otherSectionResources.entries(),
+			).flatMap(([_, resources]) =>
+				resources
+					.sort((a, b) => a.position - b.position)
+					.map((r, index) => ({
+						...r,
+						position: index,
+					})),
+			)
+
+			// 全てのリソースを結合
+			const finalResources = [
+				...updatedCurrentSectionResources,
+				...updatedOtherSectionResources,
+			]
+
+			reorderResources(finalResources).catch((error) => {
+				console.error('Failed to reorder resources:', error)
+			})
+		},
 
 		renderDropIndicator(target) {
 			return (
@@ -95,148 +262,6 @@ export default memo(function ResourceItem({
 					}
 				/>
 			)
-		},
-
-		async onInsert(e) {
-			try {
-				console.log('Drop Target Key:', e.target.key)
-				console.log('Drop Position:', e.target.dropPosition)
-
-				const items = await Promise.all(
-					e.items.filter(isTextDropItem).map(async (item) => {
-						const types = Array.from(item.types)
-						if (types.includes('tab-item')) {
-							const tabData = JSON.parse(await item.getText('tab-item'))
-
-							const targetIndex = sortedResources.findIndex(
-								(r) => r.id === e.target.key,
-							)
-							console.log('Target Index:', targetIndex)
-
-							const newPosition =
-								e.target.dropPosition === 'before'
-									? targetIndex !== -1
-										? sortedResources[targetIndex].position
-										: 0
-									: targetIndex !== -1
-										? sortedResources[targetIndex].position + 1
-										: sortedResources.length
-
-							console.log('New Position:', newPosition)
-
-							const newResource = await createResource({
-								title: tabData.title,
-								url: tabData.url,
-								faviconUrl: tabData.faviconUrl,
-								sectionId,
-								position: newPosition,
-							})
-
-							return newResource
-						}
-						return JSON.parse(await item.getText('resource-item'))
-					}),
-				)
-
-				if (items.length === 0) return
-
-				// 新しく作成されたリソースの位置を取得
-				const newResource = items[0]
-				const newPosition = newResource.position
-				console.log('New Position after creation:', newPosition)
-
-				const updatedResources = allResources.map((resource) => {
-					if (
-						resource.sectionId === sectionId &&
-						resource.position >= newPosition
-					) {
-						console.log(`Incrementing position for resource ID: ${resource.id}`)
-						return { ...resource, position: resource.position + 1 }
-					}
-					return resource
-				})
-
-				// 新しいリソースを追加
-				updatedResources.push(newResource)
-
-				console.log('Updated Resources before sorting:', updatedResources)
-
-				// 全リソースを位置順にソート
-				const sortedUpdatedResources = updatedResources
-					.filter((r) => r.sectionId === sectionId)
-					.sort((a, b) => a.position - b.position)
-
-				console.log('Sorted Updated Resources:', sortedUpdatedResources)
-
-				// 位置を再割り当て
-				const reassignedResources = sortedUpdatedResources.map((r, index) => ({
-					...r,
-					position: index, // 1から開始する代わりに0から開始
-				}))
-
-				console.log('Reassigned Resources:', reassignedResources)
-
-				await reorderResources(reassignedResources)
-			} catch (error) {
-				console.error('Failed to drop resources:', error)
-			}
-		},
-
-		onReorder(e) {
-			try {
-				const draggedResource = allResources.find(
-					(r) => r.id === Array.from(e.keys)[0],
-				)
-				if (!draggedResource) return
-
-				const targetIndex = resources.findIndex((r) => r.id === e.target.key)
-				const newPosition =
-					e.target.dropPosition === 'before'
-						? resources[targetIndex]?.position
-						: resources[targetIndex]?.position + 1
-
-				const updatedResources = allResources.map((r) => {
-					if (r.id === draggedResource.id) {
-						return { ...r, position: newPosition }
-					}
-					if (r.sectionId === sectionId && r.position >= newPosition) {
-						return { ...r, position: r.position + 1 }
-					}
-					return r
-				})
-
-				reorderResources(updatedResources)
-			} catch (error) {
-				console.error('Failed to reorder resources:', error)
-			}
-		},
-
-		async onRootDrop(e) {
-			try {
-				const items = await Promise.all(
-					e.items
-						.filter(isTextDropItem)
-						.map(async (item) =>
-							JSON.parse(await item.getText('resource-item')),
-						),
-				)
-
-				const newPosition = 0
-
-				const updatedResources = allResources.map((r) => {
-					if (items.some((item) => item.id === r.id)) {
-						return { ...r, sectionId, position: newPosition }
-					}
-					if (r.sectionId === sectionId && r.position >= newPosition) {
-						return { ...r, position: r.position + 1 }
-					}
-					return r
-				})
-
-				await reorderResources(updatedResources)
-			} catch (error) {
-				console.error('Failed to drop resources:', error)
-			}
 		},
 	})
 
