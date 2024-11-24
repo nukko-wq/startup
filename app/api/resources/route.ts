@@ -34,7 +34,9 @@ export async function POST(req: NextRequest) {
 			},
 			include: {
 				resources: {
-					select: { position: true },
+					orderBy: {
+						position: 'asc',
+					},
 				},
 			},
 		})
@@ -46,49 +48,39 @@ export async function POST(req: NextRequest) {
 			)
 		}
 
-		const newPosition = body.position
-
-		await db.$transaction([
-			db.resource.create({
-				data: {
-					title: body.title,
-					description: body.description,
-					url: body.url,
-					faviconUrl: body.faviconUrl,
-					position: newPosition,
-					mimeType: body.mimeType,
-					isGoogleDrive: body.isGoogleDrive,
-					user: {
-						connect: {
-							id: userId,
-						},
-					},
-					section: {
-						connect: {
-							id: body.sectionId,
-						},
-					},
-				},
-				select: {
-					id: true,
-					title: true,
-					description: true,
-					url: true,
-					faviconUrl: true,
-					position: true,
-					mimeType: true,
-					isGoogleDrive: true,
-					sectionId: true,
-				},
-			}),
-		])
-
-		const resource = await db.resource.findFirst({
+		await db.resource.updateMany({
 			where: {
-				title: body.title,
-				url: body.url,
 				sectionId: body.sectionId,
-				position: newPosition,
+				position: {
+					gte: body.position,
+				},
+			},
+			data: {
+				position: {
+					increment: 1,
+				},
+			},
+		})
+
+		const resource = await db.resource.create({
+			data: {
+				title: body.title,
+				description: body.description,
+				url: body.url,
+				faviconUrl: body.faviconUrl,
+				position: body.position,
+				mimeType: body.mimeType,
+				isGoogleDrive: body.isGoogleDrive,
+				user: {
+					connect: {
+						id: userId,
+					},
+				},
+				section: {
+					connect: {
+						id: body.sectionId,
+					},
+				},
 			},
 		})
 

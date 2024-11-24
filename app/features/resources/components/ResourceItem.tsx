@@ -202,29 +202,32 @@ export default memo(function ResourceItem({
 				if (tabItems.length === 0) return
 
 				const updatedExistingResources = [
-					...existingResources
-						.slice(0, dropIndex)
-						.map((r, i) => ({ ...r, position: i })),
-					...existingResources.slice(dropIndex).map((r, i) => ({
+					...existingResources.slice(0, dropIndex),
+					...existingResources.slice(dropIndex).map((r) => ({
 						...r,
-						position: i + dropIndex + tabItems.length,
+						position: r.position + tabItems.length,
 					})),
 				]
 
-				const tabItemsWithPosition = tabItems.map((item, i) => ({
-					...item,
-					position: dropIndex + i,
-				}))
-
 				const createdResources = await Promise.all(
-					tabItemsWithPosition.map((item) => createResource(item)),
+					tabItems.map((item, index) =>
+						createResource({
+							...item,
+							position: dropIndex + index,
+						}),
+					),
 				)
 
 				const finalResources = [
+					...otherSectionsResources,
 					...updatedExistingResources,
 					...createdResources,
-					...otherSectionsResources,
-				]
+				].sort((a, b) => {
+					if (a.sectionId === b.sectionId) {
+						return a.position - b.position
+					}
+					return 0
+				})
 
 				await reorderResources(finalResources)
 			} catch (error) {
