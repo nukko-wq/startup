@@ -15,6 +15,12 @@ import { useResourceStore } from '@/app/store/resourceStore'
 import ResourceIcon from '@/app/features/resources/components/ResourceIcon'
 import React, { useMemo, useCallback, memo } from 'react'
 import { useTabStore } from '@/app/store/tabStore'
+import type {
+	DroppableCollectionInsertDropEvent,
+	DroppableCollectionReorderEvent,
+	DropItem,
+	TextDropItem,
+} from '@react-types/shared'
 
 interface ResourceItemProps {
 	resources: {
@@ -96,7 +102,24 @@ export default memo(function ResourceItem({
 				/>
 			)
 		},
-		onReorder(e) {
+		onReorder(e: DroppableCollectionReorderEvent) {
+			handleReorder(e)
+		},
+		async onInsert(e: DroppableCollectionInsertDropEvent) {
+			if (
+				e.items.some(
+					(item) => isTextDropItem(item) && item.types.has('tab-item'),
+				)
+			) {
+				handleTabDrop(e)
+			} else {
+				handleResourceDrop(e)
+			}
+		},
+	})
+
+	const handleReorder = useCallback(
+		(e: DroppableCollectionReorderEvent) => {
 			try {
 				const draggedResource = allResources.find(
 					(r) => r.id === Array.from(e.keys)[0],
@@ -136,73 +159,167 @@ export default memo(function ResourceItem({
 				console.error('Failed to reorder resources:', error)
 			}
 		},
-		async onInsert(e) {
+		[allResources, sectionId, reorderResources],
+	)
+
+	const handleTabDrop = useCallback(
+		async (e: DroppableCollectionInsertDropEvent) => {
 			try {
-				const items = await Promise.all(
-					e.items.filter(isTextDropItem).map(async (item) => {
-						if (item.types.has('resource-item')) {
-							const resourceData = JSON.parse(
-								await item.getText('resource-item'),
-							)
-							return {
-								...resourceData,
-								sectionId,
-							}
-						}
-						if (item.types.has('tab-item')) {
-							const tabData = JSON.parse(await item.getText('tab-item'))
-							return await createResource({
-								title: tabData.title,
-								url: tabData.url,
-								faviconUrl: tabData.faviconUrl,
-								sectionId,
-								position: 0,
-							})
-						}
-						return null
-					}),
-				)
-
-				const validItems = items
-					.filter((item): item is Resource => item !== null)
-					.filter(
-						(item, index, self) =>
-							index === self.findIndex((t) => t.id === item.id),
-					)
-
-				if (validItems.length === 0) return
-
-				const currentSectionResources = allResources
+				const existingResources = allResources
 					.filter((r) => r.sectionId === sectionId)
-					.filter((r) => !validItems.some((v) => v.id === r.id))
 					.sort((a, b) => a.position - b.position)
 
 				const dropIndex =
 					e.target.dropPosition === 'before'
-						? currentSectionResources.findIndex((r) => r.id === e.target.key)
-						: currentSectionResources.findIndex((r) => r.id === e.target.key) +
-							1
+						? existingResources.findIndex((r) => r.id === e.target.key)
+						: existingResources.findIndex((r) => r.id === e.target.key) + 1
 
-				const updatedResources = [
-					...currentSectionResources.slice(0, dropIndex),
-					...validItems,
-					...currentSectionResources.slice(dropIndex),
+				const tabItems = await Promise.all(
+					e.items
+						.filter(isTextDropItem)
+						.filter((item) => item.types.has('tab-item'))
+						.map(async (item) => {
+							const tabData = JSON.parse(await item.getText('tab-item'))
+							return {
+								title: tabData.title,
+								url: tabData.url,
+								faviconUrl: tabData.faviconUrl,
+								sectionId,
+								position: dropIndex,
+							}
+						}),
+				)
+
+				if (tabItems.length === 0) return
+
+				const tempResources = tabItems.map((item, index) => ({
+					...item,
+					id: `temp-${Date.now()}-${index}`,
+					description: null,
+					mimeType: null,
+					isGoogleDrive: false,
+					position: dropIndex + index,
+				}))
+
+				const updatedExistingResources = existingResources.map((r) => ({
+					...r,
+					position:
+						r.position >= dropIndex ? r.position + tabItems.length : r.position,
+				}))
+
+				const updatedSectionResources = [
+					...updatedExistingResources.slice(0, dropIndex),
+					...tempResources,
+					...updatedExistingResources.slice(dropIndex),
 				].map((r, index) => ({
 					...r,
 					position: index,
-					sectionId,
 				}))
 
-				const otherSectionResources = allResources
-					.filter((r) => r.sectionId !== sectionId)
-					.filter((r) => !validItems.some((v) => v.id === r.id))
+				const otherSectionResources = allResources.filter(
+					(r) => r.sectionId !== sectionId,
+				)
 
-				await reorderResources([...updatedResources, ...otherSectionResources])
+				reorderResources([...updatedSectionResources, ...otherSectionResources])
+
+				const createdResources = await Promise.all(
+					tabItems.map(async (item, index) => {
+						const resource = await createResource({
+							...item,
+							position: dropIndex + index,
+						})
+						return resource
+					}),
+				)
+
+				const finalResources = allResources
+					.filter((r) => !tempResources.some((temp) => temp.id === r.id))
+					.concat(createdResources)
+					.map((r) => ({
+						...r,
+						position:
+							r.sectionId === sectionId
+								? updatedSectionResources.findIndex(
+										(ur) => ur.id === r.id || ur.position === r.position,
+									)
+								: r.position,
+					}))
+					.sort((a, b) => a.position - b.position)
+
+				reorderResources(finalResources)
 			} catch (error) {
-				console.error('Failed to handle drop:', error)
+				console.error('Failed to handle tab drop:', error)
+				reorderResources(allResources)
 			}
 		},
-	})
+		[allResources, sectionId, createResource, reorderResources],
+	)
+
+	const handleResourceDrop = useCallback(
+		async (e: DroppableCollectionInsertDropEvent) => {
+			try {
+				const resourceItems = await Promise.all(
+					e.items
+						.filter(isTextDropItem)
+						.filter((item) => item.types.has('resource-item'))
+						.map(async (item) => {
+							const resourceData = JSON.parse(
+								await item.getText('resource-item'),
+							)
+							return resourceData
+						}),
+				)
+
+				if (resourceItems.length === 0) return
+
+				const targetSectionResources = allResources
+					.filter((r) => r.sectionId === sectionId)
+					.sort((a, b) => a.position - b.position)
+
+				const originalSectionId = resourceItems[0].sectionId
+				const originalSectionResources = allResources
+					.filter((r) => r.sectionId === originalSectionId)
+					.sort((a, b) => a.position - b.position)
+
+				const dropIndex =
+					e.target.dropPosition === 'before'
+						? targetSectionResources.findIndex((r) => r.id === e.target.key)
+						: targetSectionResources.findIndex((r) => r.id === e.target.key) + 1
+
+				const updatedTargetResources = [
+					...targetSectionResources.slice(0, dropIndex),
+					...resourceItems.map((item) => ({ ...item, sectionId })),
+					...targetSectionResources.slice(dropIndex),
+				].map((r, index) => ({
+					...r,
+					position: index,
+				}))
+
+				const updatedOriginalResources = originalSectionResources
+					.filter((r) => !resourceItems.some((item) => item.id === r.id))
+					.map((r, index) => ({
+						...r,
+						position: index,
+					}))
+
+				const otherSectionResources = allResources.filter(
+					(r) => r.sectionId !== sectionId && r.sectionId !== originalSectionId,
+				)
+
+				const finalResources = [
+					...updatedTargetResources,
+					...updatedOriginalResources,
+					...otherSectionResources,
+				]
+
+				reorderResources(finalResources)
+			} catch (error) {
+				console.error('Failed to handle resource drop:', error)
+				reorderResources(allResources)
+			}
+		},
+		[allResources, sectionId, reorderResources],
+	)
 
 	const handleResourceClick = useCallback(
 		async (resource: Resource) => {
