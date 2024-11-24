@@ -616,24 +616,27 @@ export const useResourceStore = create<ResourceStore>()(
 				sectionId: string
 				position: number
 			}) => {
-				const { resources } = get()
+				const { resources, reorderResources } = get()
 
 				try {
-					// 同じセクション内の既存のリソースの位置を更新
-					const updatedResources = resources.map((resource) => ({
-						...resource,
-						position:
-							resource.sectionId === data.sectionId &&
-							resource.position >= data.position
-								? resource.position + 1
-								: resource.position,
-					}))
+					// 同じセクション内の既存のリソースをフィルタリングしてソート
+					const sectionResources = resources
+						.filter((r) => r.sectionId === data.sectionId)
+						.sort((a, b) => a.position - b.position)
+
+					// 他のセクションのリソースを保持
+					const otherSectionsResources = resources.filter(
+						(r) => r.sectionId !== data.sectionId,
+					)
+
+					// 指定された位置を使用
+					const targetPosition = data.position
 
 					// 新しいリソースを作成
 					const response = await fetch('/api/resources', {
 						method: 'POST',
 						headers: { 'Content-Type': 'application/json' },
-						body: JSON.stringify(data),
+						body: JSON.stringify({ ...data, position: targetPosition }),
 					})
 
 					if (!response.ok) {
@@ -642,20 +645,24 @@ export const useResourceStore = create<ResourceStore>()(
 
 					const newResource = await response.json()
 
-					// 新しいリソースを指定された位置に挿入
-					const finalResources = [
-						...updatedResources.filter(
-							(r) =>
-								r.position < data.position || r.sectionId !== data.sectionId,
-						),
+					// セクション内のリソースの位置を更新
+					const updatedSectionResources = [
+						...sectionResources.slice(0, targetPosition),
 						newResource,
-						...updatedResources.filter(
-							(r) =>
-								r.position >= data.position && r.sectionId === data.sectionId,
-						),
+						...sectionResources.slice(targetPosition).map((r) => ({
+							...r,
+							position: r.position + 1,
+						})),
 					]
 
-					set({ resources: finalResources })
+					// 最終的なリソースリストを作成
+					const finalResources = [
+						...otherSectionsResources,
+						...updatedSectionResources,
+					]
+
+					// リソースの順序を更新
+					await reorderResources(finalResources)
 					return newResource
 				} catch (error) {
 					console.error('Error creating resource:', error)
