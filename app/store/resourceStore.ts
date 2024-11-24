@@ -441,28 +441,40 @@ export const useResourceStore = create<ResourceStore>()(
 				const previousResources = [...resources]
 
 				try {
-					// 楽観的更新
-					set({ resources: newResources })
+					// セクションごとにリソースをグループ化して位置を再計算
+					const groupedResources = newResources.reduce(
+						(acc, resource) => {
+							if (!acc[resource.sectionId]) {
+								acc[resource.sectionId] = []
+							}
+							acc[resource.sectionId].push(resource)
+							return acc
+						},
+						{} as Record<string, typeof resources>,
+					)
 
-					// セクションごとにリソースをグループ化し、positionを0から振り直す
-					const resourcesBySection = newResources.reduce((acc, resource) => {
-						const sectionResources = acc.get(resource.sectionId) || []
-						sectionResources.push(resource)
-						acc.set(resource.sectionId, sectionResources)
-						return acc
-					}, new Map<string, typeof newResources>())
-
-					const itemsToUpdate = Array.from(
-						resourcesBySection.entries(),
-					).flatMap(([sectionId, sectionResources]) =>
-						sectionResources
-							.sort((a, b) => a.position - b.position)
-							.map((resource, index) => ({
-								id: resource.id,
-								position: index,
-								sectionId: sectionId,
+					// 各セクション内でpositionを0から振り直す
+					const reorderedResources = Object.values(groupedResources).flatMap(
+						(sectionResources, _) =>
+							sectionResources.map((resource, index) => ({
+								...resource,
+								position: index, // セクションごとに0から開始
 							})),
 					)
+
+					// 楽観的更新
+					set({ resources: reorderedResources })
+
+					// 一時的なリソースを除外して並び替え情報を作成
+					const itemsToUpdate = reorderedResources
+						.filter((r) => !r.id.startsWith('temp-'))
+						.map((resource) => ({
+							id: resource.id,
+							position: resource.position,
+							sectionId: resource.sectionId,
+						}))
+
+					if (itemsToUpdate.length === 0) return
 
 					const response = await fetch('/api/resources/reorder', {
 						method: 'PUT',
@@ -607,6 +619,17 @@ export const useResourceStore = create<ResourceStore>()(
 				const { resources } = get()
 
 				try {
+					// 同じセクション内の既存のリソースの位置を更新
+					const updatedResources = resources.map((resource) => ({
+						...resource,
+						position:
+							resource.sectionId === data.sectionId &&
+							resource.position >= data.position
+								? resource.position + 1
+								: resource.position,
+					}))
+
+					// 新しいリソースを作成
 					const response = await fetch('/api/resources', {
 						method: 'POST',
 						headers: { 'Content-Type': 'application/json' },
@@ -618,7 +641,21 @@ export const useResourceStore = create<ResourceStore>()(
 					}
 
 					const newResource = await response.json()
-					set({ resources: [...resources, newResource] })
+
+					// 新しいリソースを指定された位置に挿入
+					const finalResources = [
+						...updatedResources.filter(
+							(r) =>
+								r.position < data.position || r.sectionId !== data.sectionId,
+						),
+						newResource,
+						...updatedResources.filter(
+							(r) =>
+								r.position >= data.position && r.sectionId === data.sectionId,
+						),
+					]
+
+					set({ resources: finalResources })
 					return newResource
 				} catch (error) {
 					console.error('Error creating resource:', error)
