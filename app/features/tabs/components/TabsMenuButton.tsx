@@ -19,6 +19,23 @@ const TabsMenuButton = () => {
 		}
 	}
 
+	const handleSortByDomain = async () => {
+		try {
+			const extensionId = localStorage.getItem('extensionId')
+			if (!extensionId) throw new Error('Extension ID not found')
+
+			const response = await chrome.runtime.sendMessage(extensionId, {
+				type: 'SORT_TABS_BY_DOMAIN',
+			})
+
+			if (!response?.success) {
+				throw new Error('タブの並び替えに失敗しました')
+			}
+		} catch (error) {
+			console.error('タブの並び替え中にエラーが発生しました:', error)
+		}
+	}
+
 	return (
 		<>
 			<MenuTrigger>
@@ -31,7 +48,7 @@ const TabsMenuButton = () => {
 				<Popover>
 					<Menu className="bg-zinc-50 outline-none border rounded-lg shadow-md min-w-[200px]">
 						<MenuItem
-							onAction={() => {}}
+							onAction={handleSortByDomain}
 							className="p-2 outline-none hover:bg-zinc-200 cursor-pointer"
 						>
 							<div className="flex items-center gap-2">
