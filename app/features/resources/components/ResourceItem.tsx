@@ -183,50 +183,65 @@ export default memo(function ResourceItem({
 					dropIndex = existingResources.length
 				}
 
-				const tabItems = await Promise.all(
+				const tempTabItems = await Promise.all(
 					e.items
 						.filter(isTextDropItem)
 						.filter((item) => item.types.has('tab-item'))
 						.map(async (item) => {
 							const tabData = JSON.parse(await item.getText('tab-item'))
+							const tempId = `temp-${Date.now()}-${Math.random()}`
 							return {
+								id: tempId,
 								title: tabData.title,
 								url: tabData.url,
 								faviconUrl: tabData.faviconUrl,
+								description: null,
+								mimeType: null,
+								isGoogleDrive: false,
 								sectionId,
 								position: dropIndex,
 							}
 						}),
 				)
 
-				if (tabItems.length === 0) return
-
 				const updatedExistingResources = [
 					...existingResources.slice(0, dropIndex),
+					...tempTabItems,
 					...existingResources.slice(dropIndex).map((r) => ({
 						...r,
-						position: r.position + tabItems.length,
+						position: r.position + tempTabItems.length,
 					})),
 				]
 
-				const createdResources = await Promise.all(
-					tabItems.map((item, index) =>
-						createResource({
-							...item,
-							position: dropIndex + index,
-						}),
-					),
-				)
-
-				const finalResources = [
+				const tempFinalResources = [
 					...otherSectionsResources,
 					...updatedExistingResources,
-					...createdResources,
 				].sort((a, b) => {
 					if (a.sectionId === b.sectionId) {
 						return a.position - b.position
 					}
 					return 0
+				})
+
+				reorderResources(tempFinalResources)
+
+				const createdResources = await Promise.all(
+					tempTabItems.map((item, index) =>
+						createResource({
+							title: item.title,
+							url: item.url,
+							faviconUrl: item.faviconUrl,
+							sectionId,
+							position: dropIndex + index,
+						}),
+					),
+				)
+
+				const finalResources = tempFinalResources.map((resource) => {
+					const createdResource = createdResources.find(
+						(cr) => cr.url === resource.url && cr.title === resource.title,
+					)
+					return createdResource || resource
 				})
 
 				await reorderResources(finalResources)
