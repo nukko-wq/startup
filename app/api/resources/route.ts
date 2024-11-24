@@ -46,28 +46,9 @@ export async function POST(req: NextRequest) {
 			)
 		}
 
-		const maxPosition =
-			section.resources.length > 0
-				? Math.max(...section.resources.map((r) => r.position))
-				: -1
-
-		const newPosition =
-			body.position <= maxPosition ? body.position : maxPosition + 1
+		const newPosition = body.position
 
 		await db.$transaction([
-			db.resource.updateMany({
-				where: {
-					sectionId: body.sectionId,
-					position: {
-						gte: newPosition,
-					},
-				},
-				data: {
-					position: {
-						increment: 1,
-					},
-				},
-			}),
 			db.resource.create({
 				data: {
 					title: body.title,

@@ -165,14 +165,23 @@ export default memo(function ResourceItem({
 	const handleTabDrop = useCallback(
 		async (e: DroppableCollectionInsertDropEvent) => {
 			try {
+				const otherSectionsResources = allResources.filter(
+					(r) => r.sectionId !== sectionId,
+				)
+
 				const existingResources = allResources
 					.filter((r) => r.sectionId === sectionId)
 					.sort((a, b) => a.position - b.position)
 
-				const dropIndex =
-					e.target.dropPosition === 'before'
-						? existingResources.findIndex((r) => r.id === e.target.key)
-						: existingResources.findIndex((r) => r.id === e.target.key) + 1
+				let dropIndex = 0
+				if (e.target.key) {
+					dropIndex =
+						e.target.dropPosition === 'before'
+							? existingResources.findIndex((r) => r.id === e.target.key)
+							: existingResources.findIndex((r) => r.id === e.target.key) + 1
+				} else {
+					dropIndex = existingResources.length
+				}
 
 				const tabItems = await Promise.all(
 					e.items
@@ -192,61 +201,32 @@ export default memo(function ResourceItem({
 
 				if (tabItems.length === 0) return
 
-				const tempResources = tabItems.map((item, index) => ({
+				const updatedExistingResources = [
+					...existingResources
+						.slice(0, dropIndex)
+						.map((r, i) => ({ ...r, position: i })),
+					...existingResources.slice(dropIndex).map((r, i) => ({
+						...r,
+						position: i + dropIndex + tabItems.length,
+					})),
+				]
+
+				const tabItemsWithPosition = tabItems.map((item, i) => ({
 					...item,
-					id: `temp-${Date.now()}-${index}`,
-					description: null,
-					mimeType: null,
-					isGoogleDrive: false,
-					position: dropIndex + index,
+					position: dropIndex + i,
 				}))
-
-				const updatedExistingResources = existingResources.map((r) => ({
-					...r,
-					position:
-						r.position >= dropIndex ? r.position + tabItems.length : r.position,
-				}))
-
-				const updatedSectionResources = [
-					...updatedExistingResources.slice(0, dropIndex),
-					...tempResources,
-					...updatedExistingResources.slice(dropIndex),
-				].map((r, index) => ({
-					...r,
-					position: index,
-				}))
-
-				const otherSectionResources = allResources.filter(
-					(r) => r.sectionId !== sectionId,
-				)
-
-				reorderResources([...updatedSectionResources, ...otherSectionResources])
 
 				const createdResources = await Promise.all(
-					tabItems.map(async (item, index) => {
-						const resource = await createResource({
-							...item,
-							position: dropIndex + index,
-						})
-						return resource
-					}),
+					tabItemsWithPosition.map((item) => createResource(item)),
 				)
 
-				const finalResources = allResources
-					.filter((r) => !tempResources.some((temp) => temp.id === r.id))
-					.concat(createdResources)
-					.map((r) => ({
-						...r,
-						position:
-							r.sectionId === sectionId
-								? updatedSectionResources.findIndex(
-										(ur) => ur.id === r.id || ur.position === r.position,
-									)
-								: r.position,
-					}))
-					.sort((a, b) => a.position - b.position)
+				const finalResources = [
+					...updatedExistingResources,
+					...createdResources,
+					...otherSectionsResources,
+				]
 
-				reorderResources(finalResources)
+				await reorderResources(finalResources)
 			} catch (error) {
 				console.error('Failed to handle tab drop:', error)
 				reorderResources(allResources)
