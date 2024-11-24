@@ -78,7 +78,10 @@ export interface ResourceStore {
 			| ((prev: ResourceStore['resources']) => ResourceStore['resources']),
 	) => void
 	setDriveFiles: (files: DriveFile[]) => void
-	removeResource: (id: string) => Promise<void>
+	removeResource: (
+		id: string,
+		updatedResources?: ResourceStore['resources'],
+	) => Promise<void>
 	updateResource: (
 		id: string,
 		data: Partial<ResourceStore['resources'][0]>,
@@ -349,15 +352,21 @@ export const useResourceStore = create<ResourceStore>()(
 			},
 			setDriveFiles: (files) => set({ driveFiles: files }),
 
-			removeResource: async (id) => {
+			removeResource: async (
+				id: string,
+				updatedResources?: ResourceStore['resources'],
+			) => {
 				const { resources } = get()
 				const previousResources = [...resources]
 				const targetResource = resources.find((r) => r.id === id)
 
 				try {
-					set({
-						resources: resources.filter((resource) => resource.id !== id),
-					})
+					// 更新されたリソースリストがある場合はそれを使用
+					if (updatedResources) {
+						set({ resources: updatedResources.filter((r) => r.id !== id) })
+					} else {
+						set({ resources: resources.filter((r) => r.id !== id) })
+					}
 
 					const response = await fetch(`/api/resources/${id}`, {
 						method: 'DELETE',
@@ -367,13 +376,18 @@ export const useResourceStore = create<ResourceStore>()(
 						throw new Error('Failed to delete resource')
 					}
 
-					// キャッシュの無効化
+					// リソースの順序を更新
+					if (updatedResources) {
+						const finalResources = updatedResources.filter((r) => r.id !== id)
+						await get().reorderResources(finalResources)
+					}
+
+					// キャッシュの無効化処理は維持
 					if (targetResource?.sectionId) {
 						const section = get().sections.find(
 							(s) => s.id === targetResource.sectionId,
 						)
 						if (section?.spaceId) {
-							// キャッシュの更新
 							const cache = get().resourceCache.get(section.spaceId)
 							if (cache) {
 								get().resourceCache.set(section.spaceId, {
@@ -383,7 +397,6 @@ export const useResourceStore = create<ResourceStore>()(
 								})
 							}
 
-							// サーバーサイドのキャッシュも無効化
 							await fetch('/api/revalidate?tag=resources', { method: 'POST' })
 						}
 					}

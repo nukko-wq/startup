@@ -13,13 +13,38 @@ import { useResourceStore } from '@/app/store/resourceStore'
 
 const ResourceDeleteButton = ({
 	resource,
-}: { resource: Pick<Resource, 'id'> }) => {
+}: {
+	resource: Pick<Resource, 'id' | 'sectionId'>
+}) => {
 	const [isTooltipVisible, setIsTooltipVisible] = useState(false)
 	const removeResource = useResourceStore((state) => state.removeResource)
 
 	const handleDelete = async () => {
 		try {
-			await removeResource(resource.id)
+			const sectionResources = useResourceStore
+				.getState()
+				.resources.filter((r) => r.sectionId === resource.sectionId)
+				.sort((a, b) => a.position - b.position)
+
+			const deletedResourcePosition = sectionResources.find(
+				(r) => r.id === resource.id,
+			)?.position
+
+			if (typeof deletedResourcePosition === 'number') {
+				const updatedResources = useResourceStore
+					.getState()
+					.resources.map((r) => {
+						if (
+							r.sectionId === resource.sectionId &&
+							r.position > deletedResourcePosition
+						) {
+							return { ...r, position: r.position - 1 }
+						}
+						return r
+					})
+
+				await removeResource(resource.id, updatedResources)
+			}
 		} catch (error) {
 			console.error('Resource delete error:', error)
 			alert('リソースの削除に失敗しました。')
