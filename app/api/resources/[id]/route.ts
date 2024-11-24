@@ -77,11 +77,30 @@ export async function DELETE(request: NextRequest) {
 
 		const { user } = session
 
-		await db.resource.delete({
-			where: {
-				id,
-				userId: user.id,
-			},
+		await db.$transaction(async (tx) => {
+			const targetResource = await tx.resource.findUnique({
+				where: { id, userId: user.id },
+				select: { position: true, sectionId: true },
+			})
+
+			if (!targetResource) {
+				throw new Error('Resource not found')
+			}
+
+			await tx.resource.delete({
+				where: { id, userId: user.id },
+			})
+
+			await tx.resource.updateMany({
+				where: {
+					userId: user.id,
+					sectionId: targetResource.sectionId,
+					position: { gt: targetResource.position },
+				},
+				data: {
+					position: { decrement: 1 },
+				},
+			})
 		})
 
 		return Response.json({ success: true })

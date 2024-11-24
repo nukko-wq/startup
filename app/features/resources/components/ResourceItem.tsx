@@ -369,7 +369,12 @@ export default memo(function ResourceItem({
 						</div>
 						<div className="flex items-center opacity-0 group-hover:opacity-100">
 							<ResourceEditMenu resource={resource} />
-							<ResourceDeleteButton resource={resource} />
+							<ResourceDeleteButton
+								resource={{
+									id: resource.id,
+									sectionId: resource.sectionId,
+								}}
+							/>
 						</div>
 					</div>
 				</GridListItem>
