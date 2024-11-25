@@ -4,6 +4,11 @@ import { db } from '@/lib/db'
 import { spaceCreateSchema } from '@/lib/validations/space'
 import { z } from 'zod'
 
+// スキーマを拡張
+const extendedSpaceCreateSchema = spaceCreateSchema.extend({
+	withDefaultSection: z.boolean().optional(),
+})
+
 export async function POST(req: NextRequest) {
 	try {
 		const session = await auth()
@@ -14,7 +19,7 @@ export async function POST(req: NextRequest) {
 		}
 
 		const json = await req.json()
-		const body = spaceCreateSchema.parse(json)
+		const body = extendedSpaceCreateSchema.parse(json)
 
 		const workspace = await db.workspace.findFirst({
 			where: {
@@ -41,16 +46,30 @@ export async function POST(req: NextRequest) {
 
 		const newOrder = maxOrderSpace ? maxOrderSpace.order + 1 : 1
 
-		const space = await db.space.create({
-			data: {
-				name: body.name,
-				order: newOrder,
-				userId,
-				workspaceId: workspace.id,
-			},
+		// トランザクションを使用してSpaceとSectionを同時に作成
+		const result = await db.$transaction(async (tx) => {
+			const space = await tx.space.create({
+				data: {
+					name: body.name,
+					order: newOrder,
+					userId,
+					workspaceId: workspace.id,
+				},
+			})
+
+			const section = await tx.section.create({
+				data: {
+					name: 'Resources',
+					order: 0,
+					spaceId: space.id,
+					userId,
+				},
+			})
+
+			return { space, section }
 		})
 
-		return NextResponse.json(space)
+		return NextResponse.json(result)
 	} catch (error) {
 		console.error('Space creation error:', error)
 
