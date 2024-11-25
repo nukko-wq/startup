@@ -19,6 +19,7 @@ interface CreateSpaceFormProps {
 	onSubmit: (
 		data: { name: string; workspaceId: string },
 		close: () => void,
+		onSuccess?: (spaceId: string) => void,
 	) => Promise<void>
 	workspaceId: string
 }
