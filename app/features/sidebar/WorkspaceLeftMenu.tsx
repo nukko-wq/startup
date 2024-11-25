@@ -13,6 +13,7 @@ import { Plus, SquarePlus } from 'lucide-react'
 import { useState } from 'react'
 import CreateSpaceForm from '@/app/features/spaces/create_space/CreateSpaceForm'
 import { useSpaceStore } from '@/app/store/spaceStore'
+import { useResourceStore } from '@/app/store/resourceStore'
 
 interface WorkspaceLeftMenuProps {
 	workspaceId: string
@@ -28,6 +29,12 @@ const WorkspaceLeftMenu = ({ workspaceId }: WorkspaceLeftMenuProps) => {
 		close: () => void,
 	) => {
 		try {
+			if (!data.workspaceId) {
+				throw new Error('workspaceId is required')
+			}
+
+			close()
+
 			const response = await fetch('/api/spaces', {
 				method: 'POST',
 				headers: {
@@ -36,26 +43,34 @@ const WorkspaceLeftMenu = ({ workspaceId }: WorkspaceLeftMenuProps) => {
 				body: JSON.stringify({
 					name: data.name,
 					workspaceId: data.workspaceId,
-					order: spaces.filter((s) => s.workspaceId === workspaceId).length + 1,
+					withDefaultSection: true,
 				}),
 			})
 
 			if (!response.ok) {
+				const errorData = await response.json()
+				console.error('Server response:', errorData)
 				throw new Error('スペースの作成に失敗しました')
 			}
 
-			const newSpace = await response.json()
+			const { space, section } = await response.json()
 
-			// 新しいスペースを追加する前に重複チェック
-			const existingSpace = spaces.find((space) => space.id === newSpace.id)
-			if (!existingSpace) {
-				setSpaces([...spaces, newSpace])
-			}
+			// SpaceStoreの更新
+			const spaceStore = useSpaceStore.getState()
+			spaceStore.setSpaces([...spaceStore.spaces, space])
 
-			close()
+			// ResourceStoreの更新
+			const resourceStore = useResourceStore.getState()
+			resourceStore.setSections([...resourceStore.sections, section])
+
+			// キャッシュの更新
+			resourceStore.resourceCache.set(space.id, {
+				sections: [section],
+				resources: [],
+				timestamp: Date.now(),
+			})
 		} catch (error) {
 			console.error('Error creating space:', error)
-			throw error
 		}
 	}
 
@@ -73,6 +88,7 @@ const WorkspaceLeftMenu = ({ workspaceId }: WorkspaceLeftMenuProps) => {
 						<MenuItem
 							className="pl-4 pr-4 py-2 outline-none hover:cursor-pointer"
 							onAction={() => setIsOpen(true)}
+							aria-label="New Space"
 						>
 							<div className="flex items-center gap-3 text-sm">
 								<SquarePlus className="w-4 h-4" />

@@ -17,6 +17,7 @@ import CreateSpaceForm from '@/app/features/spaces/create_space/CreateSpaceForm'
 import { useWorkspaceStore } from '@/app/store/workspaceStore'
 import { useSpaceStore } from '@/app/store/spaceStore'
 import type { Space } from '@/app/types/space'
+import { useResourceStore } from '@/app/store/resourceStore'
 
 export default function SpacesMenu() {
 	const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false)
@@ -48,6 +49,7 @@ export default function SpacesMenu() {
 				body: JSON.stringify({
 					name: data.name,
 					workspaceId: data.workspaceId,
+					withDefaultSection: true,
 				}),
 			})
 
@@ -57,8 +59,11 @@ export default function SpacesMenu() {
 				throw new Error('スペースの作成に失敗しました')
 			}
 
-			const newSpace = await response.json()
-			setSpaces([...spaces, newSpace])
+			const { space, section } = await response.json()
+			setSpaces([...spaces, space])
+
+			const resourceStore = useResourceStore.getState()
+			resourceStore.setSections([section])
 		} catch (error) {
 			console.error('Error creating space:', error)
 		}
@@ -105,6 +110,7 @@ export default function SpacesMenu() {
 							setIsCreateDialogOpen(true)
 						}}
 						className="p-2 outline-none hover:bg-zinc-200 cursor-pointer"
+						aria-label="New Space"
 					>
 						<div className="flex items-center gap-2 text-zinc-800">
 							<SquarePlus className="w-4 h-4" />
@@ -117,6 +123,7 @@ export default function SpacesMenu() {
 							setIsCreateDialogOpen(true)
 						}}
 						className="p-2 outline-none hover:bg-zinc-200 cursor-pointer"
+						aria-label="New Workspace"
 					>
 						<div className="flex items-center gap-2 text-zinc-800">
 							<SquarePlus className="w-4 h-4" />
