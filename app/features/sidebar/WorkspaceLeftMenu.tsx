@@ -14,12 +14,14 @@ import { useState } from 'react'
 import CreateSpaceForm from '@/app/features/spaces/create_space/CreateSpaceForm'
 import { useSpaceStore } from '@/app/store/spaceStore'
 import { useResourceStore } from '@/app/store/resourceStore'
+import { useRouter } from 'next/navigation'
 
 interface WorkspaceLeftMenuProps {
 	workspaceId: string
 }
 
 const WorkspaceLeftMenu = ({ workspaceId }: WorkspaceLeftMenuProps) => {
+	const router = useRouter()
 	const [isOpen, setIsOpen] = useState(false)
 	const spaces = useSpaceStore((state) => state.spaces)
 	const setSpaces = useSpaceStore((state) => state.setSpaces)
@@ -27,6 +29,7 @@ const WorkspaceLeftMenu = ({ workspaceId }: WorkspaceLeftMenuProps) => {
 	const handleCreateSpace = async (
 		data: { name: string; workspaceId: string },
 		close: () => void,
+		onSuccess?: (spaceId: string) => void,
 	) => {
 		try {
 			if (!data.workspaceId) {
@@ -55,20 +58,23 @@ const WorkspaceLeftMenu = ({ workspaceId }: WorkspaceLeftMenuProps) => {
 
 			const { space, section } = await response.json()
 
-			// SpaceStoreの更新
 			const spaceStore = useSpaceStore.getState()
 			spaceStore.setSpaces([...spaceStore.spaces, space])
 
-			// ResourceStoreの更新
 			const resourceStore = useResourceStore.getState()
 			resourceStore.setSections([...resourceStore.sections, section])
 
-			// キャッシュの更新
 			resourceStore.resourceCache.set(space.id, {
 				sections: [section],
 				resources: [],
 				timestamp: Date.now(),
 			})
+
+			await spaceStore.handleSpaceClick(space.id, router)
+
+			if (onSuccess) {
+				onSuccess(space.id)
+			}
 		} catch (error) {
 			console.error('Error creating space:', error)
 		}

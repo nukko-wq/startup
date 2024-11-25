@@ -18,8 +18,10 @@ import { useWorkspaceStore } from '@/app/store/workspaceStore'
 import { useSpaceStore } from '@/app/store/spaceStore'
 import type { Space } from '@/app/types/space'
 import { useResourceStore } from '@/app/store/resourceStore'
+import { useRouter } from 'next/navigation'
 
 export default function SpacesMenu() {
+	const router = useRouter()
 	const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false)
 	const [isCreatingWorkspace, setIsCreatingWorkspace] = useState(false)
 
@@ -33,6 +35,7 @@ export default function SpacesMenu() {
 	const handleCreateSpace = async (
 		data: { name: string; workspaceId: string },
 		close: () => void,
+		onSuccess?: (spaceId: string) => void,
 	) => {
 		try {
 			if (!data.workspaceId) {
@@ -64,6 +67,13 @@ export default function SpacesMenu() {
 
 			const resourceStore = useResourceStore.getState()
 			resourceStore.setSections([section])
+
+			const spaceStore = useSpaceStore.getState()
+			await spaceStore.handleSpaceClick(space.id, router)
+
+			if (onSuccess) {
+				onSuccess(space.id)
+			}
 		} catch (error) {
 			console.error('Error creating space:', error)
 		}
