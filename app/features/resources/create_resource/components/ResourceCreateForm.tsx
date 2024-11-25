@@ -12,11 +12,12 @@ import {
 } from 'react-aria-components'
 import { Controller, useForm } from 'react-hook-form'
 import { useEffect, useRef, useState, useCallback } from 'react'
-import { Link } from 'lucide-react'
+import { Link, Search } from 'lucide-react'
 import { useSession } from 'next-auth/react'
 import IconGoogle from '@/app/components/elements/IconGoogle'
 import { useResourceStore } from '@/app/store/resourceStore'
 import type { ResourceStore } from '@/app/store/resourceStore'
+import { useDebounce } from '@/app/hooks/useDebounce'
 
 interface ResourceCreateFormProps {
 	onClose: () => void
@@ -35,11 +36,14 @@ const ResourceCreateForm = ({
 	sectionId,
 }: ResourceCreateFormProps) => {
 	const urlInputRef = useRef<HTMLInputElement | null>(null)
+	const searchInputRef = useRef<HTMLInputElement | null>(null)
 	const [urlPlaceholder, setUrlPlaceholder] = useState('URL')
 	const [isLoadingFiles, setIsLoadingFiles] = useState(false)
 	const [error, setError] = useState<string | null>(null)
 	const { data: session } = useSession()
 	const [activeTab, setActiveTab] = useState<'url' | 'drive'>('url')
+	const [searchQuery, setSearchQuery] = useState('')
+	const [debouncedQuery] = useDebounce(searchQuery, 300)
 
 	const resources = useResourceStore((state) => state.resources)
 	const driveFiles = useResourceStore((state) => state.driveFiles)
@@ -335,6 +339,54 @@ const ResourceCreateForm = ({
 		}
 	}
 
+	// Google Drive のファイル検索
+	const searchDriveFiles = useCallback(
+		async (query: string) => {
+			if (!session) {
+				setError('セッションが見つかりません')
+				return
+			}
+
+			setIsLoadingFiles(true)
+			setError(null)
+
+			try {
+				const response = await fetch(
+					`/api/googleapis?q=${encodeURIComponent(query)}`,
+				)
+				if (!response.ok) {
+					throw new Error('ファイルの検索に失敗しました')
+				}
+				const data = await response.json()
+				setDriveFiles(data.files || [])
+			} catch (error) {
+				console.error('Error searching Google Drive files:', error)
+				setError(
+					error instanceof Error ? error.message : 'エラーが発生しました',
+				)
+			} finally {
+				setIsLoadingFiles(false)
+			}
+		},
+		[session, setDriveFiles],
+	)
+
+	// 検索クエリが変更されたときに検索を実行
+	useEffect(() => {
+		if (activeTab === 'drive') {
+			searchDriveFiles(debouncedQuery)
+		}
+	}, [debouncedQuery, activeTab, searchDriveFiles])
+
+	// Google Driveタブをクリックした時の処理を修正
+	const handleDriveTabClick = () => {
+		setActiveTab('drive')
+		// setTimeout を使用して、タブ切り替え後に確実にフォーカスが移動するようにする
+		setTimeout(() => {
+			searchInputRef.current?.focus()
+		}, 0)
+	}
+
 	return (
 		<div className="flex w-full md:w-[600px] h-[468px]">
 			<div
@@ -355,7 +407,7 @@ const ResourceCreateForm = ({
 					className={`w-full text-muted-foreground p-2 flex items-center gap-1 outline-none ${
 						activeTab === 'drive' ? 'bg-foreground/10' : ''
 					}`}
-					onPress={() => setActiveTab('drive')}
+					onPress={handleDriveTabClick}
 					onHoverStart={handleDriveTabHover}
 					aria-label="Google Drive"
 				>
@@ -443,50 +495,71 @@ const ResourceCreateForm = ({
 				</Form>
 			)}
 			{activeTab === 'drive' && (
-				<div
-					className="flex flex-col w-[400px] border-l"
-					aria-label="Recent Google Drive Files"
-				>
-					<div className="flex items-center justify-center py-4">
-						<h2 className="text-lg font-bold text-zinc-700">
-							最近のGoogle Driveファイル
-						</h2>
+				<div className="flex flex-col w-full">
+					<div className="flex items-center justify-center py-2">
+						<Search className="w-[20px] h-[20px] text-zinc-700 ml-4 mr-2" />
+						<Input
+							className="w-[400px] text-zinc-700 outline-none"
+							placeholder="Search Drive for resouces to add..."
+							aria-label="Search Drive"
+							value={searchQuery}
+							onChange={(e) => setSearchQuery(e.target.value)}
+							ref={searchInputRef}
+						/>
 					</div>
-					{isLoadingFiles ? (
-						<div>読み込み中...</div>
-					) : error ? (
-						<div className="text-red-500">{error}</div>
-					) : driveFiles.length === 0 ? (
-						<div>ファイルが見つかりません</div>
-					) : (
-						<div className="overflow-y-auto">
-							<ul className="flex flex-col">
-								{driveFiles.map((file) => (
-									// biome-ignore lint/a11y/useKeyWithClickEvents: <explanation>
-									<li
-										key={file.id}
-										className="h-[40px] flex items-center hover:bg-gray-100 rounded cursor-pointer"
-										onClick={() => {
-											if (urlInputRef.current) {
-												urlInputRef.current.value = file.webViewLink
-											}
-											handleDriveFileClick(file)
-										}}
-									>
-										<div className="flex items-center gap-2">
-											<div className="pl-4">{getFileIcon(file.mimeType)}</div>
-											<div
-												className="text-ellipsis overflow-hidden whitespace-nowrap w-[355px] pr-6"
-												aria-label="Google Drive File Name"
-											>
-												{file.name}
-											</div>
-										</div>
-									</li>
-								))}
-							</ul>
+					<div
+						className="flex flex-col flex-grow w-[400px] h-[428px] border-l"
+						aria-label="Recent Google Drive Files"
+					>
+						<div className="flex items-center justify-center h-[17px]">
+							<div className="border-t border-zinc-200 flex-grow" />
+							{!searchQuery && (
+								<h2 className="text-sm text-zinc-500 px-4">Recent</h2>
+							)}
+							<div className="border-t border-zinc-200 flex-grow" />
 						</div>
-					)}
+						{isLoadingFiles ? (
+							<div className="flex flex-grow items-center justify-center">
+								<div className="text-zinc-700">読み込み中...</div>
+							</div>
+						) : error ? (
+							<div className="text-red-500">{error}</div>
+						) : driveFiles.length === 0 ? (
+							<div className="flex flex-grow items-center justify-center">
+								<div className="text-zinc-700">
+									{searchQuery ? 'ファイルが見つかりません' : 'Recent files'}
+								</div>
+							</div>
+						) : (
+							<div className="overflow-y-auto overflow-x-hidden">
+								<ul className="flex flex-col">
+									{driveFiles.map((file) => (
+										// biome-ignore lint/a11y/useKeyWithClickEvents: <explanation>
+										<li
+											key={file.id}
+											className="h-[40px] flex items-center hover:bg-gray-100 rounded cursor-pointer"
+											onClick={() => {
+												if (urlInputRef.current) {
+													urlInputRef.current.value = file.webViewLink
+												}
+												handleDriveFileClick(file)
+											}}
+										>
+											<div className="flex items-center gap-2">
+												<div className="pl-4">{getFileIcon(file.mimeType)}</div>
+												<div
+													className="text-ellipsis overflow-hidden whitespace-nowrap w-[355px] pr-6"
+													aria-label="Google Drive File Name"
+												>
+													{file.name}
+												</div>
+											</div>
+										</li>
+									))}
+								</ul>
+							</div>
+						)}
+					</div>
 				</div>
 			)}
 		</div>
