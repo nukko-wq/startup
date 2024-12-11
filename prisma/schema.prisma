@@ -1,0 +1,179 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+} 
+ 
+model User {
+  id            String          @id @default(cuid())
+  name          String?
+  email         String          @unique
+  emailVerified DateTime?
+  image         String?
+  lastActiveSpaceId String?
+  accounts      Account[]
+  sessions      Session[]
+  resources     Resource[]
+  sections      Section[]
+  spaces        Space[]
+  // Optional for WebAuthn support
+  Authenticator Authenticator[]
+  workspaces  Workspace[]
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  @@index([lastActiveSpaceId])
+  @@index([email])
+}
+ 
+model Account {
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String?
+  access_token      String?
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String?
+  session_state     String?
+ 
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+ 
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+ 
+  @@id([provider, providerAccountId])
+}
+ 
+model Session {
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+ 
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+ 
+model VerificationToken {
+  identifier String
+  token      String
+  expires    DateTime
+ 
+  @@id([identifier, token])
+}
+ 
+// Optional for WebAuthn support
+model Authenticator {
+  credentialID         String  @unique
+  userId               String
+  providerAccountId    String
+  credentialPublicKey  String
+  counter              Int
+  credentialDeviceType String
+  credentialBackedUp   Boolean
+  transports           String?
+ 
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+ 
+  @@id([userId, credentialID])
+}
+
+model Workspace {
+  id        String    @id @default(cuid())
+  name      String
+  order     Int
+  isDefault Boolean @default(false)
+  userId    String
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  spaces    Space[]
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  @@index([userId, order])
+  @@index([userId, isDefault])
+  @@index([order])
+  @@unique([userId, name])
+}
+
+model Space {
+  id          String    @id @default(cuid())
+  name        String
+  order       Int
+  isDefault   Boolean   @default(false)
+  isLastActive Boolean  @default(false)
+  workspaceId String
+  workspace   Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  sections    Section[]
+  userId      String    // ユーザーIDを追加
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade) // User との関係を追加
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  // パフォーマンスのためのインデックス
+  @@index([workspaceId, order])
+  @@index([workspaceId, isLastActive])
+  @@index([isLastActive])
+  @@index([userId]) // ユーザーIDのインデックスを追加
+  @@index([userId, workspaceId, isLastActive])
+  @@index([userId, isLastActive])
+  @@unique([workspaceId, name])
+}
+
+model Section {
+  id        String    @id @default(cuid())
+  name      String
+  order     Int
+  spaceId   String
+  space     Space     @relation(fields: [spaceId], references: [id], onDelete: Cascade)
+  resources Resource[]
+  userId    String    // ユーザーIDを追加
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade) // User との関係を追加
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  // パフォーマンスのためのインデックス
+  @@index([spaceId, order])
+  @@index([order])
+  @@index([userId]) // ユーザーIDのインデックスを追加
+  @@index([spaceId, userId, order])
+  @@index([userId, spaceId])
+}
+
+model Resource {
+  id            String   @id @default(cuid())
+  title         String   @db.VarChar(255)
+  url           String   @db.Text
+  faviconUrl    String?  @db.Text
+  mimeType      String?  @db.VarChar(100)
+  description   String?  @db.Text
+  isGoogleDrive Boolean  @default(false)
+  order         Int
+  sectionId     String
+  section       Section  @relation(fields: [sectionId], references: [id], onDelete: Cascade)
+  userId        String
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  // パフォーマンスのためのインデックス
+  @@index([sectionId, order])
+  @@index([order])
+  @@index([url])
+  @@index([userId])
+  @@index([sectionId, userId, order])
+  @@index([userId, url])
+  @@index([userId, title])
+}
