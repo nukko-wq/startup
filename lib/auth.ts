@@ -33,90 +33,21 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
 		error: '/error',
 	},
 	callbacks: {
-		async signIn({ user, account, profile }) {
-			console.log('Sign in callback: ', user)
-			console.log('Allowed emails:', allowedEmails)
-			console.log('User email:', user.email)
-
-			if (!allowedEmails.includes(user.email ?? '')) {
-				console.log('Email not allowed')
-				return false
-			}
-			try {
-				if (!account || !user.email) {
-					console.error('Invalid account or user email')
-					return false
-				}
-
-				const existingUser = await db.user.findUnique({
-					where: { email: user.email },
-					include: { accounts: true },
-				})
-
-				if (existingUser) {
-					await db.account.update({
-						where: {
-							provider_providerAccountId: {
-								provider: 'google',
-								providerAccountId: account.providerAccountId,
-							},
-						},
-						data: {
-							access_token: account.access_token,
-							refresh_token: account.refresh_token,
-							expires_at: account.expires_at,
-							scope: account.scope,
-							token_type: account.token_type,
-							id_token: account.id_token,
-						},
-					})
-				} else {
-					await db.user.create({
-						data: {
-							email: user.email,
-							name: user.name,
-							accounts: {
-								create: {
-									type: account.type ?? 'oauth',
-									provider: 'google',
-									providerAccountId: account.providerAccountId,
-									access_token: account.access_token,
-									token_type: account.token_type,
-									refresh_token: account.refresh_token,
-									expires_at: account.expires_at,
-									scope: account.scope,
-									id_token: account.id_token,
-								},
-							},
-						},
-					})
-				}
-				return true
-			} catch (error) {
-				console.error('Error in signIn callback:', error)
-				return false
-			}
+		async signIn({ user }) {
+			return allowedEmails.includes(user.email ?? '')
 		},
 		async session({ session, token }) {
 			if (session.user) {
-				session.user.id = token.id as string
+				session.user.id = token.sub as string
 				session.accessToken = token.accessToken as string
-				session.refreshToken = token.refreshToken as string
-				session.expiresAt = token.expiresAt as number
 			}
 			return session
 		},
-		async jwt({ token, account, user }) {
-			if (account && user && user.id) {
-				token.id = user.id
+		async jwt({ token, account }) {
+			if (account) {
 				token.accessToken = account.access_token
-				token.refreshToken = account.refresh_token
-				token.expires_at = account.expires_at
 			}
 			return token
-		},
-		async authorized({ auth, request: { nextUrl } }) {
-			return true
 		},
 	},
 })

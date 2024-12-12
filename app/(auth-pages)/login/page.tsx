@@ -1,10 +1,13 @@
 import SignInForm from '@/app/features/auth/components/SignInForm'
-import { getCurrentUser } from '@/lib/session'
+import { cookies } from 'next/headers'
 import { redirect } from 'next/navigation'
-export default async function Login() {
-	const user = await getCurrentUser()
 
-	if (user) {
+export default async function Login() {
+	// セッショントークンの確認
+	const cookieStore = await cookies()
+	const authCookie = cookieStore.get('next-auth.session-token')
+
+	if (authCookie) {
 		return redirect('/')
 	}
 

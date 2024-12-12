@@ -1,22 +1,24 @@
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
-import { auth } from '@/lib/auth'
 
-export async function middleware(request: NextRequest) {
-	try {
-		const session = await auth()
-
-		if (!session) {
-			return NextResponse.redirect(new URL('/login', request.url))
-		}
-
+export function middleware(request: NextRequest) {
+	// 認証不要なパスをスキップ
+	if (
+		request.nextUrl.pathname.startsWith('/login') ||
+		request.nextUrl.pathname.startsWith('/api/auth')
+	) {
 		return NextResponse.next()
-	} catch (error) {
-		console.error('Middleware error:', error)
+	}
+
+	const authCookie = request.cookies.get('next-auth.session-token')?.value
+
+	if (!authCookie) {
 		return NextResponse.redirect(new URL('/login', request.url))
 	}
+
+	return NextResponse.next()
 }
 
 export const config = {
-	matcher: ['/((?!api|_next/static|_next/image|favicon|login|auth).*)'],
+	matcher: ['/((?!_next/static|_next/image|favicon.ico).*)'],
 }
