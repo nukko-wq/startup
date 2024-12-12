@@ -1,6 +1,6 @@
 import { ReduxProvider } from '@/app/lib/redux/provider'
 import Sidebar from '@/app/components/sidebar/sidebar'
-import { db } from '@/lib/db'
+import { prisma } from '@/lib/prisma'
 import { getCurrentUser } from '@/lib/session'
 import { WorkspaceInitializer } from '@/app/(dashboard)/WorkspaceInitializer'
 import { redirect } from 'next/navigation'
@@ -17,7 +17,7 @@ export default async function Home() {
 
 		let initialWorkspace: PrismaWorkspace[] = []
 		try {
-			initialWorkspace = await db.workspace.findMany({
+			initialWorkspace = await prisma.workspace.findMany({
 				where: { userId: user.id },
 				orderBy: { order: 'asc' },
 				include: {
