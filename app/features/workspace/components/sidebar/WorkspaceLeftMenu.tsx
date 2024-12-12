@@ -46,7 +46,7 @@ const WorkspaceLeftMenu = () => {
 									<h2 className="text-lg font-semibold mb-4">
 										新しいスペースを作成
 									</h2>
-									<SpaceCreateForm onClose={close} />
+									{/* <SpaceCreateForm onClose={close} /> */}
 								</div>
 							)}
 						</Dialog>

@@ -1,4 +1,5 @@
 // GET: Workspace取得
+// POST: Workspace作成
 
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'

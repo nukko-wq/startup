@@ -1,5 +1,5 @@
 import { ReduxProvider } from '@/app/lib/redux/provider'
-import Sidebar from '@/app/components/layout/sidebar'
+import Sidebar from '@/app/components/sidebar/sidebar'
 import { prisma } from '@/lib/prisma'
 import { getCurrentUser } from '@/lib/session'
 import { WorkspaceInitializer } from '@/app/(dashboard)/WorkspaceInitializer'
@@ -19,6 +19,24 @@ export default async function Home() {
 
 		let initialWorkspace: PrismaWorkspace[] = []
 		try {
+			const defaultWorkspace = await prisma.workspace.findFirst({
+				where: {
+					userId: user.id,
+					isDefault: true,
+				},
+			})
+
+			if (!defaultWorkspace) {
+				await prisma.workspace.create({
+					data: {
+						name: 'Default Workspace',
+						order: 0,
+						isDefault: true,
+						userId: user.id,
+					},
+				})
+			}
+
 			initialWorkspace = await prisma.workspace.findMany({
 				where: { userId: user.id },
 				orderBy: { order: 'asc' },
