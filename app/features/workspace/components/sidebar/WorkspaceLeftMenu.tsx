@@ -17,7 +17,10 @@ const WorkspaceLeftMenu = () => {
 	return (
 		<>
 			<MenuTrigger>
-				<Button className="outline-none p-1 mr-2 group-hover:bg-gray-700 transition duration-200 rounded-full opacity-0 group-hover:opacity-100">
+				<Button
+					className="outline-none p-1 mr-2 group-hover:bg-gray-700 transition duration-200 rounded-full opacity-0 group-hover:opacity-100"
+					aria-label="Menu"
+				>
 					<Plus className="w-5 h-5 text-zinc-50" />
 				</Button>
 				<Popover>
@@ -37,6 +40,7 @@ const WorkspaceLeftMenu = () => {
 			</MenuTrigger>
 
 			<DialogTrigger isOpen={isOpen} onOpenChange={setIsOpen}>
+				<Button className="hidden">Open Dialog</Button>
 				<ModalOverlay className="fixed inset-0 bg-black/25 flex items-center justify-center p-4 text-center backdrop-blur">
 					<Modal className="w-full max-w-md bg-white p-6 rounded-lg align-middle shadow-xl text-left">
 						<Dialog className="outline-none">

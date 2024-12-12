@@ -43,9 +43,9 @@ const WorkspaceList = () => {
 								<div className="flex items-center justify-between group min-h-[40px] mt-1">
 									<div className="flex items-center flex-grow">
 										<div className="flex items-center cursor-grab">
-											<Button className="rounded-full py-1 pl-1 pr-2 ml-2">
+											<div className="rounded-full py-1 pl-1 pr-2 ml-2">
 												<ChevronRight className="w-6 h-6 text-gray-500" />
-											</Button>
+											</div>
 										</div>
 										<div className="flex items-center flex-grow justify-between hover:border-b-2 hover:border-blue-500 pb-1">
 											<span className="font-medium text-gray-500">
