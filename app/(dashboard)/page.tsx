@@ -47,7 +47,7 @@ export default async function Home() {
 				},
 			})
 
-			console.log('Initial workspaces:', initialWorkspace)
+			// console.log('Initial workspaces:', initialWorkspace)
 		} catch (dbError) {
 			console.error('Database error:', dbError)
 			initialWorkspace = []

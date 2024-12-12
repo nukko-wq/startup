@@ -34,9 +34,8 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
 	},
 	callbacks: {
 		async signIn({ user, account, profile }) {
-			console.log('Sign in callback: ', user)
-			console.log('Allowed emails:', allowedEmails)
-			console.log('User email:', user.email)
+			// console.log('Sign in callback: ', user)
+			// console.log('User email:', user.email)
 
 			if (!allowedEmails.includes(user.email ?? '')) {
 				console.log('Email not allowed')
