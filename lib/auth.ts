@@ -124,7 +124,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
 			}
 
 			if (!isLoggedIn && !isOnLoginPage) {
-				return false
+				return Response.redirect(new URL('/login', nextUrl))
 			}
 
 			return true
