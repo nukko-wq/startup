@@ -6,6 +6,8 @@ import { WorkspaceInitializer } from '@/app/(dashboard)/WorkspaceInitializer'
 import { redirect } from 'next/navigation'
 import type { Workspace as PrismaWorkspace } from '@prisma/client'
 
+export const dynamic = 'force-dynamic'
+
 export default async function Home() {
 	try {
 		const user = await getCurrentUser()
