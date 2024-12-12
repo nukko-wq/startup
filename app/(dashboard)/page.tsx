@@ -13,7 +13,7 @@ export default async function Home() {
 	}
 
 	const initialWorkspace = await prisma.workspace.findMany({
-		where: { userId: user?.id },
+		where: { userId: user.id },
 		orderBy: { order: 'asc' },
 		include: {
 			spaces: {
