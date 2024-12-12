@@ -4,7 +4,7 @@ import { db } from '@/lib/db'
 import { getCurrentUser } from '@/lib/session'
 import { WorkspaceInitializer } from '@/app/(dashboard)/WorkspaceInitializer'
 import { redirect } from 'next/navigation'
-import type { Workspace } from '@/app/lib/redux/features/workspace/types/workspace'
+import type { Workspace as PrismaWorkspace } from '@prisma/client'
 
 export default async function Home() {
 	try {
@@ -15,7 +15,7 @@ export default async function Home() {
 			return redirect('/login')
 		}
 
-		let initialWorkspace: Workspace[] = []
+		let initialWorkspace: PrismaWorkspace[] = []
 		try {
 			initialWorkspace = await db.$transaction(async (prisma) => {
 				const workspaces = await prisma.workspace.findMany({
