@@ -11,7 +11,6 @@ import {
 	ModalOverlay,
 	Popover,
 } from 'react-aria-components'
-import SpaceCreateForm from '@/app/features/workspace/components/sidebar/SpaceCreateForm'
 
 const WorkspaceLeftMenu = () => {
 	const [isOpen, setIsOpen] = useState(false)

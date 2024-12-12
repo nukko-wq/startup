@@ -8,6 +8,7 @@ import {
 import { ChevronRight, Layers } from 'lucide-react'
 import { Button } from 'react-aria-components'
 import WorkspaceLeftMenu from '@/app/features/workspace/components/sidebar/WorkspaceLeftMenu'
+import DefaultWorkspaceRightMenu from '@/app/features/workspace/components/sidebar/DefaultWorkspaceRightMenu'
 
 const WorkspaceList = () => {
 	const defaultWorkspace = useSelector(selectDefaultWorkspace)
@@ -26,7 +27,7 @@ const WorkspaceList = () => {
 								</div>
 								<span className="font-medium text-gray-500">Spaces</span>
 							</div>
-							<div className="">デフォルトワークスペース右メニュー</div>
+							<DefaultWorkspaceRightMenu />
 						</div>
 					</div>
 				</div>

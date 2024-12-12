@@ -1,8 +1,39 @@
 import React from 'react'
 import { Button, Form, Input, Label, TextField } from 'react-aria-components'
-import { Controller } from 'react-hook-form'
+import { Controller, useForm } from 'react-hook-form'
+import { useDispatch } from 'react-redux'
+import { createWorkspace } from '@/app/lib/redux/features/workspace/workSpaceAPI'
+import { useAppDispatch } from '@/app/lib/redux/hooks'
+interface WorkspaceFormData {
+	name: string
+}
 
-const WorkspaceCreateForm = () => {
+interface WorkspaceCreateFormProps {
+	onClose: () => void
+}
+
+const WorkspaceCreateForm = ({ onClose }: WorkspaceCreateFormProps) => {
+	const dispatch = useAppDispatch()
+	const {
+		control,
+		handleSubmit,
+		formState: { isValid, isSubmitting },
+	} = useForm<WorkspaceFormData>({
+		mode: 'onChange',
+		defaultValues: {
+			name: '',
+		},
+	})
+
+	const onSubmit = async (data: WorkspaceFormData) => {
+		try {
+			await dispatch(createWorkspace(data.name)).unwrap()
+			onClose()
+		} catch (error) {
+			console.error('Failed to create workspace:', error)
+		}
+	}
+
 	return (
 		<Form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
 			<Controller
@@ -15,7 +46,7 @@ const WorkspaceCreateForm = () => {
 						autoFocus
 						className="space-y-[2px]"
 					>
-						<Label className="text-sm">Workspace Name</Label>
+						<Label className="text-sm">ワークスペース名</Label>
 						<Input
 							{...field}
 							className="w-full px-3 py-2 border rounded focus:outline-blue-500"
