@@ -1,5 +1,5 @@
 import { ReduxProvider } from '@/app/lib/redux/provider'
-import Sidebar from '@/app/components/sidebar/sidebar'
+import Sidebar from '@/app/components/layout/sidebar'
 import { prisma } from '@/lib/prisma'
 import { getCurrentUser } from '@/lib/session'
 import { WorkspaceInitializer } from '@/app/(dashboard)/WorkspaceInitializer'

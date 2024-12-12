@@ -1,7 +1,7 @@
 'use client'
 
 import { Link } from 'react-aria-components'
-import WorkspaceList from '@/app/components/sidebar/WorkspaceList'
+import WorkspaceList from '@/app/features/workspace/components/sidebar/WorkspaceList'
 import SidebarMenu from '@/app/components/sidebar/SidebarMenu'
 const sidebar = () => {
 	return (

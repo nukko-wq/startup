@@ -7,6 +7,7 @@ import {
 } from '@/app/lib/redux/features/workspace/selector'
 import { ChevronRight, Layers } from 'lucide-react'
 import { Button } from 'react-aria-components'
+import WorkspaceLeftMenu from '@/app/features/workspace/components/sidebar/WorkspaceLeftMenu'
 
 const WorkspaceList = () => {
 	const defaultWorkspace = useSelector(selectDefaultWorkspace)
@@ -50,7 +51,8 @@ const WorkspaceList = () => {
 												{workspace.name}
 											</span>
 											<div className="flex items-center">
-												ワークスペースメニュー1 ワークスペースメニュー2
+												<WorkspaceLeftMenu />
+												<div>ワークスペースメニュー2</div>
 											</div>
 										</div>
 									</div>
