@@ -17,17 +17,14 @@ export default async function Home() {
 
 		let initialWorkspace: PrismaWorkspace[] = []
 		try {
-			initialWorkspace = await db.$transaction(async (prisma) => {
-				const workspaces = await prisma.workspace.findMany({
-					where: { userId: user.id },
-					orderBy: { order: 'asc' },
-					include: {
-						spaces: {
-							orderBy: { order: 'asc' },
-						},
+			initialWorkspace = await db.workspace.findMany({
+				where: { userId: user.id },
+				orderBy: { order: 'asc' },
+				include: {
+					spaces: {
+						orderBy: { order: 'asc' },
 					},
-				})
-				return workspaces || []
+				},
 			})
 
 			console.log('Initial workspaces:', initialWorkspace)
