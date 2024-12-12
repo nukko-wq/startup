@@ -116,17 +116,6 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
 			return token
 		},
 		async authorized({ auth, request: { nextUrl } }) {
-			const isLoggedIn = !!auth?.user
-			const isOnLoginPage = nextUrl.pathname === '/login'
-
-			if (isLoggedIn && isOnLoginPage) {
-				return Response.redirect(new URL('/', nextUrl))
-			}
-
-			if (!isLoggedIn && !isOnLoginPage) {
-				return false
-			}
-
 			return true
 		},
 	},
