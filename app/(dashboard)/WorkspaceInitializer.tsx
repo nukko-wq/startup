@@ -14,7 +14,9 @@ export function WorkspaceInitializer({
 	const dispatch = useDispatch()
 
 	useEffect(() => {
+		console.log('Initializing workspaces:', initialWorkspaces)
 		const serializedWorkspaces = initialWorkspaces.map(serializeWorkspace)
+		console.log('Serialized workspaces:', serializedWorkspaces)
 		dispatch(setWorkspaces(serializedWorkspaces))
 	}, [dispatch, initialWorkspaces])
 
