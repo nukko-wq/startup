@@ -2,7 +2,7 @@
 
 import { Link } from 'react-aria-components'
 import WorkspaceList from '@/app/components/sidebar/WorkspaceList'
-
+import SidebarMenu from '@/app/components/sidebar/SidebarMenu'
 const sidebar = () => {
 	return (
 		<div className="hidden md:flex flex-col min-h-screen bg-gray-800">
@@ -13,6 +13,7 @@ const sidebar = () => {
 				>
 					Startup
 				</Link>
+				<SidebarMenu />
 			</div>
 			<WorkspaceList />
 		</div>
