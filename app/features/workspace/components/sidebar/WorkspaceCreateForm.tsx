@@ -1,9 +1,16 @@
 import React from 'react'
 import { Button, Form, Input, Label, TextField } from 'react-aria-components'
 import { Controller, useForm } from 'react-hook-form'
-import { useDispatch } from 'react-redux'
+import { v4 as uuidv4 } from 'uuid'
 import { createWorkspace } from '@/app/lib/redux/features/workspace/workSpaceAPI'
 import { useAppDispatch } from '@/app/lib/redux/hooks'
+import {
+	addWorkspace,
+	removeWorkspace,
+	replaceWorkspace,
+} from '@/app/lib/redux/features/workspace/workspaceSlice'
+import type { Workspace } from '@/app/lib/redux/features/workspace/types/workspace'
+
 interface WorkspaceFormData {
 	name: string
 }
@@ -26,10 +33,22 @@ const WorkspaceCreateForm = ({ onClose }: WorkspaceCreateFormProps) => {
 	})
 
 	const onSubmit = async (data: WorkspaceFormData) => {
+		const tempId = uuidv4()
+		const tempWorkspace: Workspace = {
+			id: tempId,
+			name: data.name,
+			order: 0,
+			isDefault: false,
+			userId: '',
+		}
+
 		try {
-			await dispatch(createWorkspace(data.name)).unwrap()
+			dispatch(addWorkspace(tempWorkspace))
 			onClose()
+			const result = await dispatch(createWorkspace(data.name)).unwrap()
+			dispatch(replaceWorkspace({ tempId, workspace: result }))
 		} catch (error) {
+			dispatch(removeWorkspace(tempId))
 			console.error('Failed to create workspace:', error)
 		}
 	}

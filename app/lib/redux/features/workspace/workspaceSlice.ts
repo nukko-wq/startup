@@ -26,6 +26,20 @@ export const workspaceSlice = createSlice({
 		addWorkspace: (state, action: PayloadAction<Workspace>) => {
 			state.workspaces.push(action.payload)
 		},
+		removeWorkspace: (state, action: PayloadAction<string>) => {
+			state.workspaces = state.workspaces.filter((w) => w.id !== action.payload)
+		},
+		replaceWorkspace: (
+			state,
+			action: PayloadAction<{ tempId: string; workspace: Workspace }>,
+		) => {
+			const index = state.workspaces.findIndex(
+				(w) => w.id === action.payload.tempId,
+			)
+			if (index !== -1) {
+				state.workspaces[index] = action.payload.workspace
+			}
+		},
 	},
 	extraReducers: (builder) => {
 		builder
@@ -40,13 +54,6 @@ export const workspaceSlice = createSlice({
 				state.loading = false
 				state.error = action.error.message || null
 			})
-			.addCase(createWorkspace.pending, (state) => {
-				state.loading = true
-			})
-			.addCase(createWorkspace.fulfilled, (state, action) => {
-				state.loading = false
-				state.workspaces.push(action.payload)
-			})
 			.addCase(createWorkspace.rejected, (state, action) => {
 				state.loading = false
 				state.error = action.error.message || null
@@ -54,6 +61,11 @@ export const workspaceSlice = createSlice({
 	},
 })
 
-export const { setWorkspaces, setActiveWorkspace, addWorkspace } =
-	workspaceSlice.actions
+export const {
+	setWorkspaces,
+	setActiveWorkspace,
+	addWorkspace,
+	removeWorkspace,
+	replaceWorkspace,
+} = workspaceSlice.actions
 export default workspaceSlice.reducer
