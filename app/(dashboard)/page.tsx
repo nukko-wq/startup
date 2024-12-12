@@ -8,12 +8,8 @@ import { redirect } from 'next/navigation'
 export default async function Home() {
 	const user = await getCurrentUser()
 
-	if (!user) {
-		return redirect('/login')
-	}
-
 	const initialWorkspace = await prisma.workspace.findMany({
-		where: { userId: user.id },
+		where: { userId: user?.id },
 		orderBy: { order: 'asc' },
 		include: {
 			spaces: {
