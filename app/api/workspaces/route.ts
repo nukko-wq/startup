@@ -1,7 +1,7 @@
 // GET: Workspace取得
 
 import { NextResponse } from 'next/server'
-import { prisma } from '@/lib/prisma'
+import { db } from '@/lib/db'
 import { getCurrentUser } from '@/lib/session'
 
 export async function GET() {
@@ -10,7 +10,7 @@ export async function GET() {
 		if (!user) {
 			return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 		}
-		const workspaces = await prisma.workspace.findMany({
+		const workspaces = await db.workspace.findMany({
 			where: {
 				userId: user.id,
 			},
