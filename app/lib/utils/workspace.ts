@@ -1,7 +1,7 @@
-import type { Workspace } from '@prisma/client'
-import type { Workspace as WorkspaceState } from '@/app/lib/redux/features/workspace/types/workspace'
+import type { Workspace as PrismaWorkspace } from '@prisma/client'
+import type { Workspace as ReduxWorkspace } from '@/app/lib/redux/features/workspace/types/workspace'
 
-export function serializeWorkspace(workspace: Workspace): WorkspaceState {
+export function serializeWorkspace(workspace: PrismaWorkspace): ReduxWorkspace {
 	return {
 		id: workspace.id,
 		name: workspace.name,

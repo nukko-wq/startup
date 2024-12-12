@@ -3,13 +3,14 @@
 import { useEffect } from 'react'
 import { useDispatch } from 'react-redux'
 import { setWorkspaces } from '@/app/lib/redux/features/workspace/workspaceSlice'
-import type { Workspace } from '@prisma/client'
+import type { Workspace as ReduxWorkspace } from '@/app/lib/redux/features/workspace/types/workspace'
+import type { Workspace as PrismaWorkspace } from '@prisma/client'
 import { serializeWorkspace } from '@/app/lib/utils/workspace'
 
 export function WorkspaceInitializer({
 	initialWorkspaces,
 }: {
-	initialWorkspaces: Workspace[]
+	initialWorkspaces: PrismaWorkspace[]
 }) {
 	const dispatch = useDispatch()
 

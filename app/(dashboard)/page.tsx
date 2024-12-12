@@ -4,28 +4,37 @@ import { db } from '@/lib/db'
 import { getCurrentUser } from '@/lib/session'
 import { WorkspaceInitializer } from '@/app/(dashboard)/WorkspaceInitializer'
 import { redirect } from 'next/navigation'
+import type { Workspace as PrismaWorkspace } from '@prisma/client'
 
 export default async function Home() {
 	try {
 		const user = await getCurrentUser()
 
 		if (!user) {
+			console.log('No user found, redirecting to login')
 			return redirect('/login')
 		}
 
-		const initialWorkspace = await db.$transaction(async (prisma) => {
-			return await prisma.workspace.findMany({
-				where: { userId: user.id },
-				orderBy: { order: 'asc' },
-				include: {
-					spaces: {
-						orderBy: { order: 'asc' },
+		let initialWorkspace: PrismaWorkspace[] = []
+		try {
+			initialWorkspace = await db.$transaction(async (prisma) => {
+				const workspaces = await prisma.workspace.findMany({
+					where: { userId: user.id },
+					orderBy: { order: 'asc' },
+					include: {
+						spaces: {
+							orderBy: { order: 'asc' },
+						},
 					},
-				},
+				})
+				return workspaces || []
 			})
-		})
 
-		console.log('Initial workspaces:', initialWorkspace)
+			console.log('Initial workspaces:', initialWorkspace)
+		} catch (dbError) {
+			console.error('Database error:', dbError)
+			initialWorkspace = []
+		}
 
 		return (
 			<ReduxProvider>
@@ -46,7 +55,10 @@ export default async function Home() {
 			</ReduxProvider>
 		)
 	} catch (error) {
-		console.error('Error in Home page:', error)
+		console.error(
+			'Error in Home page:',
+			error instanceof Error ? error.message : error,
+		)
 		return redirect('/login')
 	}
 }
