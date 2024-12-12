@@ -1,12 +1,12 @@
 import NextAuth from 'next-auth'
 import Google from 'next-auth/providers/google'
 import { PrismaAdapter } from '@auth/prisma-adapter'
-import { db } from '@/lib/db'
+import { prisma } from '@/lib/prisma'
 
 const allowedEmails = process.env.ALLOWED_EMAILS?.split(',') ?? []
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
-	adapter: PrismaAdapter(db),
+	adapter: PrismaAdapter(prisma),
 	providers: [
 		Google({
 			clientId: process.env.AUTH_GOOGLE_ID ?? '',
@@ -48,13 +48,13 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
 					return false
 				}
 
-				const existingUser = await db.user.findUnique({
+				const existingUser = await prisma.user.findUnique({
 					where: { email: user.email },
 					include: { accounts: true },
 				})
 
 				if (existingUser) {
-					await db.account.update({
+					await prisma.account.update({
 						where: {
 							provider_providerAccountId: {
 								provider: 'google',
@@ -71,7 +71,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
 						},
 					})
 				} else {
-					await db.user.create({
+					await prisma.user.create({
 						data: {
 							email: user.email,
 							name: user.name,
