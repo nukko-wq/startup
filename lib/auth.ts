@@ -33,10 +33,63 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
 		error: '/error',
 	},
 	callbacks: {
-		async signIn({ user, account }) {
+		async signIn({ user, account, profile }) {
+			console.log('Sign in callback: ', user)
+			console.log('Allowed emails:', allowedEmails)
+			console.log('User email:', user.email)
+
+			if (!allowedEmails.includes(user.email ?? '')) {
+				console.log('Email not allowed')
+				return false
+			}
 			try {
-				if (!allowedEmails.includes(user.email ?? '')) {
+				if (!account || !user.email) {
+					console.error('Invalid account or user email')
 					return false
+				}
+
+				const existingUser = await db.user.findUnique({
+					where: { email: user.email },
+					include: { accounts: true },
+				})
+
+				if (existingUser) {
+					await db.account.update({
+						where: {
+							provider_providerAccountId: {
+								provider: 'google',
+								providerAccountId: account.providerAccountId,
+							},
+						},
+						data: {
+							access_token: account.access_token,
+							refresh_token: account.refresh_token,
+							expires_at: account.expires_at,
+							scope: account.scope,
+							token_type: account.token_type,
+							id_token: account.id_token,
+						},
+					})
+				} else {
+					await db.user.create({
+						data: {
+							email: user.email,
+							name: user.name,
+							accounts: {
+								create: {
+									type: account.type ?? 'oauth',
+									provider: 'google',
+									providerAccountId: account.providerAccountId,
+									access_token: account.access_token,
+									token_type: account.token_type,
+									refresh_token: account.refresh_token,
+									expires_at: account.expires_at,
+									scope: account.scope,
+									id_token: account.id_token,
+								},
+							},
+						},
+					})
 				}
 				return true
 			} catch (error) {
@@ -46,22 +99,35 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
 		},
 		async session({ session, token }) {
 			if (session.user) {
-				session.user.id = token.sub as string
+				session.user.id = token.id as string
 				session.accessToken = token.accessToken as string
+				session.refreshToken = token.refreshToken as string
+				session.expiresAt = token.expiresAt as number
 			}
 			return session
 		},
-		async jwt({ token, account }) {
-			if (account) {
+		async jwt({ token, account, user }) {
+			if (account && user && user.id) {
+				token.id = user.id
 				token.accessToken = account.access_token
+				token.refreshToken = account.refresh_token
+				token.expires_at = account.expires_at
 			}
 			return token
 		},
-		async redirect({ url, baseUrl }) {
-			if (url.startsWith('/')) return `${baseUrl}${url}`
-			if (new URL(url).origin === baseUrl) return url
-			return baseUrl
+		async authorized({ auth, request: { nextUrl } }) {
+			const isLoggedIn = !!auth?.user
+			const isOnLoginPage = nextUrl.pathname === '/login'
+
+			if (isLoggedIn && isOnLoginPage) {
+				return Response.redirect(new URL('/', nextUrl))
+			}
+
+			if (!isLoggedIn && !isOnLoginPage) {
+				return false
+			}
+
+			return true
 		},
 	},
-	debug: process.env.NODE_ENV === 'development',
 })
