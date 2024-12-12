@@ -33,8 +33,16 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
 		error: '/error',
 	},
 	callbacks: {
-		async signIn({ user }) {
-			return allowedEmails.includes(user.email ?? '')
+		async signIn({ user, account }) {
+			try {
+				if (!allowedEmails.includes(user.email ?? '')) {
+					return false
+				}
+				return true
+			} catch (error) {
+				console.error('Error in signIn callback:', error)
+				return false
+			}
 		},
 		async session({ session, token }) {
 			if (session.user) {
@@ -49,5 +57,11 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
 			}
 			return token
 		},
+		async redirect({ url, baseUrl }) {
+			if (url.startsWith('/')) return `${baseUrl}${url}`
+			if (new URL(url).origin === baseUrl) return url
+			return baseUrl
+		},
 	},
+	debug: process.env.NODE_ENV === 'development',
 })
