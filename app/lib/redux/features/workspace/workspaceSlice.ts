@@ -3,8 +3,11 @@ import type {
 	WorkspaceState,
 	Workspace,
 } from '@/app/lib/redux/features/workspace/types/workspace'
-import { fetchWorkspaces } from '@/app/lib/redux/features/workspace/workSpaceAPI'
-import { createWorkspace } from '@/app/lib/redux/features/workspace/workSpaceAPI'
+import {
+	fetchWorkspaces,
+	createWorkspace,
+	deleteWorkspace,
+} from '@/app/lib/redux/features/workspace/workSpaceAPI'
 
 const initialState: WorkspaceState = {
 	workspaces: [],
@@ -55,6 +58,16 @@ export const workspaceSlice = createSlice({
 				state.error = action.error.message || null
 			})
 			.addCase(createWorkspace.rejected, (state, action) => {
+				state.loading = false
+				state.error = action.error.message || null
+			})
+			.addCase(deleteWorkspace.fulfilled, (state, action) => {
+				state.workspaces = state.workspaces.filter(
+					(workspace) => workspace.id !== action.payload,
+				)
+				state.loading = false
+			})
+			.addCase(deleteWorkspace.rejected, (state, action) => {
 				state.loading = false
 				state.error = action.error.message || null
 			})

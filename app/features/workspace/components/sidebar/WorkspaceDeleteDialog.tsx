@@ -8,18 +8,35 @@ import {
 	ModalOverlay,
 } from 'react-aria-components'
 import { useState } from 'react'
+import { useAppDispatch } from '@/app/lib/redux/hooks'
+import { deleteWorkspace } from '@/app/lib/redux/features/workspace/workSpaceAPI'
+import type { Workspace } from '@/app/lib/redux/features/workspace/types/workspace'
 
 interface WorkspaceDeleteDialogProps {
+	workspace: Workspace
 	isOpen: boolean
 	onOpenChange: (open: boolean) => void
 }
 
 const WorkspaceDeleteDialog = ({
+	workspace,
 	isOpen,
 	onOpenChange,
 }: WorkspaceDeleteDialogProps) => {
+	const dispatch = useAppDispatch()
 	const [isDeleting, setIsDeleting] = useState(false)
 
+	const handleDelete = async () => {
+		try {
+			setIsDeleting(true)
+			await dispatch(deleteWorkspace(workspace.id)).unwrap()
+			onOpenChange(false)
+		} catch (error) {
+			console.error('Failed to delete workspace:', error)
+		} finally {
+			setIsDeleting(false)
+		}
+	}
 
 	return (
 		<DialogTrigger isOpen={isOpen} onOpenChange={onOpenChange}>
@@ -36,7 +53,8 @@ const WorkspaceDeleteDialog = ({
 									<AlertTriangle className="w-6 h-6" />
 								</div>
 								<p className="mt-3 text-slate-500">
-									このワークスペースを削除してもよろしいですか？この操作は取り消せません。
+									「{workspace.name}
+									」を削除してもよろしいですか？この操作は取り消せません。
 								</p>
 								<div className="mt-6 flex justify-end gap-2">
 									<Button
@@ -47,7 +65,7 @@ const WorkspaceDeleteDialog = ({
 										キャンセル
 									</Button>
 									<Button
-										onPress={}
+										onPress={handleDelete}
 										className="px-4 py-2 bg-red-500 text-white rounded-md hover:bg-red-600 outline-none flex items-center gap-2"
 										isDisabled={isDeleting}
 									>

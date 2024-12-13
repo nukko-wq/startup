@@ -8,7 +8,9 @@ import {
 } from 'react-aria-components'
 import { useState } from 'react'
 import WorkspaceDeleteDialog from '@/app/features/workspace/components/sidebar/WorkspaceDeleteDialog'
-const WorkspaceRightMenu = () => {
+import type { Workspace } from '@/app/lib/redux/features/workspace/types/workspace'
+
+const WorkspaceRightMenu = ({ workspace }: { workspace: Workspace }) => {
 	const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false)
 
 	return (
@@ -33,6 +35,7 @@ const WorkspaceRightMenu = () => {
 			</MenuTrigger>
 
 			<WorkspaceDeleteDialog
+				workspace={workspace}
 				isOpen={isDeleteDialogOpen}
 				onOpenChange={setIsDeleteDialogOpen}
 			/>
