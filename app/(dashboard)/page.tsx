@@ -4,7 +4,14 @@ import { prisma } from '@/lib/prisma'
 import { getCurrentUser } from '@/lib/session'
 import { WorkspaceInitializer } from '@/app/(dashboard)/WorkspaceInitializer'
 import { redirect } from 'next/navigation'
-import type { Workspace as PrismaWorkspace } from '@prisma/client'
+import type {
+	Workspace as PrismaWorkspace,
+	Space as PrismaSpace,
+} from '@prisma/client'
+
+interface WorkspaceWithSpaces extends PrismaWorkspace {
+	spaces: PrismaSpace[]
+}
 
 export const dynamic = 'force-dynamic'
 
@@ -17,7 +24,7 @@ export default async function Home() {
 			return redirect('/login')
 		}
 
-		let initialWorkspace: PrismaWorkspace[] = []
+		let initialWorkspace: WorkspaceWithSpaces[] = []
 		try {
 			const defaultWorkspace = await prisma.workspace.findFirst({
 				where: {
