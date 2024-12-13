@@ -32,3 +32,18 @@ export const createWorkspace = createAsyncThunk(
 		return data
 	},
 )
+
+export const deleteWorkspace = createAsyncThunk(
+	'workspace/deleteWorkspace',
+	async (workspaceId: string) => {
+		const response = await fetch(`/api/workspaces/${workspaceId}`, {
+			method: 'DELETE',
+		})
+
+		if (!response.ok) {
+			throw new Error('Failed to delete workspace')
+		}
+
+		return workspaceId
+	},
+)

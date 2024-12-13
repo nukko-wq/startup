@@ -79,11 +79,11 @@ const WorkspaceCreateForm = ({ onClose }: WorkspaceCreateFormProps) => {
 				)}
 			/>
 
-			<div className="flex justify-end gap-2">
+			<div className="flex justify-end gap-2 text-sm">
 				<Button
 					onPress={onClose}
 					type="button"
-					className="px-4 py-2 bg-gray-200 rounded hover:bg-gray-300 outline-none"
+					className="px-4 py-2 bg-gray-200 rounded hover:bg-gray-300 outline-none text-gray-700"
 				>
 					キャンセル
 				</Button>
