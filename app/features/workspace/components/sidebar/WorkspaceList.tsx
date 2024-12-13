@@ -10,6 +10,7 @@ import { Button } from 'react-aria-components'
 import WorkspaceLeftMenu from '@/app/features/workspace/components/sidebar/WorkspaceLeftMenu'
 import DefaultWorkspaceRightMenu from '@/app/features/workspace/components/sidebar/DefaultWorkspaceRightMenu'
 import WorkspaceRightMenu from '@/app/features/workspace/components/sidebar/WorkspaceRightMenu'
+import SpaceList from '@/app/features/space/components/sidebar/SpaceList'
 
 const WorkspaceList = () => {
 	const defaultWorkspace = useSelector(selectDefaultWorkspace)
@@ -32,7 +33,7 @@ const WorkspaceList = () => {
 						</div>
 					</div>
 				</div>
-				{/* <SpaceList workspaceId={defaultWorkspace?.id} /> */}
+				{defaultWorkspace && <SpaceList workspaceId={defaultWorkspace.id} />}
 			</div>
 
 			{/* 通常のワークスペース */}
@@ -59,7 +60,7 @@ const WorkspaceList = () => {
 										</div>
 									</div>
 								</div>
-								{/* <SpaceList workspaceId={workspace.id} /> */}
+								<SpaceList workspaceId={workspace.id} />
 							</div>
 						</div>
 					</div>

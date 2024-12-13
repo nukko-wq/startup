@@ -1,14 +1,24 @@
 import { GripVertical } from 'lucide-react'
 import React from 'react'
 import { Button } from 'react-aria-components'
+import { useSelector } from 'react-redux'
+import { selectSpacesByWorkspaceId } from '@/app/lib/redux/features/space/selector'
 
-const SpaceList = () => {
+interface SpaceListProps {
+	workspaceId: string
+}
+
+const SpaceList = ({ workspaceId }: SpaceListProps) => {
+	const spaces = useSelector((state) =>
+		selectSpacesByWorkspaceId(state, workspaceId),
+	)
+
 	return (
 		<div className="flex flex-col min-h-[40px]">
-			{workspaceSpaces.spaces.length === 0 ? (
+			{spaces.length === 0 ? (
 				<div className="ml-11 mr-4">Create a space</div>
 			) : (
-				workspaceSpaces.spaces.map((space) => (
+				spaces.map((space) => (
 					<div
 						key={space.id}
 						className={`

@@ -4,6 +4,7 @@ export interface Space {
 	order: number
 	workspaceId: string
 	isLastActive: boolean
+	isDefault: boolean
 }
 
 export interface SpaceState {
