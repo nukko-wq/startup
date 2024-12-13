@@ -10,7 +10,9 @@ import {
 import { useState } from 'react'
 import { useAppDispatch } from '@/app/lib/redux/hooks'
 import { deleteWorkspace } from '@/app/lib/redux/features/workspace/workSpaceAPI'
+import { removeWorkspace } from '@/app/lib/redux/features/workspace/workspaceSlice'
 import type { Workspace } from '@/app/lib/redux/features/workspace/types/workspace'
+import { addWorkspace } from '@/app/lib/redux/features/workspace/workspaceSlice'
 
 interface WorkspaceDeleteDialogProps {
 	workspace: Workspace
@@ -29,10 +31,12 @@ const WorkspaceDeleteDialog = ({
 	const handleDelete = async () => {
 		try {
 			setIsDeleting(true)
-			await dispatch(deleteWorkspace(workspace.id)).unwrap()
+			dispatch(removeWorkspace(workspace.id))
 			onOpenChange(false)
+			await dispatch(deleteWorkspace(workspace.id)).unwrap()
 		} catch (error) {
 			console.error('Failed to delete workspace:', error)
+			dispatch(addWorkspace(workspace))
 		} finally {
 			setIsDeleting(false)
 		}
