@@ -7,6 +7,7 @@ import {
 	fetchWorkspaces,
 	createWorkspace,
 	deleteWorkspace,
+	updateWorkspace,
 } from '@/app/lib/redux/features/workspace/workSpaceAPI'
 
 const initialState: WorkspaceState = {
@@ -43,6 +44,15 @@ export const workspaceSlice = createSlice({
 				state.workspaces[index] = action.payload.workspace
 			}
 		},
+		updateWorkspaceName: (
+			state,
+			action: PayloadAction<{ id: string; name: string }>,
+		) => {
+			const workspace = state.workspaces.find((w) => w.id === action.payload.id)
+			if (workspace) {
+				workspace.name = action.payload.name
+			}
+		},
 	},
 	extraReducers: (builder) => {
 		builder
@@ -71,6 +81,19 @@ export const workspaceSlice = createSlice({
 				state.loading = false
 				state.error = action.error.message || null
 			})
+			.addCase(updateWorkspace.fulfilled, (state, action) => {
+				const index = state.workspaces.findIndex(
+					(w) => w.id === action.payload.id,
+				)
+				if (index !== -1) {
+					state.workspaces[index] = action.payload
+				}
+				state.loading = false
+			})
+			.addCase(updateWorkspace.rejected, (state, action) => {
+				state.loading = false
+				state.error = action.error.message || null
+			})
 	},
 })
 
@@ -80,5 +103,6 @@ export const {
 	addWorkspace,
 	removeWorkspace,
 	replaceWorkspace,
+	updateWorkspaceName,
 } = workspaceSlice.actions
 export default workspaceSlice.reducer

@@ -47,3 +47,23 @@ export const deleteWorkspace = createAsyncThunk(
 		return workspaceId
 	},
 )
+
+export const updateWorkspace = createAsyncThunk(
+	'workspace/updateWorkspace',
+	async ({ id, name }: { id: string; name: string }) => {
+		const response = await fetch(`/api/workspaces/${id}`, {
+			method: 'PATCH',
+			headers: {
+				'Content-Type': 'application/json',
+			},
+			body: JSON.stringify({ name }),
+		})
+
+		if (!response.ok) {
+			throw new Error('Failed to update workspace')
+		}
+
+		const data: Workspace = await response.json()
+		return data
+	},
+)
