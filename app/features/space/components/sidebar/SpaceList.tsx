@@ -1,7 +1,7 @@
 import { GripVertical } from 'lucide-react'
 import React from 'react'
 import { Button } from 'react-aria-components'
-import { useSelector } from 'react-redux'
+import { useAppSelector } from '@/app/lib/redux/hooks'
 import { selectSpacesByWorkspaceId } from '@/app/lib/redux/features/space/selector'
 
 interface SpaceListProps {
@@ -9,7 +9,7 @@ interface SpaceListProps {
 }
 
 const SpaceList = ({ workspaceId }: SpaceListProps) => {
-	const spaces = useSelector((state) =>
+	const spaces = useAppSelector((state) =>
 		selectSpacesByWorkspaceId(state, workspaceId),
 	)
 
