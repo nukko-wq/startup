@@ -12,4 +12,5 @@ export interface SpaceState {
 	activeSpaceId: string | null
 	loading: boolean
 	error: string | null
+	optimisticSpaces: Space[]
 }

@@ -3,6 +3,8 @@ import { Button, Form, Input, Label, TextField } from 'react-aria-components'
 import { Controller, useForm } from 'react-hook-form'
 import { useAppDispatch } from '@/app/lib/redux/hooks'
 import { createSpace } from '@/app/lib/redux/features/space/spaceAPI'
+import { addOptimisticSpace } from '@/app/lib/redux/features/space/spaceSlice'
+import { v4 as uuidv4 } from 'uuid'
 
 interface SpaceCreateFormProps {
 	workspaceId: string
@@ -30,12 +32,25 @@ const SpaceCreateForm = ({ workspaceId, onClose }: SpaceCreateFormProps) => {
 	const onSubmit = async (data: FormInputs) => {
 		try {
 			setIsSubmitting(true)
+
+			const optimisticSpace = {
+				id: uuidv4(),
+				name: data.name,
+				workspaceId,
+				order: 0,
+				isLastActive: false,
+				isDefault: false,
+			}
+
+			dispatch(addOptimisticSpace(optimisticSpace))
+
 			await dispatch(
 				createSpace({
 					name: data.name,
 					workspaceId,
 				}),
 			).unwrap()
+
 			onClose()
 		} catch (error) {
 			console.error('スペースの作成に失敗しました:', error)
