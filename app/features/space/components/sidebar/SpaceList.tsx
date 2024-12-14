@@ -34,7 +34,7 @@ const SpaceList = ({ workspaceId }: SpaceListProps) => {
 										className="cursor-grab flex items-center pr-3"
 										aria-label="drag handle"
 									>
-										<GripVertical className="w-4 h-4 text-zinc-500" />
+										<GripVertical className="w-4 h-4 text-slate-500" />
 									</Button>
 								</div>
 								<div className="text-left text-sm">{space.name}</div>

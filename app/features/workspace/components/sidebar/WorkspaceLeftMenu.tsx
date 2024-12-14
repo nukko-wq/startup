@@ -11,8 +11,8 @@ import {
 	ModalOverlay,
 	Popover,
 } from 'react-aria-components'
-
-const WorkspaceLeftMenu = () => {
+import SpaceCreateForm from '@/app/features/space/components/sidebar/SpaceCreateForm'
+const WorkspaceLeftMenu = ({ workspaceId }: { workspaceId: string }) => {
 	const [isOpen, setIsOpen] = useState(false)
 	return (
 		<>
@@ -21,10 +21,10 @@ const WorkspaceLeftMenu = () => {
 					className="outline-none p-1 mr-2 group-hover:bg-gray-700 transition duration-200 rounded-full opacity-0 group-hover:opacity-100"
 					aria-label="Menu"
 				>
-					<Plus className="w-5 h-5 text-zinc-50" />
+					<Plus className="w-5 h-5 text-slate-50" />
 				</Button>
 				<Popover>
-					<Menu className="bg-zinc-50 outline-none border rounded-sm shadow-md min-w-[160px]">
+					<Menu className="bg-slate-50 outline-none border rounded-sm shadow-md min-w-[160px]">
 						<MenuItem
 							className="pl-4 pr-4 py-2 outline-none hover:cursor-pointer"
 							onAction={() => setIsOpen(true)}
@@ -49,6 +49,7 @@ const WorkspaceLeftMenu = () => {
 									<h2 className="text-lg font-semibold mb-4">
 										新しいスペースを作成
 									</h2>
+									<SpaceCreateForm onClose={close} workspaceId={workspaceId} />
 								</div>
 							)}
 						</Dialog>

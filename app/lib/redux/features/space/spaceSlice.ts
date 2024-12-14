@@ -3,12 +3,14 @@ import type {
 	SpaceState,
 	Space,
 } from '@/app/lib/redux/features/space/types/space'
+import { createSpace } from '@/app/lib/redux/features/space/spaceAPI'
 
 const initialState: SpaceState = {
 	spaces: [],
 	activeSpaceId: null,
 	loading: false,
 	error: null,
+	optimisticSpaces: [],
 }
 
 export const spaceSlice = createSlice({
@@ -36,6 +38,40 @@ export const spaceSlice = createSlice({
 				space.name = action.payload.name
 			}
 		},
+		addOptimisticSpace: (state, action: PayloadAction<Space>) => {
+			state.optimisticSpaces.push(action.payload)
+			state.spaces.push(action.payload)
+		},
+		removeOptimisticSpace: (state, action: PayloadAction<string>) => {
+			state.optimisticSpaces = state.optimisticSpaces.filter(
+				(space) => space.id !== action.payload,
+			)
+			state.spaces = state.spaces.filter((space) => space.id !== action.payload)
+		},
+	},
+	extraReducers: (builder) => {
+		builder
+			.addCase(createSpace.pending, (state) => {
+				state.loading = true
+				state.error = null
+			})
+			.addCase(createSpace.fulfilled, (state, action) => {
+				state.loading = false
+				state.spaces = state.spaces.map((space) =>
+					space.id === state.optimisticSpaces[0]?.id ? action.payload : space,
+				)
+				state.optimisticSpaces = []
+			})
+			.addCase(createSpace.rejected, (state, action) => {
+				state.loading = false
+				state.error = action.error.message || 'エラーが発生しました'
+				if (state.optimisticSpaces.length > 0) {
+					state.spaces = state.spaces.filter(
+						(space) => space.id !== state.optimisticSpaces[0]?.id,
+					)
+					state.optimisticSpaces = []
+				}
+			})
 	},
 })
 
@@ -45,6 +81,8 @@ export const {
 	addSpace,
 	removeSpace,
 	updateSpaceName,
+	addOptimisticSpace,
+	removeOptimisticSpace,
 } = spaceSlice.actions
 
 export default spaceSlice.reducer
