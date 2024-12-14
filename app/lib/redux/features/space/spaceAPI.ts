@@ -35,3 +35,23 @@ export const deleteSpace = createAsyncThunk(
 		return spaceId
 	},
 )
+
+export const updateSpace = createAsyncThunk(
+	'space/updateSpace',
+	async ({ id, name }: { id: string; name: string }) => {
+		const response = await fetch(`/api/spaces/${id}`, {
+			method: 'PATCH',
+			headers: {
+				'Content-Type': 'application/json',
+			},
+			body: JSON.stringify({ name }),
+		})
+
+		if (!response.ok) {
+			throw new Error('スペースの更新に失敗しました')
+		}
+
+		const data: Space = await response.json()
+		return data
+	},
+)

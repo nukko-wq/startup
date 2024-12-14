@@ -105,7 +105,6 @@ model Workspace {
   @@index([userId, order])
   @@index([userId, isDefault])
   @@index([order])
-  @@unique([userId, name])
 }
 
 model Space {

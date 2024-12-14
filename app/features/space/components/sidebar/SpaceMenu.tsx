@@ -8,9 +8,11 @@ import {
 } from 'react-aria-components'
 import SpaceDeleteDialog from '@/app/features/space/components/sidebar/SpaceDeleteDialog'
 import { useState } from 'react'
+import SpaceRenameDialog from '@/app/features/space/components/sidebar/SpaceRenameDialog'
 
 const SpaceMenu = ({ spaceId }: { spaceId: string }) => {
 	const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false)
+	const [isRenameDialogOpen, setIsRenameDialogOpen] = useState(false)
 
 	return (
 		<>
@@ -24,6 +26,15 @@ const SpaceMenu = ({ spaceId }: { spaceId: string }) => {
 				<Popover>
 					<Menu className="bg-zinc-50 outline-none border rounded-lg shadow-md min-w-[160px] text-sm">
 						<MenuItem
+							onAction={() => setIsRenameDialogOpen(true)}
+							className="pl-3 pr-4 py-2 outline-none hover:bg-zinc-100 hover:cursor-pointer rounded-t-lg"
+						>
+							<div className="flex items-center gap-2">
+								<Pencil className="w-4 h-4" />
+								Rename
+							</div>
+						</MenuItem>
+						<MenuItem
 							onAction={() => setIsDeleteDialogOpen(true)}
 							className="pl-3 pr-4 py-2 outline-none hover:bg-zinc-100 text-red-600 hover:cursor-pointer rounded-b-lg"
 						>
@@ -35,6 +46,12 @@ const SpaceMenu = ({ spaceId }: { spaceId: string }) => {
 					</Menu>
 				</Popover>
 			</MenuTrigger>
+
+			<SpaceRenameDialog
+				spaceId={spaceId}
+				isOpen={isRenameDialogOpen}
+				onOpenChange={setIsRenameDialogOpen}
+			/>
 
 			<SpaceDeleteDialog
 				spaceId={spaceId}

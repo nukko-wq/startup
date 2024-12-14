@@ -1,4 +1,5 @@
 // DELETE /api/spaces/[spaceId]
+// PATCH スペースのリネーム
 
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
@@ -63,6 +64,49 @@ export async function DELETE(
 		return NextResponse.json(result)
 	} catch (error) {
 		console.error('スペース削除エラー:', error)
+		return new NextResponse('内部サーバーエラー', { status: 500 })
+	}
+}
+
+export async function PATCH(
+	req: Request,
+	{ params }: { params: Promise<{ spaceId: string }> },
+) {
+	try {
+		const user = await getCurrentUser()
+		if (!user) {
+			return new NextResponse('Unauthorized', { status: 401 })
+		}
+
+		const resolvedParams = await params
+		const { spaceId } = resolvedParams
+		const { name } = await req.json()
+
+		const space = await prisma.space.findUnique({
+			where: { id: spaceId },
+			include: {
+				workspace: {
+					select: { userId: true },
+				},
+			},
+		})
+
+		if (!space) {
+			return new NextResponse('スペースが見つかりません', { status: 404 })
+		}
+
+		if (space.workspace.userId !== user.id) {
+			return new NextResponse('権限がありません', { status: 403 })
+		}
+
+		const updatedSpace = await prisma.space.update({
+			where: { id: spaceId },
+			data: { name },
+		})
+
+		return NextResponse.json(updatedSpace)
+	} catch (error) {
+		console.error('スペース更新エラー:', error)
 		return new NextResponse('内部サーバーエラー', { status: 500 })
 	}
 }
