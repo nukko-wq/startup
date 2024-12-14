@@ -11,6 +11,7 @@ import {
 const initialState: SpaceState = {
 	spaces: [],
 	activeSpaceId: null,
+	status: 'idle',
 	loading: false,
 	error: null,
 	optimisticSpaces: [],
