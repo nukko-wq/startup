@@ -43,6 +43,7 @@ const SpaceCreateForm = ({ workspaceId, onClose }: SpaceCreateFormProps) => {
 			}
 
 			dispatch(addOptimisticSpace(optimisticSpace))
+			onClose()
 
 			await dispatch(
 				createSpace({
@@ -50,8 +51,6 @@ const SpaceCreateForm = ({ workspaceId, onClose }: SpaceCreateFormProps) => {
 					workspaceId,
 				}),
 			).unwrap()
-
-			onClose()
 		} catch (error) {
 			console.error('スペースの作成に失敗しました:', error)
 		} finally {
