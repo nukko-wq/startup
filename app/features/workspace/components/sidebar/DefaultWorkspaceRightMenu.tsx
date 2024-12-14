@@ -12,8 +12,13 @@ import {
 	Popover,
 } from 'react-aria-components'
 import WorkspaceCreateForm from '@/app/features/workspace/components/sidebar/WorkspaceCreateForm'
+import SpaceCreateForm from '@/app/features/space/components/sidebar/SpaceCreateForm'
 
-const DefaultWorkspaceRightMenu = () => {
+const DefaultWorkspaceRightMenu = ({
+	workspaceId,
+}: {
+	workspaceId?: string
+}) => {
 	const [isWorkspaceOpen, setIsWorkspaceOpen] = useState(false)
 	const [isSpaceOpen, setIsSpaceOpen] = useState(false)
 
@@ -22,6 +27,7 @@ const DefaultWorkspaceRightMenu = () => {
 	}
 
 	const handleNewSpace = () => {
+		if (!workspaceId) return
 		setIsSpaceOpen(true)
 	}
 
@@ -73,20 +79,26 @@ const DefaultWorkspaceRightMenu = () => {
 				</ModalOverlay>
 			</DialogTrigger>
 
-			<DialogTrigger isOpen={isSpaceOpen} onOpenChange={setIsSpaceOpen}>
-				<Button className="hidden">Open Dialog</Button>
-				<ModalOverlay className="fixed inset-0 bg-black/25 flex min-h-full items-center justify-center p-4 text-center backdrop-blur">
-					<Modal className="w-full max-w-md overflow-hidden rounded-2xl bg-white p-6 text-left align-middle shadow-xl">
-						<Dialog className="outline-none">
-							<div>
-								<h2 className="text-lg font-semibold mb-4">
-									新しいスペースを作成
-								</h2>
-							</div>
-						</Dialog>
-					</Modal>
-				</ModalOverlay>
-			</DialogTrigger>
+			{workspaceId && (
+				<DialogTrigger isOpen={isSpaceOpen} onOpenChange={setIsSpaceOpen}>
+					<Button className="hidden">Open Dialog</Button>
+					<ModalOverlay className="fixed inset-0 bg-black/25 flex min-h-full items-center justify-center p-4 text-center backdrop-blur">
+						<Modal className="w-full max-w-md overflow-hidden rounded-2xl bg-white p-6 text-left align-middle shadow-xl">
+							<Dialog className="outline-none">
+								<div>
+									<h2 className="text-lg font-semibold mb-4">
+										新しいスペースを作成
+									</h2>
+									<SpaceCreateForm
+										workspaceId={workspaceId}
+										onClose={() => setIsSpaceOpen(false)}
+									/>
+								</div>
+							</Dialog>
+						</Modal>
+					</ModalOverlay>
+				</DialogTrigger>
+			)}
 		</>
 	)
 }
