@@ -40,11 +40,32 @@ export async function DELETE(
 			})
 		}
 
-		// ワークスペースを削除
-		await prisma.workspace.delete({
-			where: {
-				id: workspaceId,
-			},
+		// トランザクションで削除と再整列を実行
+		await prisma.$transaction(async (tx) => {
+			// ワークスペースを削除
+			await tx.workspace.delete({
+				where: {
+					id: workspaceId,
+				},
+			})
+
+			// 削除後の全ワークスペースを取得して再整列
+			const remainingWorkspaces = await tx.workspace.findMany({
+				where: {
+					userId: user.id,
+				},
+				orderBy: {
+					order: 'asc',
+				},
+			})
+
+			// orderを更新
+			for (let i = 0; i < remainingWorkspaces.length; i++) {
+				await tx.workspace.update({
+					where: { id: remainingWorkspaces[i].id },
+					data: { order: i },
+				})
+			}
 		})
 
 		return new NextResponse(null, { status: 204 })
