@@ -1,4 +1,5 @@
 import { AlertTriangle } from 'lucide-react'
+import { useState } from 'react'
 import {
 	Button,
 	Dialog,
@@ -7,8 +8,40 @@ import {
 	Modal,
 	ModalOverlay,
 } from 'react-aria-components'
+import { useAppDispatch } from '@/app/lib/redux/hooks'
+import { deleteSpace } from '@/app/lib/redux/features/space/spaceAPI'
+import { addOptimisticDelete } from '@/app/lib/redux/features/space/spaceSlice'
 
-const SpaceDeleteDialog = () => {
+interface SpaceDeleteDialogProps {
+	spaceId: string
+	isOpen: boolean
+	onOpenChange: (isOpen: boolean) => void
+}
+
+const SpaceDeleteDialog = ({
+	spaceId,
+	isOpen,
+	onOpenChange,
+}: SpaceDeleteDialogProps) => {
+	const dispatch = useAppDispatch()
+	const [isDeleting, setIsDeleting] = useState(false)
+
+	const handleDelete = async (close: () => void) => {
+		try {
+			setIsDeleting(true)
+
+			// 楽観的更新
+			dispatch(addOptimisticDelete(spaceId))
+			close()
+
+			await dispatch(deleteSpace(spaceId)).unwrap()
+		} catch (error) {
+			console.error('スペースの削除に失敗しました:', error)
+		} finally {
+			setIsDeleting(false)
+		}
+	}
+
 	return (
 		<DialogTrigger isOpen={isOpen} onOpenChange={onOpenChange}>
 			<Button className="hidden">Open Dialog</Button>

@@ -20,3 +20,18 @@ export const createSpace = createAsyncThunk(
 		return data
 	},
 )
+
+export const deleteSpace = createAsyncThunk(
+	'space/deleteSpace',
+	async (spaceId: string) => {
+		const response = await fetch(`/api/spaces/${spaceId}`, {
+			method: 'DELETE',
+		})
+
+		if (!response.ok) {
+			throw new Error('スペースの削除に失敗しました')
+		}
+
+		return spaceId
+	},
+)

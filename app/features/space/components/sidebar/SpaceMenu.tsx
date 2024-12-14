@@ -7,8 +7,11 @@ import {
 	Popover,
 } from 'react-aria-components'
 import SpaceDeleteDialog from '@/app/features/space/components/sidebar/SpaceDeleteDialog'
+import { useState } from 'react'
 
-const SpaceMenu = () => {
+const SpaceMenu = ({ spaceId }: { spaceId: string }) => {
+	const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false)
+
 	return (
 		<>
 			<MenuTrigger>
@@ -33,7 +36,11 @@ const SpaceMenu = () => {
 				</Popover>
 			</MenuTrigger>
 
-			<SpaceDeleteDialog />
+			<SpaceDeleteDialog
+				spaceId={spaceId}
+				isOpen={isDeleteDialogOpen}
+				onOpenChange={setIsDeleteDialogOpen}
+			/>
 		</>
 	)
 }
