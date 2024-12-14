@@ -30,7 +30,22 @@ export const spaceSlice = createSlice({
 			state.spaces.push(action.payload)
 		},
 		removeSpace: (state, action: PayloadAction<string>) => {
-			state.spaces = state.spaces.filter((space) => space.id !== action.payload)
+			const targetSpace = state.spaces.find(
+				(space) => space.id === action.payload,
+			)
+			if (targetSpace) {
+				state.spaces = state.spaces
+					.map((space) => {
+						if (
+							space.workspaceId === targetSpace.workspaceId &&
+							space.order > targetSpace.order
+						) {
+							return { ...space, order: space.order - 1 }
+						}
+						return space
+					})
+					.filter((space) => space.id !== action.payload)
+			}
 		},
 		updateSpaceName: (
 			state,

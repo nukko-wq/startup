@@ -21,36 +21,46 @@ export async function DELETE(
 			return new NextResponse('スペースIDが必要です', { status: 400 })
 		}
 
-		// スペースの存在確認と所有権の確認
-		const existingSpace = await prisma.space.findUnique({
-			where: {
-				id: spaceId,
-			},
+		// 削除対象のスペースを取得
+		const targetSpace = await prisma.space.findUnique({
+			where: { id: spaceId },
 			include: {
 				workspace: {
-					select: {
-						userId: true,
-					},
+					select: { userId: true },
 				},
 			},
 		})
 
-		if (!existingSpace) {
+		if (!targetSpace) {
 			return new NextResponse('スペースが見つかりません', { status: 404 })
 		}
 
-		if (existingSpace.workspace.userId !== user.id) {
+		if (targetSpace.workspace.userId !== user.id) {
 			return new NextResponse('権限がありません', { status: 403 })
 		}
 
-		// スペースの削除
-		const deletedSpace = await prisma.space.delete({
-			where: {
-				id: spaceId,
-			},
+		// トランザクションで削除とorder更新を実行
+		const result = await prisma.$transaction(async (tx) => {
+			// スペースを削除
+			const deletedSpace = await tx.space.delete({
+				where: { id: spaceId },
+			})
+
+			// 同じワークスペース内の、削除したスペースより大きいorderを持つスペースのorderを-1する
+			await tx.space.updateMany({
+				where: {
+					workspaceId: targetSpace.workspaceId,
+					order: { gt: targetSpace.order },
+				},
+				data: {
+					order: { decrement: 1 },
+				},
+			})
+
+			return deletedSpace
 		})
 
-		return NextResponse.json(deletedSpace)
+		return NextResponse.json(result)
 	} catch (error) {
 		console.error('スペース削除エラー:', error)
 		return new NextResponse('内部サーバーエラー', { status: 500 })
