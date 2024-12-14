@@ -72,9 +72,7 @@ export const workspaceSlice = createSlice({
 				state.error = action.error.message || null
 			})
 			.addCase(deleteWorkspace.fulfilled, (state, action) => {
-				state.workspaces = state.workspaces.filter(
-					(workspace) => workspace.id !== action.payload,
-				)
+				state.workspaces = action.payload.updatedWorkspaces
 				state.loading = false
 			})
 			.addCase(deleteWorkspace.rejected, (state, action) => {
