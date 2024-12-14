@@ -7,10 +7,13 @@ import { redirect } from 'next/navigation'
 import type {
 	Workspace as PrismaWorkspace,
 	Space as PrismaSpace,
+	Section as PrismaSection,
 } from '@prisma/client'
 
-interface WorkspaceWithSpaces extends PrismaWorkspace {
-	spaces: PrismaSpace[]
+interface WorkspaceWithSpacesAndSections extends PrismaWorkspace {
+	spaces: (PrismaSpace & {
+		sections: PrismaSection[]
+	})[]
 }
 
 export const dynamic = 'force-dynamic'
@@ -24,12 +27,26 @@ export default async function Home() {
 			return redirect('/login')
 		}
 
-		let initialWorkspace: WorkspaceWithSpaces[] = []
+		let initialWorkspace: WorkspaceWithSpacesAndSections[] = []
 		try {
+			const activeSpaceIds = await prisma.space
+				.findMany({
+					where: { isLastActive: true },
+					select: { id: true },
+				})
+				.then((spaces) => spaces.map((space) => space.id))
+
 			const defaultWorkspace = await prisma.workspace.findFirst({
 				where: {
 					userId: user.id,
 					isDefault: true,
+				},
+				include: {
+					spaces: {
+						include: {
+							sections: true,
+						},
+					},
 				},
 			})
 
@@ -40,6 +57,16 @@ export default async function Home() {
 						order: 0,
 						isDefault: true,
 						userId: user.id,
+						spaces: {
+							create: [],
+						},
+					},
+					include: {
+						spaces: {
+							include: {
+								sections: true,
+							},
+						},
 					},
 				})
 			}
@@ -50,6 +77,16 @@ export default async function Home() {
 				include: {
 					spaces: {
 						orderBy: { order: 'asc' },
+						include: {
+							sections: {
+								orderBy: { order: 'asc' },
+								where: {
+									spaceId: {
+										in: activeSpaceIds,
+									},
+								},
+							},
+						},
 					},
 				},
 			})

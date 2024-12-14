@@ -7,6 +7,17 @@ import { prisma } from '@/lib/prisma'
 import { getCurrentUser } from '@/lib/session'
 import { redirect } from 'next/navigation'
 import { WorkspaceInitializer } from '@/app/(dashboard)/WorkspaceInitializer'
+import type {
+	Workspace as PrismaWorkspace,
+	Space as PrismaSpace,
+	Section as PrismaSection,
+} from '@prisma/client'
+
+interface WorkspaceWithSpacesAndSections extends PrismaWorkspace {
+	spaces: (PrismaSpace & {
+		sections: PrismaSection[]
+	})[]
+}
 
 export const dynamic = 'force-dynamic'
 
@@ -18,15 +29,21 @@ export default async function SpacePage() {
 		}
 
 		// ワークスペースとスペースのデータを取得
-		const workspaces = await prisma.workspace.findMany({
-			where: { userId: user.id },
-			orderBy: { order: 'asc' },
-			include: {
-				spaces: {
-					orderBy: { order: 'asc' },
+		const workspaces: WorkspaceWithSpacesAndSections[] =
+			await prisma.workspace.findMany({
+				where: { userId: user.id },
+				orderBy: { order: 'asc' },
+				include: {
+					spaces: {
+						orderBy: { order: 'asc' },
+						include: {
+							sections: {
+								orderBy: { order: 'asc' },
+							},
+						},
+					},
 				},
-			},
-		})
+			})
 
 		return (
 			<ReduxProvider>
