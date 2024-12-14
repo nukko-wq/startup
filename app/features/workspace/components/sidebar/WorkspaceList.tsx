@@ -29,7 +29,7 @@ const WorkspaceList = () => {
 								</div>
 								<span className="font-medium text-gray-500">Spaces</span>
 							</div>
-							<DefaultWorkspaceRightMenu />
+							<DefaultWorkspaceRightMenu workspaceId={defaultWorkspace?.id} />
 						</div>
 					</div>
 				</div>
