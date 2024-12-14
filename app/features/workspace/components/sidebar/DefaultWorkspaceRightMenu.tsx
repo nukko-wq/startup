@@ -29,24 +29,24 @@ const DefaultWorkspaceRightMenu = () => {
 		<>
 			<MenuTrigger>
 				<Button className="outline-none p-1 mr-2 bg-gray-700 hover:bg-gray-600 transition-colors duration-200 rounded-full">
-					<Plus className="w-5 h-5 text-zinc-50" />
+					<Plus className="w-5 h-5 text-slate-50" />
 				</Button>
 				<Popover>
-					<Menu className="bg-zinc-50 outline-none border shadow-md min-w-[200px] rounded-sm">
+					<Menu className="bg-slate-50 outline-none border shadow-md min-w-[200px] rounded-sm">
 						<MenuItem
 							onAction={handleNewSpace}
-							className="p-2 outline-none hover:bg-zinc-200 cursor-pointer"
+							className="p-2 outline-none hover:bg-slate-200 cursor-pointer"
 						>
-							<div className="flex items-center gap-2 text-zinc-800">
+							<div className="flex items-center gap-2 text-slate-800">
 								<SquarePlus className="w-4 h-4" />
 								<span>New Space</span>
 							</div>
 						</MenuItem>
 						<MenuItem
 							onAction={handleNewWorkspace}
-							className="p-2 outline-none hover:bg-zinc-200 cursor-pointer"
+							className="p-2 outline-none hover:bg-slate-200 cursor-pointer"
 						>
-							<div className="flex items-center gap-2 text-zinc-800">
+							<div className="flex items-center gap-2 text-slate-800">
 								<SquarePlus className="w-4 h-4" />
 								<span>New Workspace</span>
 							</div>
