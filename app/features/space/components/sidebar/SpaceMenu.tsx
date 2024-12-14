@@ -47,7 +47,11 @@ const SpaceMenu = ({ spaceId }: { spaceId: string }) => {
 				</Popover>
 			</MenuTrigger>
 
-			<SpaceRenameDialog />
+			<SpaceRenameDialog
+				spaceId={spaceId}
+				isOpen={isRenameDialogOpen}
+				onOpenChange={setIsRenameDialogOpen}
+			/>
 
 			<SpaceDeleteDialog
 				spaceId={spaceId}

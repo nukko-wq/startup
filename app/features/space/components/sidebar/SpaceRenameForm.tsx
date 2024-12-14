@@ -1,12 +1,54 @@
-import { useState } from "react"
-import { Button, Form, Input, Label, TextField } from "react-aria-components"
-import { Controller } from "react-hook-form"
+import { useState } from 'react'
+import { Button, Form, Input, Label, TextField } from 'react-aria-components'
+import { Controller, useForm } from 'react-hook-form'
+import { useAppDispatch } from '@/app/lib/redux/hooks'
+import { updateSpace } from '@/app/lib/redux/features/space/spaceAPI'
+import { updateSpaceName } from '@/app/lib/redux/features/space/spaceSlice'
 
-const SpaceRenameForm = () => {
-const [isSubmitting, setIsSubmitting] = useState(false)
+interface SpaceRenameFormProps {
+	spaceId: string
+	initialName: string
+	onClose: () => void
+}
+
+interface FormInputs {
+	name: string
+}
+
+const SpaceRenameForm = ({
+	spaceId,
+	initialName,
+	onClose,
+}: SpaceRenameFormProps) => {
+	const dispatch = useAppDispatch()
+	const [isSubmitting, setIsSubmitting] = useState(false)
+
+	const {
+		control,
+		handleSubmit,
+		formState: { isValid },
+	} = useForm<FormInputs>({
+		mode: 'onChange',
+		defaultValues: {
+			name: initialName,
+		},
+	})
+
+	const onSubmit = async (data: FormInputs) => {
+		try {
+			setIsSubmitting(true)
+			dispatch(updateSpaceName({ id: spaceId, name: data.name }))
+			onClose()
+			await dispatch(updateSpace({ id: spaceId, name: data.name })).unwrap()
+		} catch (error) {
+			console.error('スペースの更新に失敗しました:', error)
+		} finally {
+			setIsSubmitting(false)
+		}
+	}
 
 	return (
-    <Form onSubmit={} className="space-y-4">
+		<Form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
 			<Controller
 				name="name"
 				control={control}
@@ -45,13 +87,13 @@ const [isSubmitting, setIsSubmitting] = useState(false)
 				<Button
 					type="submit"
 					className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 outline-none flex items-center gap-2"
-					isDisabled={isSubmitting}
+					isDisabled={!isValid || isSubmitting}
 				>
 					{isSubmitting ? '更新中...' : '保存'}
 				</Button>
 			</div>
 		</Form>
-  )
+	)
 }
 
 export default SpaceRenameForm
