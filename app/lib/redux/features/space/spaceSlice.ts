@@ -6,6 +6,7 @@ import type {
 import {
 	createSpace,
 	deleteSpace,
+	updateSpaceLastActive,
 } from '@/app/lib/redux/features/space/spaceAPI'
 
 const initialState: SpaceState = {
@@ -73,6 +74,12 @@ export const spaceSlice = createSlice({
 			)
 			state.spaces = state.spaces.filter((space) => space.id !== action.payload)
 		},
+		updateLastActiveSpace: (state, action: PayloadAction<string>) => {
+			state.spaces = state.spaces.map((space) => ({
+				...space,
+				isLastActive: space.id === action.payload,
+			}))
+		},
 	},
 	extraReducers: (builder) => {
 		builder
@@ -107,7 +114,13 @@ export const spaceSlice = createSlice({
 			.addCase(deleteSpace.rejected, (state, action) => {
 				state.loading = false
 				state.error = action.error.message || 'エラーが発生しました'
-				// 削除が失敗した場合、スペースを元に戻す処理を追加する必要があります
+				// 削除が失敗した場合、スペースを元に戻す処理を��加する必要があります
+			})
+			.addCase(updateSpaceLastActive.fulfilled, (state, action) => {
+				state.spaces = state.spaces.map((space) => ({
+					...space,
+					isLastActive: space.id === action.payload.id,
+				}))
 			})
 	},
 })
@@ -121,6 +134,7 @@ export const {
 	addOptimisticSpace,
 	removeOptimisticSpace,
 	addOptimisticDelete,
+	updateLastActiveSpace,
 } = spaceSlice.actions
 
 export default spaceSlice.reducer

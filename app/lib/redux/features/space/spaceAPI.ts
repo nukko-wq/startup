@@ -55,3 +55,26 @@ export const updateSpace = createAsyncThunk(
 		return data
 	},
 )
+
+export const updateSpaceLastActive = createAsyncThunk(
+	'space/updateSpaceLastActive',
+	async ({
+		spaceId,
+		workspaceId,
+	}: { spaceId: string; workspaceId: string }) => {
+		const response = await fetch(`/api/spaces/${spaceId}/last-active`, {
+			method: 'PATCH',
+			headers: {
+				'Content-Type': 'application/json',
+			},
+			body: JSON.stringify({ workspaceId }),
+		})
+
+		if (!response.ok) {
+			throw new Error('アクティブスペースの更新に失敗しました')
+		}
+
+		const data: Space = await response.json()
+		return data
+	},
+)
