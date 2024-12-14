@@ -1,10 +1,11 @@
 import { useState } from 'react'
 import { Button, Form, Input, Label, TextField } from 'react-aria-components'
 import { Controller, useForm } from 'react-hook-form'
-import { useAppDispatch } from '@/app/lib/redux/hooks'
+import { useAppDispatch, useAppSelector } from '@/app/lib/redux/hooks'
 import { createSpace } from '@/app/lib/redux/features/space/spaceAPI'
 import { addOptimisticSpace } from '@/app/lib/redux/features/space/spaceSlice'
 import { v4 as uuidv4 } from 'uuid'
+import type { RootState } from '@/app/lib/redux/store'
 
 interface SpaceCreateFormProps {
 	workspaceId: string
@@ -17,6 +18,7 @@ interface FormInputs {
 
 const SpaceCreateForm = ({ workspaceId, onClose }: SpaceCreateFormProps) => {
 	const dispatch = useAppDispatch()
+	const spaces = useAppSelector((state: RootState) => state.space.spaces)
 	const [isSubmitting, setIsSubmitting] = useState(false)
 	const {
 		control,
@@ -33,11 +35,18 @@ const SpaceCreateForm = ({ workspaceId, onClose }: SpaceCreateFormProps) => {
 		try {
 			setIsSubmitting(true)
 
+			const maxOrder = Math.max(
+				...spaces
+					.filter((space) => space.workspaceId === workspaceId)
+					.map((space) => space.order),
+				-1,
+			)
+
 			const optimisticSpace = {
 				id: uuidv4(),
 				name: data.name,
 				workspaceId,
-				order: 0,
+				order: maxOrder + 1,
 				isLastActive: false,
 				isDefault: false,
 			}
