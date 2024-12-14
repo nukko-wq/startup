@@ -3,6 +3,7 @@ import type {
 	SpaceState,
 	Space,
 } from '@/app/lib/redux/features/space/types/space'
+import { createSpace } from '@/app/lib/redux/features/space/spaceAPI'
 
 const initialState: SpaceState = {
 	spaces: [],
@@ -36,6 +37,21 @@ export const spaceSlice = createSlice({
 				space.name = action.payload.name
 			}
 		},
+	},
+	extraReducers: (builder) => {
+		builder
+			.addCase(createSpace.pending, (state) => {
+				state.loading = true
+				state.error = null
+			})
+			.addCase(createSpace.fulfilled, (state, action) => {
+				state.loading = false
+				state.spaces.push(action.payload)
+			})
+			.addCase(createSpace.rejected, (state, action) => {
+				state.loading = false
+				state.error = action.error.message || 'エラーが発生しました'
+			})
 	},
 })
 
