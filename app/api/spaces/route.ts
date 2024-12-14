@@ -27,7 +27,9 @@ export async function POST(request: Request) {
 						email: user.email,
 					},
 				},
-				order: 0,
+				order: await prisma.space.count({
+					where: { workspaceId: workspaceId },
+				}),
 				isDefault: false,
 				isLastActive: false,
 			},

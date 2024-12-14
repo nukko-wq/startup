@@ -3,6 +3,7 @@ import React from 'react'
 import { Button } from 'react-aria-components'
 import { useAppSelector } from '@/app/lib/redux/hooks'
 import { selectSpacesByWorkspaceId } from '@/app/lib/redux/features/space/selector'
+import SpaceMenu from '@/app/features/space/components/sidebar/SpaceMenu'
 
 interface SpaceListProps {
 	workspaceId: string
@@ -40,7 +41,7 @@ const SpaceList = ({ workspaceId }: SpaceListProps) => {
 								<div className="text-left text-sm">{space.name}</div>
 							</div>
 							<div className="opacity-0 group-hover:opacity-100">
-								Space Menu
+								<SpaceMenu spaceId={space.id} />
 							</div>
 						</div>
 					</div>
