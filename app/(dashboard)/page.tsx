@@ -1,9 +1,11 @@
+import { headers } from 'next/headers'
 import { ReduxProvider } from '@/app/lib/redux/provider'
 import Sidebar from '@/app/components/sidebar/sidebar'
 import { prisma } from '@/lib/prisma'
 import { getCurrentUser } from '@/lib/session'
 import { WorkspaceInitializer } from '@/app/(dashboard)/WorkspaceInitializer'
 import { redirect } from 'next/navigation'
+import HomeInitializer from '@/app/(dashboard)/HomeInitializer'
 import type {
 	Workspace as PrismaWorkspace,
 	Space as PrismaSpace,
@@ -27,15 +29,16 @@ export default async function Home() {
 			return redirect('/login')
 		}
 
+		const activeSpace = await prisma.space.findFirst({
+			where: {
+				userId: user.id,
+				isLastActive: true,
+			},
+			select: { id: true },
+		})
+
 		let initialWorkspace: WorkspaceWithSpacesAndSections[] = []
 		try {
-			const activeSpaceIds = await prisma.space
-				.findMany({
-					where: { isLastActive: true },
-					select: { id: true },
-				})
-				.then((spaces) => spaces.map((space) => space.id))
-
 			const defaultWorkspace = await prisma.workspace.findFirst({
 				where: {
 					userId: user.id,
@@ -80,18 +83,11 @@ export default async function Home() {
 						include: {
 							sections: {
 								orderBy: { order: 'asc' },
-								where: {
-									spaceId: {
-										in: activeSpaceIds,
-									},
-								},
 							},
 						},
 					},
 				},
 			})
-
-			// console.log('Initial workspaces:', initialWorkspace)
 		} catch (dbError) {
 			console.error('Database error:', dbError)
 			initialWorkspace = []
@@ -100,6 +96,7 @@ export default async function Home() {
 		return (
 			<ReduxProvider>
 				<WorkspaceInitializer initialWorkspaces={initialWorkspace} />
+				{activeSpace && <HomeInitializer activeSpaceId={activeSpace.id} />}
 				<div className="flex w-full h-full">
 					<div className="flex flex-col w-full h-full">
 						<div className="grid grid-cols-[260px_1fr] min-[1921px]:grid-cols-[320px_1fr] bg-slate-50">
@@ -116,10 +113,7 @@ export default async function Home() {
 			</ReduxProvider>
 		)
 	} catch (error) {
-		console.error(
-			'Error in Home page:',
-			error instanceof Error ? error.message : error,
-		)
+		console.error('Error in Home page:', error)
 		return redirect('/login')
 	}
 }
