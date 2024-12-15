@@ -3,7 +3,10 @@ import { Pencil } from 'lucide-react'
 import { Button, Form, Input, Text } from 'react-aria-components'
 import { useForm, Controller } from 'react-hook-form'
 import { useAppDispatch } from '@/app/lib/redux/hooks'
-import { updateSection } from '@/app/lib/redux/features/section/sectionSlice'
+import {
+	updateSection,
+	revertSection,
+} from '@/app/lib/redux/features/section/sectionSlice'
 import { updateSectionName } from '@/app/lib/redux/features/section/sectionAPI'
 import type { Section } from '@/app/lib/redux/features/section/types/section'
 
@@ -30,12 +33,22 @@ const SectionNameEdit = ({ section }: SectionNameEditProps) => {
 	}
 
 	const onSubmit = async (data: FormInputs) => {
+		const originalSection = { ...section }
+		const optimisticSection = { ...section, name: data.name }
+
 		try {
-			const updatedSection = await updateSectionName(section.id, data.name)
-			dispatch(updateSection(updatedSection))
+			// 楽観的更新
+			dispatch(updateSection(optimisticSection))
 			setIsEditing(false)
+
+			// API呼び出し
+			const updatedSection = await updateSectionName(section.id, data.name)
+			// API呼び出しが成功した場合は、サーバーからの応答で更新
+			dispatch(updateSection(updatedSection))
 		} catch (error) {
 			console.error('セクション名の更新に失敗しました:', error)
+			// エラーが発生した場合は元の状態に戻す
+			dispatch(revertSection(originalSection))
 		}
 	}
 
