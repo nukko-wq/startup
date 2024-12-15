@@ -73,8 +73,11 @@ const ResourceCreateForm = ({
 		try {
 			const faviconUrl = await getFaviconUrl(data.url)
 
+			const title = data.title.trim() || new URL(data.url).hostname
+
 			const newResource = await createResource({
 				...data,
+				title,
 				sectionId,
 				faviconUrl,
 			})
@@ -150,7 +153,6 @@ const ResourceCreateForm = ({
 								<Controller
 									name="title"
 									control={control}
-									rules={{ required: true }}
 									render={({ field: { value, onChange, onBlur } }) => (
 										<Input
 											value={value}
