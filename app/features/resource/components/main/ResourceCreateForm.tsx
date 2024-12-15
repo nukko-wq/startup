@@ -16,9 +16,13 @@ import {
 	TextField,
 } from 'react-aria-components'
 import IconGoogle from '@/app/components/elements/IconGoogle'
-import { useAppDispatch } from '@/app/lib/redux/hooks'
-import { addResource } from '@/app/lib/redux/features/resource/resourceSlice'
+import { useAppDispatch, useAppSelector } from '@/app/lib/redux/hooks'
+import {
+	addResource,
+	removeResource,
+} from '@/app/lib/redux/features/resource/resourceSlice'
 import { createResource } from '@/app/lib/redux/features/resource/resourceAPI'
+import type { Resource } from '@/app/lib/redux/features/resource/types/resource'
 
 interface ResourceCreateFormProps {
 	sectionId: string
@@ -32,6 +36,15 @@ const ResourceCreateForm = ({
 	const [activeTab, setActiveTab] = useState<'url' | 'drive'>('url')
 	const urlInputRef = useRef<HTMLInputElement>(null)
 	const dispatch = useAppDispatch()
+
+	const lastOrder = useAppSelector((state) => {
+		const sectionResources = state.resource.resources.filter(
+			(r) => r.sectionId === sectionId,
+		)
+		return sectionResources.length > 0
+			? Math.max(...sectionResources.map((r) => r.order))
+			: -1
+	})
 
 	useEffect(() => {
 		if (activeTab === 'url') {
@@ -83,6 +96,24 @@ const ResourceCreateForm = ({
 			const faviconUrl = await getFaviconUrl(data.url)
 			const title = data.title?.trim() || new URL(data.url).hostname
 
+			const optimisticResource: Resource = {
+				id: `temp-${Date.now()}`,
+				title,
+				url: data.url,
+				faviconUrl,
+				mimeType: null,
+				description: null,
+				isGoogleDrive: false,
+				sectionId,
+				userId: '',
+				order: lastOrder + 1,
+				createdAt: new Date().toISOString(),
+				updatedAt: new Date().toISOString(),
+			}
+
+			dispatch(addResource(optimisticResource))
+			onClose()
+
 			const newResource = await createResource({
 				...data,
 				title,
@@ -90,10 +121,11 @@ const ResourceCreateForm = ({
 				faviconUrl,
 			})
 
+			dispatch(removeResource(optimisticResource.id))
 			dispatch(addResource(newResource))
-			onClose()
 		} catch (error) {
 			console.error('Failed to create resource:', error)
+			dispatch(removeResource(`temp-${Date.now()}`))
 		}
 	}
 

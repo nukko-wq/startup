@@ -24,9 +24,20 @@ export const resourceSlice = createSlice({
 				(resource) => resource.id !== action.payload,
 			)
 		},
+		replaceResource: (
+			state,
+			action: PayloadAction<{ oldId: string; newResource: Resource }>,
+		) => {
+			const index = state.resources.findIndex(
+				(r) => r.id === action.payload.oldId,
+			)
+			if (index !== -1) {
+				state.resources[index] = action.payload.newResource
+			}
+		},
 	},
 })
 
-export const { setResources, addResource, removeResource } =
+export const { setResources, addResource, removeResource, replaceResource } =
 	resourceSlice.actions
 export default resourceSlice.reducer
