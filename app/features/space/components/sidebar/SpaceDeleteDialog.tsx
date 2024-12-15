@@ -11,6 +11,7 @@ import {
 import { useAppDispatch } from '@/app/lib/redux/hooks'
 import { deleteSpace } from '@/app/lib/redux/features/space/spaceAPI'
 import { addOptimisticDelete } from '@/app/lib/redux/features/space/spaceSlice'
+import { useRouter } from 'next/navigation'
 
 interface SpaceDeleteDialogProps {
 	spaceId: string
@@ -24,6 +25,7 @@ const SpaceDeleteDialog = ({
 	onOpenChange,
 }: SpaceDeleteDialogProps) => {
 	const dispatch = useAppDispatch()
+	const router = useRouter()
 	const [isDeleting, setIsDeleting] = useState(false)
 
 	const handleDelete = async (close: () => void) => {
@@ -35,6 +37,7 @@ const SpaceDeleteDialog = ({
 			close()
 
 			await dispatch(deleteSpace(spaceId)).unwrap()
+			router.push('/')
 		} catch (error) {
 			console.error('スペースの削除に失敗しました:', error)
 		} finally {

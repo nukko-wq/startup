@@ -5,7 +5,7 @@ import Sidebar from '@/app/components/sidebar/sidebar'
 import SectionListWrapper from '@/app/features/section/components/main/SectionListWrapper'
 import { prisma } from '@/lib/prisma'
 import { getCurrentUser } from '@/lib/session'
-import { redirect } from 'next/navigation'
+import { redirect, notFound } from 'next/navigation'
 import { WorkspaceInitializer } from '@/app/(dashboard)/WorkspaceInitializer'
 import SpaceInitializer from '@/app/features/space/components/SpaceInitializer'
 import type {
@@ -37,19 +37,25 @@ export default async function SpacePage({
 		const resolvedParams = await params
 		const spaceId = resolvedParams.spaceId
 
-		// 現在のスペースIDを取得
-		const currentSpaceId = spaceId
+		// スペースの存在確認を追加
+		const spaceExists = await prisma.space.findUnique({
+			where: { id: spaceId },
+		})
+
+		if (!spaceExists) {
+			notFound()
+		}
 
 		// 現在のスペースをアクティブに設定
 		await prisma.space.update({
-			where: { id: currentSpaceId },
+			where: { id: spaceId },
 			data: { isLastActive: true },
 		})
 
 		// 他のスペースのisLastActiveをfalseに設定
 		await prisma.space.updateMany({
 			where: {
-				AND: [{ id: { not: currentSpaceId } }, { userId: user.id }],
+				AND: [{ id: { not: spaceId } }, { userId: user.id }],
 			},
 			data: { isLastActive: false },
 		})
@@ -66,7 +72,7 @@ export default async function SpacePage({
 							sections: {
 								orderBy: { order: 'asc' },
 								where: {
-									spaceId: currentSpaceId, // 現在のスペースのセクションのみを取得
+									spaceId: spaceId, // 現在のスペースのセクションのみを取得
 								},
 							},
 						},
@@ -77,7 +83,7 @@ export default async function SpacePage({
 		return (
 			<ReduxProvider>
 				<WorkspaceInitializer initialWorkspaces={workspaces} />
-				<SpaceInitializer spaceId={currentSpaceId} />
+				<SpaceInitializer spaceId={spaceId} />
 				<div className="flex w-full h-full">
 					<div className="flex flex-col w-full h-full">
 						<div className="grid grid-cols-[260px_1fr] min-[1921px]:grid-cols-[320px_1fr] bg-slate-50">
