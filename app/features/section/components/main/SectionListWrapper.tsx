@@ -2,22 +2,42 @@
 
 import { Plus } from 'lucide-react'
 import { Button } from 'react-aria-components'
-import { useAppDispatch } from '@/app/lib/redux/hooks'
-import { addSection } from '@/app/lib/redux/features/section/sectionSlice'
+import { useAppDispatch, useAppSelector } from '@/app/lib/redux/hooks'
+import { v4 as uuidv4 } from 'uuid'
+import {
+	addSection,
+	updateSection,
+	deleteSection,
+} from '@/app/lib/redux/features/section/sectionSlice'
 import { createSection } from '@/app/lib/redux/features/section/sectionAPI'
 import SectionList from '@/app/features/section/components/main/SectionList'
 import { useParams } from 'next/navigation'
+import type { RootState } from '@/app/lib/redux/store'
 
 const SectionListWrapper = () => {
 	const dispatch = useAppDispatch()
 	const params = useParams()
 	const spaceId = params.spaceId as string
+	const sections = useAppSelector((state: RootState) => state.section.sections)
 
 	const handleCreateSection = async () => {
+		const optimisticSection = {
+			id: uuidv4(),
+			name: 'Resources',
+			spaceId,
+			order: sections.length,
+			userId: '',
+			createdAt: new Date().toISOString(),
+			updatedAt: new Date().toISOString(),
+		}
+
+		dispatch(addSection(optimisticSection))
+
 		try {
 			const newSection = await createSection('Resources', spaceId)
-			dispatch(addSection(newSection))
+			dispatch(updateSection(newSection))
 		} catch (error) {
+			dispatch(deleteSection(optimisticSection.id))
 			console.error('セクションの作成に失敗しました:', error)
 		}
 	}
