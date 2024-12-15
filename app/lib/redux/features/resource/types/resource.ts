@@ -6,6 +6,7 @@ export interface Resource {
 	url: string
 	faviconUrl: string | null
 	mimeType: string | null
+	description: string | null
 	isGoogleDrive: boolean
 	sectionId: string
 	userId: string
