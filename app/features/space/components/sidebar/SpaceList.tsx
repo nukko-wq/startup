@@ -1,5 +1,4 @@
 import { GripVertical } from 'lucide-react'
-import React from 'react'
 import { useRouter } from 'next/navigation'
 import { useAppSelector, useAppDispatch } from '@/app/lib/redux/hooks'
 import { selectSpacesByWorkspaceId } from '@/app/lib/redux/features/space/selector'

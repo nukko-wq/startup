@@ -1,7 +1,6 @@
 'use client'
 
 import { AlignJustify, LogOut } from 'lucide-react'
-import React from 'react'
 import {
 	Button,
 	Menu,
