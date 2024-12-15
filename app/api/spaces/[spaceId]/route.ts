@@ -4,6 +4,7 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { getCurrentUser } from '@/lib/session'
+
 export async function DELETE(
 	req: Request,
 	{ params }: { params: Promise<{ spaceId: string }> },
@@ -82,6 +83,11 @@ export async function PATCH(
 		const { spaceId } = resolvedParams
 		const { name } = await req.json()
 
+		if (!name) {
+			return new NextResponse('名前は必須です', { status: 400 })
+		}
+
+		// スペースの存在確認と権限チェック
 		const space = await prisma.space.findUnique({
 			where: { id: spaceId },
 			include: {
@@ -99,6 +105,7 @@ export async function PATCH(
 			return new NextResponse('権限がありません', { status: 403 })
 		}
 
+		// スペース名の更新
 		const updatedSpace = await prisma.space.update({
 			where: { id: spaceId },
 			data: { name },

@@ -15,7 +15,10 @@ const SpaceMenu = ({ spaceId }: { spaceId: string }) => {
 	const [isRenameDialogOpen, setIsRenameDialogOpen] = useState(false)
 
 	return (
-		<>
+		<div
+			onClick={(e) => e.stopPropagation()}
+			onKeyDown={(e) => e.stopPropagation()}
+		>
 			<MenuTrigger>
 				<Button
 					aria-label="Menu"
@@ -24,9 +27,18 @@ const SpaceMenu = ({ spaceId }: { spaceId: string }) => {
 					<EllipsisVertical className="w-5 h-5 text-zinc-700 opacity-0 group-hover:opacity-100 group-hover:text-zinc-200 transition duration-300" />
 				</Button>
 				<Popover>
-					<Menu className="bg-zinc-50 outline-none border rounded-lg shadow-md min-w-[160px] text-sm">
+					<Menu
+						className="bg-zinc-50 outline-none border rounded-lg shadow-md min-w-[160px] text-sm"
+						onAction={(key) => {
+							if (key === 'rename') {
+								setIsRenameDialogOpen(true)
+							} else if (key === 'delete') {
+								setIsDeleteDialogOpen(true)
+							}
+						}}
+					>
 						<MenuItem
-							onAction={() => setIsRenameDialogOpen(true)}
+							id="rename"
 							className="pl-3 pr-4 py-2 outline-none hover:bg-zinc-100 hover:cursor-pointer rounded-t-lg"
 						>
 							<div className="flex items-center gap-2">
@@ -35,7 +47,7 @@ const SpaceMenu = ({ spaceId }: { spaceId: string }) => {
 							</div>
 						</MenuItem>
 						<MenuItem
-							onAction={() => setIsDeleteDialogOpen(true)}
+							id="delete"
 							className="pl-3 pr-4 py-2 outline-none hover:bg-zinc-100 text-red-600 hover:cursor-pointer rounded-b-lg"
 						>
 							<div className="flex items-center gap-2">
@@ -58,7 +70,7 @@ const SpaceMenu = ({ spaceId }: { spaceId: string }) => {
 				isOpen={isDeleteDialogOpen}
 				onOpenChange={setIsDeleteDialogOpen}
 			/>
-		</>
+		</div>
 	)
 }
 
