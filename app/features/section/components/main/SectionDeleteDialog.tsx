@@ -2,7 +2,8 @@ import { useState } from 'react'
 import { AlertTriangle } from 'lucide-react'
 import { useAppDispatch } from '@/app/lib/redux/hooks'
 import { setSections } from '@/app/lib/redux/features/section/sectionSlice'
-import { deleteSection } from '@/app/lib/redux/features/section/sectionAPI'
+import { deleteSection as deleteSectionAction } from '@/app/lib/redux/features/section/sectionSlice'
+import { deleteSection as deleteSectionAPI } from '@/app/lib/redux/features/section/sectionAPI'
 import type { Section } from '@/app/lib/redux/features/section/types/section'
 import {
 	Button,
@@ -26,15 +27,28 @@ const SectionDeleteDialog = ({
 }: SectionDeleteDialogProps) => {
 	const dispatch = useAppDispatch()
 	const [isDeleting, setIsDeleting] = useState(false)
+	const [error, setError] = useState<Error | null>(null)
 
 	const handleDelete = async () => {
 		try {
 			setIsDeleting(true)
-			const updatedSections = await deleteSection(section.id)
-			dispatch(setSections(updatedSections))
-			onClose()
+			setError(null)
+
+			dispatch(deleteSectionAction(section.id))
+
+			try {
+				await deleteSectionAPI(section.id)
+				onClose()
+			} catch (error) {
+				const rollbackSections = await fetch('/api/sections').then((res) =>
+					res.json(),
+				)
+				dispatch(setSections(rollbackSections))
+				throw error
+			}
 		} catch (error) {
 			console.error('セクションの削除に失敗しました:', error)
+			setError(error instanceof Error ? error : new Error('削除に失敗しました'))
 		} finally {
 			setIsDeleting(false)
 		}
@@ -57,6 +71,9 @@ const SectionDeleteDialog = ({
 								<p className="mt-3 text-slate-500">
 									このセクションを削除してもよろしいですか？この操作は取り消せません。
 								</p>
+								{error && (
+									<p className="mt-2 text-red-500 text-sm">{error.message}</p>
+								)}
 								<div className="mt-6 flex justify-end gap-2">
 									<Button
 										onPress={onClose}
