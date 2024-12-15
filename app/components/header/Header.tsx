@@ -13,33 +13,45 @@ const Header = () => {
 	const activeSpace = useAppSelector(selectActiveSpace)
 	const [isEditing, setIsEditing] = useState(false)
 	const [editingName, setEditingName] = useState(activeSpace?.name || '')
+	const [previousName, setPreviousName] = useState('')
 
 	const handleEditStart = () => {
 		if (activeSpace) {
 			setEditingName(activeSpace.name)
+			setPreviousName(activeSpace.name)
 			setIsEditing(true)
 		}
 	}
 
 	const handleEditSubmit = async () => {
 		if (activeSpace && editingName.trim() !== '') {
+			const newName = editingName.trim()
+
+			// 楽観的更新
+			dispatch(
+				updateSpaceName({
+					id: activeSpace.id,
+					name: newName,
+				}),
+			)
+
+			setIsEditing(false)
+
 			try {
-				const result = await dispatch(
+				await dispatch(
 					updateSpace({
 						id: activeSpace.id,
-						name: editingName.trim(),
+						name: newName,
 					}),
 				).unwrap()
-
+			} catch (error) {
+				// エラー時に元の名前に戻す
 				dispatch(
 					updateSpaceName({
 						id: activeSpace.id,
-						name: editingName.trim(),
+						name: previousName,
 					}),
 				)
-
-				setIsEditing(false)
-			} catch (error) {
 				console.error('スペース名の更新に失敗しました:', error)
 			}
 		}
