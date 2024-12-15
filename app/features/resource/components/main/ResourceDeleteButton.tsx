@@ -1,5 +1,10 @@
-import { useAppDispatch } from '@/app/lib/redux/hooks'
-import { removeResource } from '@/app/lib/redux/features/resource/resourceSlice'
+'use client'
+
+import { useAppDispatch, useAppSelector } from '@/app/lib/redux/hooks'
+import {
+	removeResource,
+	addResource,
+} from '@/app/lib/redux/features/resource/resourceSlice'
 import { deleteResource } from '@/app/lib/redux/features/resource/resourceAPI'
 import { Trash2 } from 'lucide-react'
 import React, { useState } from 'react'
@@ -19,13 +24,28 @@ const ResourceDeleteButton = ({ resourceId }: ResourceDeleteButtonProps) => {
 	const [isTooltipVisible, setIsTooltipVisible] = useState(false)
 	const [isDeleting, setIsDeleting] = useState(false)
 
+	// 削除対象のリソースを取得
+	const targetResource = useAppSelector((state) =>
+		state.resource.resources.find((r) => r.id === resourceId),
+	)
+
 	const handleDelete = async () => {
+		if (!targetResource) return
+
 		try {
 			setIsDeleting(true)
-			await deleteResource(resourceId)
+
+			// 楽観的に削除
 			dispatch(removeResource(resourceId))
-		} catch (error) {
-			console.error('リソースの削除に失敗しました:', error)
+
+			try {
+				// APIを呼び出して実際に削除
+				await deleteResource(resourceId)
+			} catch (error) {
+				// APIエラー時は削除を取り消し（ロールバック）
+				console.error('リソースの削除に失敗しました:', error)
+				dispatch(addResource(targetResource))
+			}
 		} finally {
 			setIsDeleting(false)
 		}
