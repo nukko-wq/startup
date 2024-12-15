@@ -50,7 +50,19 @@ const ResourceCreateForm = ({
 			)
 			if (!response.ok) return null
 			const data = await response.json()
-			return data.faviconUrl
+
+			// まず直接URLを試す
+			try {
+				const directResponse = await fetch(data.faviconUrl)
+				if (directResponse.ok) {
+					return data.faviconUrl
+				}
+			} catch (error) {
+				console.warn('Direct favicon fetch failed, using fallback')
+			}
+
+			// 失敗した場合はGoogle S2を使用
+			return data.fallbackUrl
 		} catch (error) {
 			console.error('Failed to fetch favicon:', error)
 			return null
