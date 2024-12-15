@@ -5,19 +5,25 @@ import { useDispatch } from 'react-redux'
 import { setWorkspaces } from '@/app/lib/redux/features/workspace/workspaceSlice'
 import { setSpaces } from '@/app/lib/redux/features/space/spaceSlice'
 import { setSections } from '@/app/lib/redux/features/section/sectionSlice'
+import { setResources } from '@/app/lib/redux/features/resource/resourceSlice'
 import type {
 	Workspace as PrismaWorkspace,
 	Space as PrismaSpace,
 	Section as PrismaSection,
+	Resource as PrismaResource,
 } from '@prisma/client'
 import { serializeWorkspace } from '@/app/lib/utils/workspace'
 import { serializeSpace } from '@/app/lib/utils/space'
 import { serializeSection } from '@/app/lib/utils/section'
+import { serializeResource } from '@/app/lib/utils/resource'
+import type { Resource } from '@/app/lib/redux/features/resource/types/resource'
 
 // Prisma Workspaceの型を拡張
 interface WorkspaceWithSpacesAndSections extends PrismaWorkspace {
 	spaces: (PrismaSpace & {
-		sections: PrismaSection[]
+		sections: (PrismaSection & {
+			resources: PrismaResource[]
+		})[]
 	})[]
 }
 
@@ -46,6 +52,16 @@ export function WorkspaceInitializer({
 			),
 		)
 		dispatch(setSections(allSections))
+
+		// リソースの初期化
+		const allResources: Resource[] = initialWorkspaces.flatMap((workspace) =>
+			workspace.spaces.flatMap((space) =>
+				space.sections.flatMap((section) =>
+					section.resources.map((resource) => serializeResource(resource)),
+				),
+			),
+		)
+		dispatch(setResources(allResources))
 	}, [dispatch, initialWorkspaces])
 
 	return null

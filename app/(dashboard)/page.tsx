@@ -7,15 +7,19 @@ import { WorkspaceInitializer } from '@/app/(dashboard)/WorkspaceInitializer'
 import { redirect } from 'next/navigation'
 import HomeInitializer from '@/app/(dashboard)/HomeInitializer'
 import Header from '@/app/components/header/Header'
+import SectionListWrapper from '@/app/features/section/components/main/SectionListWrapper'
 import type {
 	Workspace as PrismaWorkspace,
 	Space as PrismaSpace,
 	Section as PrismaSection,
+	Resource as PrismaResource,
 } from '@prisma/client'
 
 interface WorkspaceWithSpacesAndSections extends PrismaWorkspace {
 	spaces: (PrismaSpace & {
-		sections: PrismaSection[]
+		sections: (PrismaSection & {
+			resources: PrismaResource[]
+		})[]
 	})[]
 }
 
@@ -48,7 +52,11 @@ export default async function Home() {
 				include: {
 					spaces: {
 						include: {
-							sections: true,
+							sections: {
+								include: {
+									resources: true,
+								},
+							},
 						},
 					},
 				},
@@ -68,7 +76,11 @@ export default async function Home() {
 					include: {
 						spaces: {
 							include: {
-								sections: true,
+								sections: {
+									include: {
+										resources: true,
+									},
+								},
 							},
 						},
 					},
@@ -84,6 +96,11 @@ export default async function Home() {
 						include: {
 							sections: {
 								orderBy: { order: 'asc' },
+								include: {
+									resources: {
+										orderBy: { order: 'asc' },
+									},
+								},
 							},
 						},
 					},
@@ -106,7 +123,9 @@ export default async function Home() {
 								<Header />
 								<div className="flex flex-grow w-full h-[calc(100vh-68px)]">
 									<div className="flex justify-center w-1/2">Tab List</div>
-									<div className="flex justify-center w-1/2">Section List</div>
+									<div className="flex justify-center w-1/2">
+										<SectionListWrapper />
+									</div>
 								</div>
 							</main>
 						</div>

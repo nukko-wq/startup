@@ -12,12 +12,15 @@ import type {
 	Workspace as PrismaWorkspace,
 	Space as PrismaSpace,
 	Section as PrismaSection,
+	Resource as PrismaResource,
 } from '@prisma/client'
 import Header from '@/app/components/header/Header'
 
 interface WorkspaceWithSpacesAndSections extends PrismaWorkspace {
 	spaces: (PrismaSpace & {
-		sections: PrismaSection[]
+		sections: (PrismaSection & {
+			resources: PrismaResource[]
+		})[]
 	})[]
 }
 
@@ -72,7 +75,12 @@ export default async function SpacePage({
 							sections: {
 								orderBy: { order: 'asc' },
 								where: {
-									spaceId: spaceId, // 現在のスペースのセクションのみを取得
+									spaceId: spaceId,
+								},
+								include: {
+									resources: {
+										orderBy: { order: 'asc' },
+									},
 								},
 							},
 						},
