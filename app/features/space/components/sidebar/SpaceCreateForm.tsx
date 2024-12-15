@@ -6,6 +6,7 @@ import { createSpace } from '@/app/lib/redux/features/space/spaceAPI'
 import { addOptimisticSpace } from '@/app/lib/redux/features/space/spaceSlice'
 import { v4 as uuidv4 } from 'uuid'
 import type { RootState } from '@/app/lib/redux/store'
+import { useRouter } from 'next/navigation'
 
 interface SpaceCreateFormProps {
 	workspaceId: string
@@ -19,6 +20,7 @@ interface FormInputs {
 const SpaceCreateForm = ({ workspaceId, onClose }: SpaceCreateFormProps) => {
 	const dispatch = useAppDispatch()
 	const spaces = useAppSelector((state: RootState) => state.space.spaces)
+	const router = useRouter()
 	const [isSubmitting, setIsSubmitting] = useState(false)
 	const {
 		control,
@@ -47,19 +49,21 @@ const SpaceCreateForm = ({ workspaceId, onClose }: SpaceCreateFormProps) => {
 				name: data.name,
 				workspaceId,
 				order: maxOrder + 1,
-				isLastActive: false,
+				isLastActive: true,
 				isDefault: false,
 			}
 
 			dispatch(addOptimisticSpace(optimisticSpace))
 			onClose()
 
-			await dispatch(
+			const result = await dispatch(
 				createSpace({
 					name: data.name,
 					workspaceId,
 				}),
 			).unwrap()
+
+			router.push(`/space/${result.id}`)
 		} catch (error) {
 			console.error('スペースの作成に失敗しました:', error)
 		} finally {

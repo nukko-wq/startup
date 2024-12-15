@@ -90,9 +90,11 @@ export const spaceSlice = createSlice({
 			})
 			.addCase(createSpace.fulfilled, (state, action) => {
 				state.loading = false
-				state.spaces = state.spaces.map((space) =>
-					space.id === state.optimisticSpaces[0]?.id ? action.payload : space,
-				)
+				state.spaces = state.spaces.map((space) => ({
+					...space,
+					isLastActive: space.id === action.payload.id,
+				}))
+				state.activeSpaceId = action.payload.id
 				state.optimisticSpaces = []
 			})
 			.addCase(createSpace.rejected, (state, action) => {
@@ -122,6 +124,7 @@ export const spaceSlice = createSlice({
 					...space,
 					isLastActive: space.id === action.payload.id,
 				}))
+				state.activeSpaceId = action.payload.id
 			})
 			.addCase(updateSpace.pending, (state) => {
 				state.loading = true

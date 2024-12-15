@@ -17,6 +17,16 @@ export const createSpace = createAsyncThunk(
 		}
 
 		const data: Space = await response.json()
+
+		// 作成したスペースをアクティブに設定
+		await fetch(`/api/spaces/${data.id}/last-active`, {
+			method: 'PATCH',
+			headers: {
+				'Content-Type': 'application/json',
+			},
+			body: JSON.stringify({ workspaceId }),
+		})
+
 		return data
 	},
 )

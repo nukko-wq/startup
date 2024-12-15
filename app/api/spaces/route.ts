@@ -14,25 +14,35 @@ export async function POST(request: Request) {
 
 		const { name, workspaceId } = await request.json()
 
-		const space: Space = await prisma.space.create({
-			data: {
-				name,
-				workspace: {
-					connect: {
-						id: workspaceId,
+		// トランザクションで処理
+		const space = await prisma.$transaction(async (tx) => {
+			// 同じワークスペース内の全スペースのisLastActiveをfalseに設定
+			await tx.space.updateMany({
+				where: { workspaceId },
+				data: { isLastActive: false },
+			})
+
+			// 新しいスペースを作成
+			return await tx.space.create({
+				data: {
+					name,
+					workspace: {
+						connect: {
+							id: workspaceId,
+						},
 					},
-				},
-				user: {
-					connect: {
-						email: user.email,
+					user: {
+						connect: {
+							email: user.email,
+						},
 					},
+					order: await tx.space.count({
+						where: { workspaceId: workspaceId },
+					}),
+					isDefault: false,
+					isLastActive: true,
 				},
-				order: await prisma.space.count({
-					where: { workspaceId: workspaceId },
-				}),
-				isDefault: false,
-				isLastActive: false,
-			},
+			})
 		})
 
 		return NextResponse.json(serializeSpace(space))
