@@ -16,9 +16,11 @@ export const resourceSlice = createSlice({
 		setResources: (state, action: PayloadAction<Resource[]>) => {
 			state.resources = action.payload
 		},
-		// 他の必要なリデューサー
+		addResource: (state, action: PayloadAction<Resource>) => {
+			state.resources.push(action.payload)
+		},
 	},
 })
 
-export const { setResources } = resourceSlice.actions
+export const { setResources, addResource } = resourceSlice.actions
 export default resourceSlice.reducer

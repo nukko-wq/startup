@@ -8,6 +8,7 @@ export const serializeResource = (prismaResource: PrismaResource): Resource => {
 		url: prismaResource.url,
 		faviconUrl: prismaResource.faviconUrl,
 		mimeType: prismaResource.mimeType,
+		description: prismaResource.description,
 		isGoogleDrive: prismaResource.isGoogleDrive,
 		sectionId: prismaResource.sectionId,
 		userId: prismaResource.userId,
