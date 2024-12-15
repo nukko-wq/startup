@@ -1,0 +1,16 @@
+// app/lib/redux/features/section/sectionAPI.ts
+export const createSection = async (name: string, spaceId: string) => {
+	const response = await fetch('/api/sections', {
+		method: 'POST',
+		headers: {
+			'Content-Type': 'application/json',
+		},
+		body: JSON.stringify({ name, spaceId }),
+	})
+
+	if (!response.ok) {
+		throw new Error('セクションの作成に失敗しました')
+	}
+
+	return response.json()
+}
