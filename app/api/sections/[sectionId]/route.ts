@@ -6,7 +6,7 @@ import { getCurrentUser } from '@/lib/session'
 import { prisma } from '@/lib/prisma'
 import { serializeSection } from '@/app/lib/redux/features/section/types/section'
 export async function DELETE(
-	request: NextRequest,
+	request: Request,
 	{ params }: { params: Promise<{ sectionId: string }> },
 ) {
 	try {
@@ -17,7 +17,6 @@ export async function DELETE(
 
 		const resolvedParams = await params
 		const { sectionId } = resolvedParams
-
 		const section = await prisma.section.findUnique({
 			where: { id: sectionId },
 		})
@@ -33,11 +32,34 @@ export async function DELETE(
 			return NextResponse.json({ error: '権限がありません' }, { status: 403 })
 		}
 
-		await prisma.section.delete({
-			where: { id: sectionId },
+		// トランザクションを使用して削除と再整列を行う
+		const { spaceId, order: deletedOrder } = section
+
+		await prisma.$transaction(async (tx) => {
+			// セクションを削除
+			await tx.section.delete({
+				where: { id: sectionId },
+			})
+
+			// 削除されたセクションより後ろのorderを1つずつ詰める
+			await tx.section.updateMany({
+				where: {
+					spaceId: spaceId,
+					order: { gt: deletedOrder },
+				},
+				data: {
+					order: { decrement: 1 },
+				},
+			})
 		})
 
-		return NextResponse.json({ success: true })
+		// 更新後のセクションリストを取得して返す
+		const updatedSections = await prisma.section.findMany({
+			where: { spaceId: spaceId },
+			orderBy: { order: 'asc' },
+		})
+
+		return NextResponse.json(updatedSections.map(serializeSection))
 	} catch (error) {
 		return NextResponse.json(
 			{ error: 'セクションの削除に失敗しました' },

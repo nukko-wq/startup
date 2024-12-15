@@ -42,3 +42,19 @@ export const updateSectionName = async (sectionId: string, name: string) => {
 
 	return response.json()
 }
+
+export const reorderSections = async (spaceId: string) => {
+	const response = await fetch('/api/sections/reorder', {
+		method: 'POST',
+		headers: {
+			'Content-Type': 'application/json',
+		},
+		body: JSON.stringify({ spaceId }),
+	})
+
+	if (!response.ok) {
+		throw new Error('セクションの順序更新に失敗しました')
+	}
+
+	return response.json()
+}

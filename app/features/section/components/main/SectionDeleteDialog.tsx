@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { AlertTriangle } from 'lucide-react'
 import { useAppDispatch } from '@/app/lib/redux/hooks'
-import { deleteSection as deleteSectionAction } from '@/app/lib/redux/features/section/sectionSlice'
+import { setSections } from '@/app/lib/redux/features/section/sectionSlice'
 import { deleteSection } from '@/app/lib/redux/features/section/sectionAPI'
 import type { Section } from '@/app/lib/redux/features/section/types/section'
 import {
@@ -30,8 +30,8 @@ const SectionDeleteDialog = ({
 	const handleDelete = async () => {
 		try {
 			setIsDeleting(true)
-			await deleteSection(section.id)
-			dispatch(deleteSectionAction(section.id))
+			const updatedSections = await deleteSection(section.id)
+			dispatch(setSections(updatedSections))
 			onClose()
 		} catch (error) {
 			console.error('セクションの削除に失敗しました:', error)
