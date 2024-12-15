@@ -6,6 +6,7 @@ import { getCurrentUser } from '@/lib/session'
 import { WorkspaceInitializer } from '@/app/(dashboard)/WorkspaceInitializer'
 import { redirect } from 'next/navigation'
 import HomeInitializer from '@/app/(dashboard)/HomeInitializer'
+import Header from '@/app/components/header/Header'
 import type {
 	Workspace as PrismaWorkspace,
 	Space as PrismaSpace,
@@ -102,6 +103,7 @@ export default async function Home() {
 						<div className="grid grid-cols-[260px_1fr] min-[1921px]:grid-cols-[320px_1fr] bg-slate-50">
 							<Sidebar />
 							<main className="flex flex-col flex-grow items-center bg-slate-100">
+								<Header />
 								<div className="flex flex-grow w-full h-[calc(100vh-68px)]">
 									<div className="flex justify-center w-1/2">Tab List</div>
 									<div className="flex justify-center w-1/2">Section List</div>

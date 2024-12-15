@@ -7,6 +7,7 @@ import {
 	createSpace,
 	deleteSpace,
 	updateSpaceLastActive,
+	updateSpace,
 } from '@/app/lib/redux/features/space/spaceAPI'
 
 const initialState: SpaceState = {
@@ -114,13 +115,30 @@ export const spaceSlice = createSlice({
 			.addCase(deleteSpace.rejected, (state, action) => {
 				state.loading = false
 				state.error = action.error.message || 'エラーが発生しました'
-				// 削除が失敗した場合、スペースを元に戻す処理を��加する必要があります
+				// 削除が失敗した場合、スペースを元に戻す処理を加する必要があります
 			})
 			.addCase(updateSpaceLastActive.fulfilled, (state, action) => {
 				state.spaces = state.spaces.map((space) => ({
 					...space,
 					isLastActive: space.id === action.payload.id,
 				}))
+			})
+			.addCase(updateSpace.pending, (state) => {
+				state.loading = true
+				state.error = null
+			})
+			.addCase(updateSpace.fulfilled, (state, action) => {
+				state.loading = false
+				const index = state.spaces.findIndex(
+					(space) => space.id === action.payload.id,
+				)
+				if (index !== -1) {
+					state.spaces[index] = action.payload
+				}
+			})
+			.addCase(updateSpace.rejected, (state, action) => {
+				state.loading = false
+				state.error = action.error.message || 'エラーが発生しました'
 			})
 	},
 })
