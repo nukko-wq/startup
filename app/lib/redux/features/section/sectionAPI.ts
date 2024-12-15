@@ -26,3 +26,19 @@ export const deleteSection = async (sectionId: string) => {
 
 	return response.json()
 }
+
+export const updateSectionName = async (sectionId: string, name: string) => {
+	const response = await fetch(`/api/sections/${sectionId}`, {
+		method: 'PATCH',
+		headers: {
+			'Content-Type': 'application/json',
+		},
+		body: JSON.stringify({ name }),
+	})
+
+	if (!response.ok) {
+		throw new Error('セクション名の更新に失敗しました')
+	}
+
+	return response.json()
+}
