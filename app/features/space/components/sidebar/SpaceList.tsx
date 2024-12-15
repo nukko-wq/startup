@@ -45,7 +45,7 @@ const SpaceList = ({ workspaceId }: SpaceListProps) => {
 						className={`
 							flex flex-grow justify-between text-gray-400 cursor-pointer 
 							hover:bg-gray-700 hover:bg-opacity-75 group transition duration-200 pl-3
-							${space.id === activeSpaceId ? 'bg-gray-700 bg-opacity-75' : ''}
+							${space.id === activeSpaceId ? 'bg-gray-700 bg-opacity-75 border-l-4 border-blue-500' : 'border-l-4 border-transparent'}
 						`}
 						onClick={() => handleSpaceClick(space.id)}
 						onKeyDown={(e) => {
