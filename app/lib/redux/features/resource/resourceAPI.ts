@@ -26,3 +26,13 @@ export const createResource = async (
 
 	return response.json()
 }
+
+export const deleteResource = async (resourceId: string): Promise<void> => {
+	const response = await fetch(`/api/resources/${resourceId}`, {
+		method: 'DELETE',
+	})
+
+	if (!response.ok) {
+		throw new Error('リソースの削除に失敗しました')
+	}
+}

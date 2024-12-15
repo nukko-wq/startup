@@ -19,8 +19,14 @@ export const resourceSlice = createSlice({
 		addResource: (state, action: PayloadAction<Resource>) => {
 			state.resources.push(action.payload)
 		},
+		removeResource: (state, action: PayloadAction<string>) => {
+			state.resources = state.resources.filter(
+				(resource) => resource.id !== action.payload,
+			)
+		},
 	},
 })
 
-export const { setResources, addResource } = resourceSlice.actions
+export const { setResources, addResource, removeResource } =
+	resourceSlice.actions
 export default resourceSlice.reducer

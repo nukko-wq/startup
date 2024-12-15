@@ -1,5 +1,12 @@
 'use client'
 
+import { useState, useRef, useEffect } from 'react'
+import { zodResolver } from '@hookform/resolvers/zod'
+import { useForm, Controller } from 'react-hook-form'
+import {
+	resourceSchema,
+	type ResourceFormData,
+} from '../../schemas/resourceSchema'
 import {
 	Button,
 	Form,
@@ -9,8 +16,6 @@ import {
 	TextField,
 } from 'react-aria-components'
 import IconGoogle from '@/app/components/elements/IconGoogle'
-import { useState } from 'react'
-import { Controller, useForm } from 'react-hook-form'
 import { useAppDispatch } from '@/app/lib/redux/hooks'
 import { addResource } from '@/app/lib/redux/features/resource/resourceSlice'
 import { createResource } from '@/app/lib/redux/features/resource/resourceAPI'
@@ -20,27 +25,31 @@ interface ResourceCreateFormProps {
 	onClose: () => void
 }
 
-interface FormInputs {
-	url: string
-	title: string
-}
-
 const ResourceCreateForm = ({
 	sectionId,
 	onClose,
 }: ResourceCreateFormProps) => {
 	const [activeTab, setActiveTab] = useState<'url' | 'drive'>('url')
+	const urlInputRef = useRef<HTMLInputElement>(null)
 	const dispatch = useAppDispatch()
+
+	useEffect(() => {
+		if (activeTab === 'url') {
+			urlInputRef.current?.focus()
+		}
+	}, [activeTab])
 
 	const {
 		control,
 		handleSubmit,
-		formState: { isSubmitting, isValid },
-	} = useForm<FormInputs>({
+		formState: { errors, isSubmitting, isValid },
+	} = useForm<ResourceFormData>({
+		resolver: zodResolver(resourceSchema),
 		defaultValues: {
 			url: '',
 			title: '',
 		},
+		mode: 'onChange',
 	})
 
 	const getFaviconUrl = async (url: string): Promise<string | null> => {
@@ -69,12 +78,14 @@ const ResourceCreateForm = ({
 		}
 	}
 
-	const onSubmit = async (data: FormInputs) => {
+	const onSubmit = async (data: ResourceFormData) => {
 		try {
 			const faviconUrl = await getFaviconUrl(data.url)
+			const title = data.title?.trim() || new URL(data.url).hostname
 
 			const newResource = await createResource({
 				...data,
+				title,
 				sectionId,
 				faviconUrl,
 			})
@@ -129,17 +140,23 @@ const ResourceCreateForm = ({
 								<Controller
 									name="url"
 									control={control}
-									rules={{ required: true }}
-									render={({ field: { value, onChange, onBlur } }) => (
-										<Input
-											value={value}
-											onChange={onChange}
-											onBlur={onBlur}
-											type="url"
-											className="w-full p-2 border rounded mt-1 focus:outline-blue-500"
-											placeholder="https://example.com"
-											aria-label="URL"
-										/>
+									render={({ field }) => (
+										<div>
+											<Input
+												{...field}
+												ref={urlInputRef}
+												type="url"
+												className={`w-full p-2 border rounded mt-1 focus:outline-blue-500 
+													${errors.url ? 'border-red-500' : 'border-gray-200'}`}
+												placeholder="https://example.com"
+												aria-label="URL"
+											/>
+											{errors.url && (
+												<span className="text-red-500 text-sm mt-1">
+													{errors.url.message}
+												</span>
+											)}
+										</div>
 									)}
 								/>
 							</TextField>
@@ -150,17 +167,22 @@ const ResourceCreateForm = ({
 								<Controller
 									name="title"
 									control={control}
-									rules={{ required: true }}
-									render={({ field: { value, onChange, onBlur } }) => (
-										<Input
-											value={value}
-											onChange={onChange}
-											onBlur={onBlur}
-											type="text"
-											className="w-full p-2 border-gray-200 rounded border focus:outline-blue-500"
-											placeholder="Name"
-											aria-label="Name"
-										/>
+									render={({ field }) => (
+										<div>
+											<Input
+												{...field}
+												type="text"
+												className={`w-full p-2 border rounded mt-1 focus:outline-blue-500
+													${errors.title ? 'border-red-500' : 'border-gray-200'}`}
+												placeholder="Name"
+												aria-label="Name"
+											/>
+											{errors.title && (
+												<span className="text-red-500 text-sm mt-1">
+													{errors.title.message}
+												</span>
+											)}
+										</div>
 									)}
 								/>
 							</TextField>
@@ -176,7 +198,8 @@ const ResourceCreateForm = ({
 							<Button
 								type="submit"
 								isDisabled={isSubmitting || !isValid}
-								className="px-4 py-2 text-sm border rounded bg-blue-500 disabled:opacity-50 text-white hover:bg-blue-600 focus:outline-blue-500"
+								className={`px-4 py-2 text-sm border rounded bg-blue-500 text-white hover:bg-blue-600 focus:outline-blue-500
+									${isSubmitting || !isValid ? 'opacity-50' : ''}`}
 							>
 								{isSubmitting ? '作成中...' : 'ADD RESOURCE'}
 							</Button>
