@@ -14,3 +14,15 @@ export const createSection = async (name: string, spaceId: string) => {
 
 	return response.json()
 }
+
+export const deleteSection = async (sectionId: string) => {
+	const response = await fetch(`/api/sections/${sectionId}`, {
+		method: 'DELETE',
+	})
+
+	if (!response.ok) {
+		throw new Error('セクションの削除に失敗しました')
+	}
+
+	return response.json()
+}

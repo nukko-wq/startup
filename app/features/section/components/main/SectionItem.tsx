@@ -1,5 +1,6 @@
 import { File } from 'lucide-react'
 import type { Section } from '@/app/lib/redux/features/section/types/section'
+import SectionMenu from '@/app/features/section/components/main/SectionMenu'
 
 interface SectionItemProps {
 	section: Section
@@ -13,7 +14,10 @@ const SectionItem = ({ section }: SectionItemProps) => {
 					<File className="w-6 h-6 text-zinc-700" />
 					<div className="text-sm text-zinc-700 ml-2">{section.name}</div>
 				</div>
-				<div className="hidden md:flex">リソース作成ボタン</div>
+				<div className="hidden md:flex">
+					<div>リソース作成ボタン</div>
+					<SectionMenu section={section} />
+				</div>
 			</div>
 		</div>
 	)
