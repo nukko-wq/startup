@@ -2,18 +2,14 @@
 
 import { useSelector } from 'react-redux'
 import SectionItem from '@/app/features/section/components/main/SectionItem'
+import { selectSectionsByActiveSpace } from '@/app/lib/redux/features/section/selector'
 
 const SectionList = () => {
-	const sections = useSelector((state) => state.section.sections)
-	const activeSpaceId = useSelector((state) => state.space.activeSpaceId)
-
-	const filteredSections = sections.filter(
-		(section) => section.spaceId === activeSpaceId,
-	)
+	const sections = useSelector(selectSectionsByActiveSpace)
 
 	return (
 		<div className="flex flex-col w-full gap-2">
-			{filteredSections.map((section) => (
+			{sections.map((section) => (
 				<div key={section.id} className="outline-none group">
 					<SectionItem section={section} />
 				</div>

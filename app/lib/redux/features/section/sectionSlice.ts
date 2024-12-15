@@ -1,14 +1,6 @@
 // app/lib/redux/features/section/sectionSlice.ts
 import { createSlice, type PayloadAction } from '@reduxjs/toolkit'
-
-export interface Section {
-	id: string
-	name: string
-	order: number
-	spaceId: string
-	createdAt: string
-	updatedAt: string
-}
+import type { Section } from '@/app/lib/redux/features/section/types/section'
 
 interface SectionState {
 	sections: Section[]

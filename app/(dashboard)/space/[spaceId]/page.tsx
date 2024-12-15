@@ -21,12 +21,30 @@ interface WorkspaceWithSpacesAndSections extends PrismaWorkspace {
 
 export const dynamic = 'force-dynamic'
 
-export default async function SpacePage() {
+export default async function SpacePage({
+	params,
+}: {
+	params: Promise<{ spaceId: string }>
+}) {
 	try {
 		const user = await getCurrentUser()
 		if (!user) {
 			return redirect('/login')
 		}
+
+		const resolvedParams = await params
+		const spaceId = resolvedParams.spaceId
+
+		// 現在のスペースIDを取得
+		const currentSpaceId = spaceId
+
+		// アクティブなスペースのIDを先に取得
+		const activeSpaceIds = await prisma.space
+			.findMany({
+				where: { isLastActive: true },
+				select: { id: true },
+			})
+			.then((spaces) => spaces.map((space) => space.id))
 
 		// ワークスペースとスペースのデータを取得
 		const workspaces: WorkspaceWithSpacesAndSections[] =
@@ -39,6 +57,18 @@ export default async function SpacePage() {
 						include: {
 							sections: {
 								orderBy: { order: 'asc' },
+								where: {
+									OR: [
+										// 現在のスペースのセクション
+										{ spaceId: currentSpaceId },
+										// アクティブなスペースのセクション
+										{
+											spaceId: {
+												in: activeSpaceIds,
+											},
+										},
+									],
+								},
 							},
 						},
 					},
