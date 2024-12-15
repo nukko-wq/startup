@@ -35,7 +35,8 @@ const SectionListWrapper = () => {
 
 		try {
 			const newSection = await createSection('Resources', spaceId)
-			dispatch(updateSection(newSection))
+			dispatch(deleteSection(optimisticSection.id))
+			dispatch(addSection(newSection))
 		} catch (error) {
 			dispatch(deleteSection(optimisticSection.id))
 			console.error('セクションの作成に失敗しました:', error)
