@@ -33,6 +33,14 @@ const sectionSlice = createSlice({
 				state.sections[index] = action.payload
 			}
 		},
+		revertSection: (state, action: PayloadAction<Section>) => {
+			const index = state.sections.findIndex(
+				(section) => section.id === action.payload.id,
+			)
+			if (index !== -1) {
+				state.sections[index] = action.payload
+			}
+		},
 		deleteSection: (state, action: PayloadAction<string>) => {
 			state.sections = state.sections.filter(
 				(section) => section.id !== action.payload,
@@ -46,6 +54,7 @@ export const {
 	setActiveSectionId,
 	addSection,
 	updateSection,
+	revertSection,
 	deleteSection,
 } = sectionSlice.actions
 export default sectionSlice.reducer
