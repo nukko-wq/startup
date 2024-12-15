@@ -9,12 +9,14 @@ interface ResourceIconProps {
 	faviconUrl?: string | null
 	mimeType?: string | null
 	isGoogleDrive?: boolean
+	loading?: 'lazy' | 'eager'
 }
 
 export default function ResourceIcon({
 	faviconUrl,
 	mimeType,
 	isGoogleDrive,
+	loading = 'eager',
 }: ResourceIconProps) {
 	const getGoogleIcon = () => {
 		switch (mimeType) {
@@ -39,6 +41,7 @@ export default function ResourceIcon({
 				height={32}
 				alt="page_outline"
 				className="absolute -left-1 -top-1 h-[32px] w-[32px]"
+				loading={loading}
 			/>
 			{faviconUrl || isGoogleDrive ? (
 				<div className="relative h-[16px] w-[16px]">
@@ -49,6 +52,7 @@ export default function ResourceIcon({
 							src={faviconUrl ?? undefined}
 							alt="Favicon"
 							className="relative h-[16px] w-[16px]"
+							loading={loading}
 						/>
 					)}
 				</div>
