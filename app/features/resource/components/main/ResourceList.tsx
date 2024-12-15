@@ -6,6 +6,7 @@ import { Button } from 'react-aria-components'
 import { GripVertical } from 'lucide-react'
 import ResourceIcon from '@/app/components/elements/ResourceIcon'
 import type { Resource } from '@/app/lib/redux/features/resource/types/resource'
+import ResourceDeleteButton from '@/app/features/resource/components/main/ResourceDeleteButton'
 
 interface ResourceListProps {
 	sectionId: string
@@ -78,6 +79,9 @@ const ResourceList = ({ sectionId }: ResourceListProps) => {
 										{getResourceDescription(resource)}
 									</span>
 								</div>
+							</div>
+							<div className="flex items-center opacity-0 group-hover/item:opacity-100">
+								<ResourceDeleteButton resourceId={resource.id} />
 							</div>
 						</div>
 					</div>
