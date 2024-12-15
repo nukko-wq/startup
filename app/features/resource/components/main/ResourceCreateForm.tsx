@@ -43,11 +43,28 @@ const ResourceCreateForm = ({
 		},
 	})
 
+	const getFaviconUrl = async (url: string): Promise<string | null> => {
+		try {
+			const response = await fetch(
+				`/api/favicon?url=${encodeURIComponent(url)}`,
+			)
+			if (!response.ok) return null
+			const data = await response.json()
+			return data.faviconUrl
+		} catch (error) {
+			console.error('Failed to fetch favicon:', error)
+			return null
+		}
+	}
+
 	const onSubmit = async (data: FormInputs) => {
 		try {
+			const faviconUrl = await getFaviconUrl(data.url)
+
 			const newResource = await createResource({
 				...data,
 				sectionId,
+				faviconUrl,
 			})
 
 			dispatch(addResource(newResource))

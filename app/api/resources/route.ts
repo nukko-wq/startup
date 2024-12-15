@@ -12,7 +12,7 @@ export async function POST(request: Request) {
 		}
 
 		const json = await request.json()
-		const { title, url, sectionId } = json
+		const { title, url, sectionId, faviconUrl } = json
 
 		// セクションの存在確認とユーザー所有権の確認
 		const section = await prisma.section.findFirst({
@@ -37,6 +37,7 @@ export async function POST(request: Request) {
 			data: {
 				title,
 				url,
+				faviconUrl,
 				sectionId,
 				userId: user.id,
 				order: maxOrder ? maxOrder.order + 1 : 0,

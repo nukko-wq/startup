@@ -6,6 +6,7 @@ interface CreateResourceData {
 	title: string
 	url: string
 	sectionId: string
+	faviconUrl?: string | null
 }
 
 export const createResource = async (
