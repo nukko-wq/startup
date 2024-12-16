@@ -60,9 +60,9 @@ const ResourceMenu = ({ resource }: { resource: Resource }) => {
 			>
 				<Button
 					aria-label="Edit"
-					className="outline-none p-2 hover:bg-gray-200 transition-colors duration-200 rounded-full"
+					className="outline-none p-2 hover:bg-gray-200 transition-colors duration-200 rounded-full group/edit"
 				>
-					<Pencil className="w-5 h-5 text-gray-700" />
+					<Pencil className="w-5 h-5 text-gray-500 group-hover/edit:text-gray-700" />
 				</Button>
 				{isTooltipVisible && !isDialogOpen && (
 					<Tooltip className="bg-gray-800 text-gray-300 text-xs shadow-md rounded-lg px-2 py-1">

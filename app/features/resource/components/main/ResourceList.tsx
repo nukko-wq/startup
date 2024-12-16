@@ -105,7 +105,7 @@ const ResourceList = ({ sectionId }: ResourceListProps) => {
 							}
 						}}
 					>
-						<div className="grid grid-cols-[32px_1fr_74px] items-center px-1 pt-1 pb-2 border-b border-slate-200 last:border-b-0 hover:bg-slate-100">
+						<div className="grid grid-cols-[32px_1fr_74px] items-center px-1 pt-1 pb-2 border-b border-slate-200 last:border-b-0 hover:bg-gray-100">
 							<div className="cursor-grab flex items-center p-2 opacity-0 group-hover/item:opacity-100">
 								<Button className="cursor-grab">
 									<GripVertical className="w-4 h-4 text-slate-500" />
