@@ -65,7 +65,7 @@ const ResourceMenu = ({ resource }: { resource: Resource }) => {
 					<Pencil className="w-5 h-5 text-gray-700" />
 				</Button>
 				{isTooltipVisible && !isDialogOpen && (
-					<Tooltip className="bg-gray-800 text-gray-300 text-sm shadow-md rounded-lg px-2 py-1">
+					<Tooltip className="bg-gray-800 text-gray-300 text-xs shadow-md rounded-lg px-2 py-1">
 						<OverlayArrow>
 							{/* biome-ignore lint/a11y/noSvgWithoutTitle: <explanation> */}
 							<svg
