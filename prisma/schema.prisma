@@ -156,9 +156,7 @@ model Resource {
   title         String   @db.VarChar(255)
   url           String   @db.Text
   faviconUrl    String?  @db.Text
-  mimeType      String?  @db.VarChar(100)
   description   String?  @db.Text
-  isGoogleDrive Boolean  @default(false)
   order         Int
   sectionId     String
   section       Section  @relation(fields: [sectionId], references: [id], onDelete: Cascade)

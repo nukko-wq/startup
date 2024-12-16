@@ -69,11 +69,7 @@ const ResourceList = ({ sectionId }: ResourceListProps) => {
 								</Button>
 							</div>
 							<div className="flex items-end gap-2 truncate">
-								<ResourceIcon
-									faviconUrl={resource.faviconUrl}
-									mimeType={resource.mimeType}
-									isGoogleDrive={resource.isGoogleDrive}
-								/>
+								<ResourceIcon faviconUrl={resource.faviconUrl} />
 								<div className="flex flex-col truncate">
 									<span className="truncate">{resource.title}</span>
 									<span className="text-xs text-gray-400">

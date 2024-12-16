@@ -41,7 +41,6 @@ export async function POST(request: Request) {
 				sectionId,
 				userId: user.id,
 				order: maxOrder ? maxOrder.order + 1 : 0,
-				isGoogleDrive: false,
 			},
 		})
 
