@@ -32,6 +32,9 @@ const GoogleDriveList = ({
 	const [searchQuery, setSearchQuery] = useState('')
 	const dispatch = useAppDispatch()
 	const { files, loading, error } = useAppSelector((state) => state.googleDrive)
+	const [fileCache, setFileCache] = useState<Record<string, GoogleDriveFile[]>>(
+		{},
+	)
 
 	const DEBOUNCE_DELAY = 500
 	const debouncedFetchFiles = useMemo(
@@ -40,18 +43,23 @@ const GoogleDriveList = ({
 	)
 
 	const fetchFiles = async (query?: string) => {
+		const cacheKey = query || ''
+
+		if (fileCache[cacheKey]) {
+			dispatch(setFiles(fileCache[cacheKey]))
+			return
+		}
+
 		dispatch(setLoading(true))
 		try {
 			const response = await fetchGoogleDriveFiles(query)
+			setFileCache((prev) => ({
+				...prev,
+				[cacheKey]: response.files,
+			}))
 			dispatch(setFiles(response.files))
 		} catch (error) {
-			dispatch(
-				setError(
-					error instanceof Error
-						? error.message
-						: '予期せぬエラーが発生しました',
-				),
-			)
+			// エラー処理
 		} finally {
 			dispatch(setLoading(false))
 		}
