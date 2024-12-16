@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { Search } from 'lucide-react'
 import { Button, Input } from 'react-aria-components'
 import { useAppDispatch, useAppSelector } from '@/app/lib/redux/hooks'
@@ -16,6 +16,8 @@ import {
 } from '@/app/lib/redux/features/resource/resourceSlice'
 import { createResource } from '@/app/lib/redux/features/resource/resourceAPI'
 import type { Resource } from '@/app/lib/redux/features/resource/types/resource'
+import debounce from 'lodash/debounce'
+
 interface GoogleDriveListProps {
 	sectionId: string
 	onClose: (isSubmit?: boolean) => void
@@ -30,6 +32,12 @@ const GoogleDriveList = ({
 	const [searchQuery, setSearchQuery] = useState('')
 	const dispatch = useAppDispatch()
 	const { files, loading, error } = useAppSelector((state) => state.googleDrive)
+
+	const DEBOUNCE_DELAY = 500
+	const debouncedFetchFiles = useMemo(
+		() => debounce((query: string) => fetchFiles(query), DEBOUNCE_DELAY),
+		[],
+	)
 
 	const fetchFiles = async (query?: string) => {
 		dispatch(setLoading(true))
@@ -58,14 +66,14 @@ const GoogleDriveList = ({
 	// 検索クエリが変更された時のみ実行
 	// biome-ignore lint/correctness/useExhaustiveDependencies: <explanation>
 	useEffect(() => {
-		if (!searchQuery) return // 検索クエリが空の場合は実行しない
+		if (!searchQuery) {
+			fetchFiles()
+			return
+		}
 
-		const timer = setTimeout(() => {
-			fetchFiles(searchQuery)
-		}, 500)
-
-		return () => clearTimeout(timer)
-	}, [searchQuery])
+		debouncedFetchFiles(searchQuery)
+		return () => debouncedFetchFiles.cancel()
+	}, [searchQuery, debouncedFetchFiles])
 
 	const handleFileSelect = async (file: GoogleDriveFile) => {
 		try {
