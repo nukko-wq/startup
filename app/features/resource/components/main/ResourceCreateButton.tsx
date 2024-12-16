@@ -1,4 +1,4 @@
-import { forwardRef } from 'react'
+import { forwardRef, useCallback, useRef, useState } from 'react'
 import { FilePlus } from 'lucide-react'
 import {
 	Button,
@@ -10,7 +10,6 @@ import {
 	TooltipTrigger,
 } from 'react-aria-components'
 import ResourceCreateForm from '@/app/features/resource/components/main/ResourceCreateForm'
-import { useState } from 'react'
 import type { Section } from '@/app/lib/redux/features/section/types/section'
 
 interface ResourceCreateButtonProps {
@@ -22,11 +21,38 @@ const ResourceCreateButton = forwardRef<
 	ResourceCreateButtonProps
 >(({ section }, ref) => {
 	const [isOpen, setIsOpen] = useState(false)
+	const [isTooltipVisible, setIsTooltipVisible] = useState(false)
+	const isSubmitting = useRef(false)
+
+	const handleTooltipChange = useCallback((isOpen: boolean) => {
+		if (!isOpen && !isSubmitting.current) {
+			setIsTooltipVisible(isOpen)
+		}
+	}, [])
+
+	const handleFormClose = useCallback((isSubmit = false) => {
+		if (isSubmit) {
+			isSubmitting.current = true
+			setIsTooltipVisible(false)
+			setIsOpen(false)
+			setTimeout(() => {
+				isSubmitting.current = false
+			}, 100)
+		} else {
+			setIsTooltipVisible(false)
+			setIsOpen(false)
+		}
+	}, [])
 
 	return (
 		<div>
 			<DialogTrigger isOpen={isOpen} onOpenChange={setIsOpen}>
-				<TooltipTrigger delay={700} closeDelay={0}>
+				<TooltipTrigger
+					isOpen={isTooltipVisible && !isOpen}
+					onOpenChange={handleTooltipChange}
+					delay={700}
+					closeDelay={0}
+				>
 					<Button
 						ref={ref}
 						aria-label="Add Resource"
@@ -55,7 +81,7 @@ const ResourceCreateButton = forwardRef<
 						<div className="bg-white flex items-center justify-center rounded-lg shadow-md">
 							<ResourceCreateForm
 								sectionId={section.id}
-								onClose={() => setIsOpen(false)}
+								onClose={handleFormClose}
 							/>
 						</div>
 					</Dialog>

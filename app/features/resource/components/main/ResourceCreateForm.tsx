@@ -26,7 +26,7 @@ import type { Resource } from '@/app/lib/redux/features/resource/types/resource'
 import GoogleDriveList from '@/app/features/google-drive/components/main/GoogleDriveLIst'
 interface ResourceCreateFormProps {
 	sectionId: string
-	onClose: () => void
+	onClose: (isSubmit?: boolean) => void
 }
 
 const ResourceCreateForm = ({
@@ -98,7 +98,7 @@ const ResourceCreateForm = ({
 			}
 
 			dispatch(addResource(optimisticResource))
-			onClose()
+			onClose(true)
 
 			const newResource = await createResource({
 				...data,
@@ -208,7 +208,7 @@ const ResourceCreateForm = ({
 						<div className="flex justify-between">
 							<Button
 								type="button"
-								onPress={onClose}
+								onPress={() => onClose(false)}
 								className="px-4 py-2 text-sm border rounded hover:bg-gray-50 outline-none"
 							>
 								キャンセル
