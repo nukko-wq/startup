@@ -44,7 +44,10 @@ const ResourceEditForm = ({ resource, onClose }: ResourceEditFormProps) => {
 			}
 			dispatch(updateResourceAction(optimisticResource))
 
-			// APIリクエストを実行
+			// フォームを即座に閉じる
+			onClose(true)
+
+			// バックグラウンドでAPIリクエストを実行
 			try {
 				const updatedResource = await updateResource({
 					id: resource.id,
@@ -53,12 +56,11 @@ const ResourceEditForm = ({ resource, onClose }: ResourceEditFormProps) => {
 
 				// APIレスポンスで最終的な状態を更新
 				dispatch(updateResourceAction(updatedResource))
-				onClose(true)
 			} catch (error) {
 				// エラーが発生した場合は、元の状態に戻す
 				dispatch(updateResourceAction(resource))
 				console.error('リソースの更新に失敗しました:', error)
-				// ここでエラー表示のUIを追加することもできます
+				// エラー通知を表示
 			}
 		} catch (error) {
 			console.error('Failed to update resource:', error)
