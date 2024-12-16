@@ -1,3 +1,4 @@
+import { forwardRef } from 'react'
 import { FilePlus } from 'lucide-react'
 import {
 	Button,
@@ -16,7 +17,10 @@ interface ResourceCreateButtonProps {
 	section: Section
 }
 
-const ResourceCreateButton = ({ section }: ResourceCreateButtonProps) => {
+const ResourceCreateButton = forwardRef<
+	HTMLButtonElement,
+	ResourceCreateButtonProps
+>(({ section }, ref) => {
 	const [isOpen, setIsOpen] = useState(false)
 
 	return (
@@ -24,6 +28,7 @@ const ResourceCreateButton = ({ section }: ResourceCreateButtonProps) => {
 			<DialogTrigger isOpen={isOpen} onOpenChange={setIsOpen}>
 				<TooltipTrigger delay={700} closeDelay={0}>
 					<Button
+						ref={ref}
 						aria-label="Add Resource"
 						className="outline-none hover:bg-zinc-200 transition-colors duration-200 rounded-full p-2"
 					>
@@ -58,6 +63,8 @@ const ResourceCreateButton = ({ section }: ResourceCreateButtonProps) => {
 			</DialogTrigger>
 		</div>
 	)
-}
+})
+
+ResourceCreateButton.displayName = 'ResourceCreateButton'
 
 export default ResourceCreateButton
