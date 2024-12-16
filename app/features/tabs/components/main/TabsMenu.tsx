@@ -32,6 +32,30 @@ const TabsMenu = () => {
 		}
 	}
 
+	const handleCloseAllTabs = async () => {
+		try {
+			const response = await fetch('/api/extension/id')
+			const { extensionIds } = await response.json()
+			const extensionId = extensionIds[0]
+
+			if (!extensionId || !chrome?.runtime) {
+				throw new Error('拡張機能が見つかりません')
+			}
+
+			chrome.runtime.sendMessage(
+				extensionId,
+				{ type: 'CLOSE_ALL_TABS' },
+				(response) => {
+					if (!response?.success) {
+						console.error('タブの一括クローズに失敗しました')
+					}
+				},
+			)
+		} catch (error) {
+			console.error('タブの一括クローズエラー:', error)
+		}
+	}
+
 	return (
 		<MenuTrigger>
 			<Button
@@ -53,7 +77,7 @@ const TabsMenu = () => {
 					</MenuItem>
 					<MenuItem
 						className="p-2 outline-none text-red-600 cursor-pointer"
-						onAction={() => {}}
+						onAction={handleCloseAllTabs}
 					>
 						<div className="flex items-center gap-2">
 							<Trash2 className="w-4 h-4" />
