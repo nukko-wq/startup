@@ -68,18 +68,18 @@ const TabsMenu = () => {
 				<Menu className="bg-zinc-50 outline-none border rounded-lg shadow-md min-w-[200px]">
 					<MenuItem
 						onAction={handleSortByDomain}
-						className="p-2 outline-none cursor-pointer"
+						className="p-2 outline-none cursor-pointer hover:bg-slate-100"
 					>
-						<div className="flex items-center gap-2">
+						<div className="flex items-center gap-2 text-sm">
 							<FilePlus className="w-4 h-4" />
 							Sort by domain
 						</div>
 					</MenuItem>
 					<MenuItem
-						className="p-2 outline-none text-red-600 cursor-pointer"
+						className="p-2 outline-none text-red-600 cursor-pointer hover:bg-slate-100"
 						onAction={handleCloseAllTabs}
 					>
-						<div className="flex items-center gap-2">
+						<div className="flex items-center gap-2 text-sm">
 							<Trash2 className="w-4 h-4" />
 							Close all tabs
 						</div>
