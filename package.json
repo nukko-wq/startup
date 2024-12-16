@@ -29,6 +29,7 @@
 		"zod": "^3.24.1"
 	},
 	"devDependencies": {
+		"@types/chrome": "^0.0.287",
 		"@types/lodash": "^4.17.13",
 		"@types/node": "^20",
 		"@types/react": "^19",

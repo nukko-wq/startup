@@ -30,11 +30,11 @@ const ResourceList = ({ sectionId }: ResourceListProps) => {
 				const { extensionIds } = await response.json()
 				const extensionId = extensionIds[0]
 
-				if (!extensionId) {
-					throw new Error('拡張機能IDが設定されていません')
+				if (!extensionId || !window.chrome?.runtime) {
+					throw new Error('拡張機能が見つかりません')
 				}
 
-				chrome.runtime.sendMessage(
+				window.chrome.runtime.sendMessage(
 					extensionId,
 					{ type: 'SWITCH_TO_TAB', tabId: existingTab.id },
 					(response) => {
