@@ -17,6 +17,43 @@ const ResourceList = ({ sectionId }: ResourceListProps) => {
 	const resources = useAppSelector((state) =>
 		selectSortedResourcesBySectionId(state, sectionId),
 	)
+	const tabs = useAppSelector((state) => state.tabs.tabs)
+
+	const handleResourceClick = async (resource: Resource) => {
+		try {
+			// 既存のタブを探す
+			const existingTab = tabs.find((tab) => tab.url === resource.url)
+
+			if (existingTab) {
+				// タブが見つかった場合は、そのタブに切り替える
+				const response = await fetch('/api/extension/id')
+				const { extensionIds } = await response.json()
+				const extensionId = extensionIds[0]
+
+				if (!extensionId) {
+					throw new Error('拡張機能IDが設定されていません')
+				}
+
+				chrome.runtime.sendMessage(
+					extensionId,
+					{ type: 'SWITCH_TO_TAB', tabId: existingTab.id },
+					(response) => {
+						if (!response?.success) {
+							// タブの切り替えに失敗した場合は新しいタブで開く
+							window.open(resource.url, '_blank')
+						}
+					},
+				)
+			} else {
+				// タブが見つからない場合は新しいタブで開く
+				window.open(resource.url, '_blank')
+			}
+		} catch (error) {
+			console.error('リソースを開く際にエラーが発生しました:', error)
+			// エラーが発生した場合は新しいタブで開く
+			window.open(resource.url, '_blank')
+		}
+	}
 
 	const getResourceDescription = (resource: Resource): string => {
 		if (resource.description) return resource.description
@@ -61,6 +98,12 @@ const ResourceList = ({ sectionId }: ResourceListProps) => {
 					<div
 						key={resource.id}
 						className="flex flex-grow flex-col cursor-pointer group/item"
+						onClick={() => handleResourceClick(resource)}
+						onKeyDown={(e) => {
+							if (e.key === 'Enter') {
+								handleResourceClick(resource)
+							}
+						}}
 					>
 						<div className="grid grid-cols-[32px_1fr_74px] items-center px-1 pt-1 pb-2 border-b border-zinc-200 last:border-b-0 hover:bg-zinc-100">
 							<div className="cursor-grab flex items-center p-2 opacity-0 group-hover/item:opacity-100">

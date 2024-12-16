@@ -67,7 +67,7 @@ const ResourceDeleteButton = ({ resourceId }: ResourceDeleteButtonProps) => {
 				<Trash2 className="w-5 h-5 text-zinc-700" />
 			</Button>
 			{isTooltipVisible && (
-				<Tooltip className="bg-gray-800 text-gray-300 text-sm shadow-md rounded-lg px-2 py-1">
+				<Tooltip className="bg-gray-800 text-gray-300 text-xs shadow-md rounded-lg px-2 py-1">
 					<OverlayArrow>
 						<svg
 							width={8}

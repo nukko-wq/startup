@@ -15,6 +15,7 @@ import type {
 	Resource as PrismaResource,
 } from '@prisma/client'
 import Header from '@/app/components/header/Header'
+import TabList from '@/app/features/tabs/components/main/TabList'
 
 interface WorkspaceWithSpacesAndSections extends PrismaWorkspace {
 	spaces: (PrismaSpace & {
@@ -99,7 +100,9 @@ export default async function SpacePage({
 							<main className="flex flex-col flex-grow items-center bg-slate-100">
 								<Header />
 								<div className="flex flex-grow w-full h-[calc(100vh-68px)]">
-									<div className="flex justify-center w-1/2">Tab List</div>
+									<div className="flex justify-center w-1/2">
+										<TabList />
+									</div>
 									<div className="flex justify-center w-1/2">
 										<SectionListWrapper />
 									</div>

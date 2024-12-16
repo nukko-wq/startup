@@ -4,6 +4,7 @@ import spaceReducer from '@/app/lib/redux/features/space/spaceSlice'
 import sectionReducer from '@/app/lib/redux/features/section/sectionSlice'
 import resourceReducer from '@/app/lib/redux/features/resource/resourceSlice'
 import googleDriveReducer from '@/app/lib/redux/features/google-drive/googleDriveSlice'
+import tabsReducer from '@/app/lib/redux/features/tabs/tabsSlice'
 
 export const store = configureStore({
 	reducer: {
@@ -12,6 +13,7 @@ export const store = configureStore({
 		section: sectionReducer,
 		resource: resourceReducer,
 		googleDrive: googleDriveReducer,
+		tabs: tabsReducer,
 	},
 })
 
