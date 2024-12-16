@@ -10,8 +10,23 @@ import {
 import { fetchGoogleDriveFiles } from '@/app/lib/redux/features/google-drive/googleDriveAPI'
 import GoogleDriveListIcon from '@/app/features/google-drive/components/GoogleDriveListIcon'
 import type { GoogleDriveFile } from '@/app/lib/redux/features/google-drive/types/googleDrive'
+import {
+	addResource,
+	removeResource,
+} from '@/app/lib/redux/features/resource/resourceSlice'
+import { createResource } from '@/app/lib/redux/features/resource/resourceAPI'
+import type { Resource } from '@/app/lib/redux/features/resource/types/resource'
+interface GoogleDriveListProps {
+	sectionId: string
+	onClose: (isSubmit?: boolean) => void
+	lastOrder: number
+}
 
-const GoogleDriveList = () => {
+const GoogleDriveList = ({
+	sectionId,
+	onClose,
+	lastOrder,
+}: GoogleDriveListProps) => {
 	const [searchQuery, setSearchQuery] = useState('')
 	const dispatch = useAppDispatch()
 	const { files, loading, error } = useAppSelector((state) => state.googleDrive)
@@ -52,8 +67,37 @@ const GoogleDriveList = () => {
 		return () => clearTimeout(timer)
 	}, [searchQuery])
 
-	const handleFileSelect = (file: GoogleDriveFile) => {
-		// ファイル選択時の処理をここに実装
+	const handleFileSelect = async (file: GoogleDriveFile) => {
+		try {
+			const optimisticResource: Resource = {
+				id: `temp-${Date.now()}`,
+				title: file.name,
+				url: file.webViewLink,
+				faviconUrl: '',
+				description: null,
+				sectionId,
+				userId: '',
+				order: lastOrder + 1,
+				createdAt: new Date().toISOString(),
+				updatedAt: new Date().toISOString(),
+			}
+
+			dispatch(addResource(optimisticResource))
+			onClose(true)
+
+			const newResource = await createResource({
+				title: file.name,
+				url: file.webViewLink,
+				sectionId,
+				faviconUrl: '/google-drive-icon.png',
+			})
+
+			dispatch(removeResource(optimisticResource.id))
+			dispatch(addResource(newResource))
+		} catch (error) {
+			console.error('Googleドライブファイルの追加に失敗しました:', error)
+			dispatch(removeResource(`temp-${Date.now()}`))
+		}
 	}
 
 	return (
