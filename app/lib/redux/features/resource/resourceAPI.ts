@@ -36,3 +36,24 @@ export const deleteResource = async (resourceId: string): Promise<void> => {
 		throw new Error('リソースの削除に失敗しました')
 	}
 }
+
+export const updateResource = async (data: {
+	id: string
+	url: string
+	title?: string
+	description?: string
+}): Promise<Resource> => {
+	const response = await fetch(`/api/resources/${data.id}`, {
+		method: 'PATCH',
+		headers: {
+			'Content-Type': 'application/json',
+		},
+		body: JSON.stringify(data),
+	})
+
+	if (!response.ok) {
+		throw new Error('Failed to update resource')
+	}
+
+	return response.json()
+}

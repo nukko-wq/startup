@@ -10,6 +10,11 @@ export const resourceSchema = z.object({
 		.max(255, { message: 'タイトルは255文字以内で入力してください' })
 		.optional()
 		.or(z.literal('')),
+	description: z
+		.string()
+		.max(1000, { message: '説明は1000文字以内で入力してください' })
+		.optional()
+		.or(z.literal('')),
 })
 
 export type ResourceFormData = z.infer<typeof resourceSchema>

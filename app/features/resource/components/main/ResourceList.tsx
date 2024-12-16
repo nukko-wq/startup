@@ -7,6 +7,7 @@ import { GripVertical } from 'lucide-react'
 import ResourceIcon from '@/app/components/elements/ResourceIcon'
 import type { Resource } from '@/app/lib/redux/features/resource/types/resource'
 import ResourceDeleteButton from '@/app/features/resource/components/main/ResourceDeleteButton'
+import ResourceMenu from '@/app/features/resource/components/main/ResourceMenu'
 
 interface ResourceListProps {
 	sectionId: string
@@ -81,6 +82,7 @@ const ResourceList = ({ sectionId }: ResourceListProps) => {
 								</div>
 							</div>
 							<div className="flex items-center opacity-0 group-hover/item:opacity-100">
+								<ResourceMenu resource={resource} />
 								<ResourceDeleteButton resourceId={resource.id} />
 							</div>
 						</div>
