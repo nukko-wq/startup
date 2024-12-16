@@ -2,7 +2,7 @@
 
 import { Bookmark } from 'lucide-react'
 import { useState } from 'react'
-import { useAppDispatch } from '@/app/lib/redux/hooks'
+import { useAppDispatch, useAppSelector } from '@/app/lib/redux/hooks'
 import {
 	Button,
 	OverlayArrow,
@@ -10,8 +10,14 @@ import {
 	TooltipTrigger,
 } from 'react-aria-components'
 import { createResource } from '@/app/lib/redux/features/resource/resourceAPI'
-import { addResource } from '@/app/lib/redux/features/resource/resourceSlice'
+import {
+	addResource,
+	replaceResource,
+	removeResource,
+} from '@/app/lib/redux/features/resource/resourceSlice'
 import type { Tab } from '@/app/lib/redux/features/tabs/types/tabs'
+import type { Resource } from '@/app/lib/redux/features/resource/types/resource'
+import type { RootState } from '@/app/lib/redux/store'
 
 interface TabSaveButtonProps {
 	tab: Tab
@@ -22,13 +28,33 @@ const TabSaveButton = ({ tab, sectionId }: TabSaveButtonProps) => {
 	const dispatch = useAppDispatch()
 	const [isSaving, setIsSaving] = useState(false)
 	const [isOpen, setIsOpen] = useState(false)
+	const resources = useAppSelector(
+		(state: RootState) => state.resource.resources,
+	)
+
 	const handleSave = async () => {
 		if (isSaving) return
+
+		const maxOrder = Math.max(...resources.map((r) => r.order), -1)
+
+		const tempResource: Resource = {
+			id: `temp-${Date.now()}`,
+			title: tab.title,
+			url: tab.url,
+			faviconUrl: tab.faviconUrl || null,
+			description: null,
+			sectionId: sectionId,
+			userId: '',
+			order: maxOrder + 1,
+			createdAt: new Date().toISOString(),
+			updatedAt: new Date().toISOString(),
+		}
 
 		try {
 			setIsSaving(true)
 
-			// リソースの作成データを準備
+			dispatch(addResource(tempResource))
+
 			const resourceData = {
 				title: tab.title,
 				url: tab.url,
@@ -36,16 +62,17 @@ const TabSaveButton = ({ tab, sectionId }: TabSaveButtonProps) => {
 				faviconUrl: tab.faviconUrl || null,
 			}
 
-			// APIを呼び出してリソースを作成
 			const newResource = await createResource(resourceData)
 
-			// Reduxストアに新しいリソースを追加
-			dispatch(addResource(newResource))
-
-			// 成功通知を表示するなどの処理をここに追加できます
+			dispatch(
+				replaceResource({
+					oldId: tempResource.id,
+					newResource: newResource,
+				}),
+			)
 		} catch (error) {
 			console.error('タブの保存に失敗しました:', error)
-			// エラー通知を表示するなどの処理をここに追加できます
+			dispatch(removeResource(tempResource.id))
 		} finally {
 			setIsSaving(false)
 		}
