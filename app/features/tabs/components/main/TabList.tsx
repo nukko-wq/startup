@@ -5,6 +5,7 @@ import { useAppDispatch, useAppSelector } from '@/app/lib/redux/hooks'
 import { Diamond, GripVertical } from 'lucide-react'
 import { Button } from 'react-aria-components'
 import { fetchTabs, updateTabs } from '@/app/lib/redux/features/tabs/tabsSlice'
+import TabSaveButton from '@/app/features/tabs/components/main/TabSaveButton'
 import type { RootState } from '@/app/lib/redux/store'
 import type { Tab } from '@/app/lib/redux/features/tabs/types/tabs'
 
@@ -13,6 +14,10 @@ const TabList = () => {
 	const { tabs, status, error } = useAppSelector(
 		(state: RootState) => state.tabs,
 	)
+	const sections = useAppSelector((state: RootState) => state.section.sections)
+
+	// 最初のセクションのIDを取得
+	const defaultSectionId = sections[0]?.id
 
 	useEffect(() => {
 		// 初期タブ情報の取得
@@ -119,7 +124,7 @@ const TabList = () => {
 								</div>
 								<div className="flex items-center">
 									<div className="opacity-0 group-hover:opacity-100">
-										TabSaveButton
+										<TabSaveButton tab={tab} sectionId={defaultSectionId} />
 									</div>
 									<div className="opacity-0 group-hover:opacity-100">
 										TabDeleteButton
