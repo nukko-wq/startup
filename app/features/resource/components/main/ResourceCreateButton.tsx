@@ -46,7 +46,7 @@ const ResourceCreateButton = forwardRef<
 					>
 						<FilePlus className="w-6 h-6 text-slate-700" />
 					</Button>
-					<Tooltip className="bg-slate-800 text-slate-300 text-sm shadow-md rounded-lg px-2 py-1">
+					<Tooltip className="bg-slate-800 text-slate-300 text-xs shadow-md rounded-lg px-2 py-1">
 						<OverlayArrow>
 							<svg
 								width={8}
