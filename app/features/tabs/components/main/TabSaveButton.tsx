@@ -87,16 +87,21 @@ const TabSaveButton = ({ tab, sectionId }: TabSaveButtonProps) => {
 		>
 			<Button
 				onPress={handleSave}
-				className="outline-none p-2 hover:bg-gray-200 transition-colors duration-200 rounded-full"
+				className="outline-none p-2 hover:bg-gray-200 transition-colors duration-200 rounded-full group/bookmark"
 				aria-label="タブを保存"
 				isDisabled={isSaving}
 			>
-				<Bookmark className="w-5 h-5 text-gray-700" />
+				<Bookmark className="w-5 h-5 text-gray-500 group-hover/bookmark:text-gray-700" />
 			</Button>
-			<Tooltip className="bg-gray-800 text-gray-300 text-xs shadow-md rounded-lg px-2 py-1">
+			<Tooltip className="bg-slate-800 text-slate-300 text-xs shadow-md rounded-lg px-2 py-1">
 				<OverlayArrow>
 					{/* biome-ignore lint/a11y/noSvgWithoutTitle: <explanation> */}
-					<svg width={8} height={8} viewBox="0 0 8 8" className="fill-gray-800">
+					<svg
+						width={8}
+						height={8}
+						viewBox="0 0 8 8"
+						className="fill-slate-800"
+					>
 						<path d="M0 0 L4 4 L8 0" />
 					</svg>
 				</OverlayArrow>

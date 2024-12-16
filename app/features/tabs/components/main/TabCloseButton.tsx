@@ -61,16 +61,21 @@ const TabCloseButton = ({ tabId }: TabCloseButtonProps) => {
 		>
 			<Button
 				onPress={handleClose}
-				className="outline-none p-2 hover:bg-gray-200 rounded-full transition-colors duration-200"
+				className="outline-none p-2 hover:bg-gray-200 rounded-full transition-colors duration-200 group/close"
 				aria-label="タブを閉じる"
 				isDisabled={isClosing}
 			>
-				<X className="w-5 h-5 text-gray-700" />
+				<X className="w-5 h-5 text-gray-500 group-hover/close:text-gray-700" />
 			</Button>
-			<Tooltip className="bg-gray-800 text-gray-300 text-sm shadow-md rounded-lg px-2 py-1">
+			<Tooltip className="bg-slate-800 text-slate-300 text-sm shadow-md rounded-lg px-2 py-1">
 				<OverlayArrow>
 					{/* biome-ignore lint/a11y/noSvgWithoutTitle: <explanation> */}
-					<svg width={8} height={8} viewBox="0 0 8 8" className="fill-gray-800">
+					<svg
+						width={8}
+						height={8}
+						viewBox="0 0 8 8"
+						className="fill-slate-800"
+					>
 						<path d="M0 0 L4 4 L8 0" />
 					</svg>
 				</OverlayArrow>

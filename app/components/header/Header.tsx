@@ -83,7 +83,7 @@ const Header = () => {
 								}
 							}}
 							onBlur={handleEditCancel}
-							className="text-xl font-bold py-1 pl-6 text-zinc-800 bg-transparent border-b-2 border-blue-500 outline-none"
+							className="text-xl font-bold py-1 pl-6 text-slate-800 bg-transparent border-b-2 border-blue-500 outline-none"
 							onFocus={(e) => {
 								const input = e.target as HTMLInputElement
 								const length = input.value.length
@@ -93,14 +93,14 @@ const Header = () => {
 					</Form>
 				) : (
 					<Button
-						className="group flex items-center gap-2 hover:bg-zinc-100 rounded-lg px-2 py-1 outline-none"
+						className="group flex items-center gap-2 hover:bg-slate-100 rounded-lg px-2 py-1 outline-none"
 						onPress={handleEditStart}
 						aria-label="Space Name"
 					>
-						<Text className="text-xl font-bold text-zinc-800 pl-4">
+						<Text className="text-xl font-bold text-slate-800 pl-4">
 							{activeSpace?.name || 'Select a Space'}
 						</Text>
-						<Pencil className="w-4 h-4 text-zinc-400 opacity-0 group-hover:opacity-100 transition-opacity" />
+						<Pencil className="w-4 h-4 text-slate-400 opacity-0 group-hover:opacity-100 transition-opacity" />
 					</Button>
 				)}
 			</div>

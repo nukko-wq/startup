@@ -124,9 +124,9 @@ const GoogleDriveList = ({
 	return (
 		<div className="flex flex-col w-full">
 			<div className="flex items-center justify-center py-2">
-				<Search className="w-[20px] h-[20px] text-zinc-700 ml-4 mr-2" />
+				<Search className="w-[20px] h-[20px] text-slate-700 ml-4 mr-2" />
 				<Input
-					className="w-[400px] text-zinc-700 outline-none"
+					className="w-[400px] text-slate-700 outline-none"
 					placeholder="Search Drive for resources to add..."
 					aria-label="Search Drive"
 					value={searchQuery}
@@ -138,15 +138,15 @@ const GoogleDriveList = ({
 				aria-label="Recent Google Drive Files"
 			>
 				<div className="flex items-center justify-center h-[17px]">
-					<div className="border-t border-zinc-200 flex-grow" />
+					<div className="border-t border-slate-200 flex-grow" />
 					{!searchQuery && (
-						<h2 className="text-sm text-zinc-500 px-4">Recent</h2>
+						<h2 className="text-sm text-slate-500 px-4">Recent</h2>
 					)}
-					<div className="border-t border-zinc-200 flex-grow" />
+					<div className="border-t border-slate-200 flex-grow" />
 				</div>
 				{loading ? (
 					<div className="flex flex-grow items-center justify-center">
-						<div className="text-zinc-700">読み込み中...</div>
+						<div className="text-slate-700">読み込み中...</div>
 					</div>
 				) : error ? (
 					<div className="p-4 text-center text-red-500">{error}</div>
@@ -156,7 +156,7 @@ const GoogleDriveList = ({
 							{files.map((file) => (
 								<li
 									key={file.id}
-									className="h-[40px] flex items-center hover:bg-zinc-100 cursor-pointer group/item"
+									className="h-[40px] flex items-center hover:bg-slate-100 cursor-pointer group/item"
 								>
 									<Button
 										onPress={() => handleFileSelect(file)}
