@@ -211,7 +211,7 @@ const ResourceCreateForm = ({
 							<Button
 								type="button"
 								onPress={onClose}
-								className="px-4 py-2 text-sm border rounded hover:bg-gray-200 focus:outline-blue-500"
+								className="px-4 py-2 text-sm border rounded hover:bg-gray-50 outline-none"
 							>
 								キャンセル
 							</Button>
