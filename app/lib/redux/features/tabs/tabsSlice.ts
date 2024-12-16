@@ -17,7 +17,12 @@ export const fetchTabs = createAsyncThunk('tabs/fetchTabs', async () => {
 const tabsSlice = createSlice({
 	name: 'tabs',
 	initialState,
-	reducers: {},
+	reducers: {
+		updateTabs: (state, action) => {
+			state.tabs = action.payload
+			state.status = 'succeeded'
+		},
+	},
 	extraReducers: (builder) => {
 		builder
 			.addCase(fetchTabs.pending, (state) => {
@@ -34,4 +39,5 @@ const tabsSlice = createSlice({
 	},
 })
 
+export const { updateTabs } = tabsSlice.actions
 export default tabsSlice.reducer

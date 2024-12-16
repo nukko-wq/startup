@@ -4,9 +4,10 @@ import { useEffect } from 'react'
 import { useAppDispatch, useAppSelector } from '@/app/lib/redux/hooks'
 import { Diamond, GripVertical } from 'lucide-react'
 import { Button } from 'react-aria-components'
-import { fetchTabs } from '@/app/lib/redux/features/tabs/tabsSlice'
+import { fetchTabs, updateTabs } from '@/app/lib/redux/features/tabs/tabsSlice'
 import type { RootState } from '@/app/lib/redux/store'
 import type { Tab } from '@/app/lib/redux/features/tabs/types/tabs'
+
 const TabList = () => {
 	const dispatch = useAppDispatch()
 	const { tabs, status, error } = useAppSelector(
@@ -14,11 +15,50 @@ const TabList = () => {
 	)
 
 	useEffect(() => {
+		// 初期タブ情報の取得
 		dispatch(fetchTabs())
+
+		// 拡張機能からのメッセージを受け取るリスナーを設定
+		const handleMessage = (event: MessageEvent) => {
+			if (
+				event.data.source === 'startup-extension' &&
+				event.data.type === 'TABS_UPDATED'
+			) {
+				dispatch(updateTabs(event.data.tabs))
+			}
+		}
+
+		window.addEventListener('message', handleMessage)
+
+		// クリーンアップ
+		return () => {
+			window.removeEventListener('message', handleMessage)
+		}
 	}, [dispatch])
 
-	const handleTabAction = (tab: Tab) => {
-		// タブをクリックした時の処理を実装
+	// タブをクリックしたときの処理
+	const handleTabAction = async (tab: Tab) => {
+		try {
+			const response = await fetch('/api/extension/id')
+			const { extensionIds } = await response.json()
+			const extensionId = extensionIds[0]
+
+			if (!extensionId || !chrome?.runtime) {
+				throw new Error('拡張機能が見つかりません')
+			}
+
+			chrome.runtime.sendMessage(
+				extensionId,
+				{ type: 'SWITCH_TO_TAB', tabId: tab.id },
+				(response) => {
+					if (!response?.success) {
+						console.error('タブの切り替えに失敗しました')
+					}
+				},
+			)
+		} catch (error) {
+			console.error('タブの切り替えエラー:', error)
+		}
 	}
 
 	if (status === 'loading') {
