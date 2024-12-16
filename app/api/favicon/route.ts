@@ -1,3 +1,4 @@
+// /app/api/favicon/route.ts
 import { NextResponse } from 'next/server'
 
 export async function GET(request: Request) {
@@ -10,12 +11,11 @@ export async function GET(request: Request) {
 
 	try {
 		const domain = new URL(url).origin
-		const faviconUrl = `${domain}/favicon.ico`
 		const googleFaviconUrl = `https://www.google.com/s2/favicons?domain=${domain}&sz=32`
 
+		// Google S2 APIのURLを直接返す
 		return NextResponse.json({
-			faviconUrl: faviconUrl,
-			fallbackUrl: googleFaviconUrl,
+			faviconUrl: googleFaviconUrl,
 		})
 	} catch (error) {
 		return NextResponse.json(
