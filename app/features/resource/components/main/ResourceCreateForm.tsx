@@ -119,13 +119,13 @@ const ResourceCreateForm = ({
 	return (
 		<div className="flex w-full md:w-[600px] h-[468px]">
 			<div
-				className="hidden md:block min-w-[200px] bg-zinc-100"
+				className="hidden md:block min-w-[200px] bg-slate-100"
 				aria-label="Side Menu"
 			>
-				<div className="text-xl font-bold p-4 text-zinc-700">Add Resource</div>
+				<div className="text-xl font-bold p-4 text-slate-700">Add Resource</div>
 				<Button
 					className={`w-full text-muted-foreground p-2 flex items-center gap-2 outline-none ${
-						activeTab === 'url' ? 'bg-zinc-200' : ''
+						activeTab === 'url' ? 'bg-slate-200' : ''
 					}`}
 					onPress={() => setActiveTab('url')}
 					aria-label="URL"
@@ -135,7 +135,7 @@ const ResourceCreateForm = ({
 				</Button>
 				<Button
 					className={`w-full text-muted-foreground p-2 flex items-center gap-1 outline-none ${
-						activeTab === 'drive' ? 'bg-zinc-200' : ''
+						activeTab === 'drive' ? 'bg-slate-200' : ''
 					}`}
 					onPress={() => setActiveTab('drive')}
 					aria-label="Google Drive"

@@ -60,20 +60,20 @@ const ResourceDeleteButton = ({ resourceId }: ResourceDeleteButtonProps) => {
 		>
 			<Button
 				className={`p-2 mr-1 transition-colors duration-200 rounded-full outline-none
-					${isDeleting ? 'opacity-50 cursor-not-allowed' : 'hover:bg-gray-200'}`}
+					${isDeleting ? 'opacity-50 cursor-not-allowed' : 'hover:bg-slate-200'}`}
 				onPress={handleDelete}
 				isDisabled={isDeleting}
 			>
-				<Trash2 className="w-5 h-5 text-zinc-700" />
+				<Trash2 className="w-5 h-5 text-slate-700" />
 			</Button>
 			{isTooltipVisible && (
-				<Tooltip className="bg-gray-800 text-gray-300 text-xs shadow-md rounded-lg px-2 py-1">
+				<Tooltip className="bg-slate-800 text-slate-300 text-xs shadow-md rounded-lg px-2 py-1">
 					<OverlayArrow>
 						<svg
 							width={8}
 							height={8}
 							viewBox="0 0 8 8"
-							className="fill-gray-800"
+							className="fill-slate-800"
 							aria-labelledby="arrowTitle"
 						>
 							<title id="arrowTitle">ツールチップの矢印</title>

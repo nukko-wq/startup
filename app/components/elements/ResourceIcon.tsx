@@ -93,7 +93,7 @@ export default function ResourceIcon({
 						loading={loading}
 					/>
 				) : (
-					<Earth className="w-4 h-4 text-zinc-500" />
+					<Earth className="w-4 h-4 text-slate-500" />
 				)}
 			</div>
 		</div>
