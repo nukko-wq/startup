@@ -8,6 +8,7 @@ import { fetchTabs, updateTabs } from '@/app/lib/redux/features/tabs/tabsSlice'
 import TabSaveButton from '@/app/features/tabs/components/main/TabSaveButton'
 import type { RootState } from '@/app/lib/redux/store'
 import type { Tab } from '@/app/lib/redux/features/tabs/types/tabs'
+import TabCloseButton from '@/app/features/tabs/components/main/TabCloseButton'
 
 const TabList = () => {
 	const dispatch = useAppDispatch()
@@ -127,7 +128,7 @@ const TabList = () => {
 										<TabSaveButton tab={tab} sectionId={defaultSectionId} />
 									</div>
 									<div className="opacity-0 group-hover:opacity-100">
-										TabDeleteButton
+										<TabCloseButton tabId={tab.id} />
 									</div>
 								</div>
 							</div>
