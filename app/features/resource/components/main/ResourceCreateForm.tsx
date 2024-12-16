@@ -97,8 +97,9 @@ const ResourceCreateForm = ({
 				updatedAt: new Date().toISOString(),
 			}
 
-			dispatch(addResource(optimisticResource))
 			onClose(true)
+
+			dispatch(addResource(optimisticResource))
 
 			const newResource = await createResource({
 				...data,

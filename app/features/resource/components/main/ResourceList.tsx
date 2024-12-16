@@ -43,7 +43,7 @@ const ResourceList = ({ sectionId }: ResourceListProps) => {
 				return 'Google Sheet'
 			}
 			if (pathname.startsWith('/document/')) {
-				return 'Google Document'
+				return 'Google Doc'
 			}
 		}
 
