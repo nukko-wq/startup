@@ -37,13 +37,29 @@ const ResourceEditForm = ({ resource, onClose }: ResourceEditFormProps) => {
 
 	const onSubmit = async (data: ResourceFormData) => {
 		try {
-			const updatedResource = await updateResource({
-				id: resource.id,
+			// 楽観的更新のために、まず先にReduxステートを更新
+			const optimisticResource = {
+				...resource,
 				...data,
-			})
+			}
+			dispatch(updateResourceAction(optimisticResource))
 
-			dispatch(updateResourceAction(updatedResource))
-			onClose(true)
+			// APIリクエストを実行
+			try {
+				const updatedResource = await updateResource({
+					id: resource.id,
+					...data,
+				})
+
+				// APIレスポンスで最終的な状態を更新
+				dispatch(updateResourceAction(updatedResource))
+				onClose(true)
+			} catch (error) {
+				// エラーが発生した場合は、元の状態に戻す
+				dispatch(updateResourceAction(resource))
+				console.error('リソースの更新に失敗しました:', error)
+				// ここでエラー表示のUIを追加することもできます
+			}
 		} catch (error) {
 			console.error('Failed to update resource:', error)
 		}
