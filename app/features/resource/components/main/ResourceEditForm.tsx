@@ -15,7 +15,7 @@ import type { Resource } from '@/app/lib/redux/features/resource/types/resource'
 
 interface ResourceEditFormProps {
 	resource: Resource
-	onClose: () => void
+	onClose: (isSubmit?: boolean) => void
 }
 
 const ResourceEditForm = ({ resource, onClose }: ResourceEditFormProps) => {
@@ -43,7 +43,7 @@ const ResourceEditForm = ({ resource, onClose }: ResourceEditFormProps) => {
 			})
 
 			dispatch(updateResourceAction(updatedResource))
-			onClose()
+			onClose(true)
 		} catch (error) {
 			console.error('Failed to update resource:', error)
 		}
@@ -122,7 +122,7 @@ const ResourceEditForm = ({ resource, onClose }: ResourceEditFormProps) => {
 				<div className="mt-[40px] flex gap-2 justify-end">
 					<Button
 						type="button"
-						onPress={onClose}
+						onPress={() => onClose(false)}
 						className="px-4 py-2 text-sm border rounded hover:bg-gray-50 outline-none"
 					>
 						キャンセル
