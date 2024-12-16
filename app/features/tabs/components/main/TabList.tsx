@@ -9,6 +9,7 @@ import TabSaveButton from '@/app/features/tabs/components/main/TabSaveButton'
 import type { RootState } from '@/app/lib/redux/store'
 import type { Tab } from '@/app/lib/redux/features/tabs/types/tabs'
 import TabCloseButton from '@/app/features/tabs/components/main/TabCloseButton'
+import TabsMenu from '@/app/features/tabs/components/main/TabsMenu'
 
 const TabList = () => {
 	const dispatch = useAppDispatch()
@@ -82,7 +83,7 @@ const TabList = () => {
 					<Diamond className="w-6 h-6" />
 					<div className="text-[17px] text-slate-700">Tabs</div>
 				</div>
-				TabsMenu
+				<TabsMenu />
 			</div>
 			{tabs.length > 0 && (
 				<div className="border-slate-400 rounded-md flex flex-col bg-white shadow-sm">
