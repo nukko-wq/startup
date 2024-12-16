@@ -61,7 +61,6 @@ export async function DELETE(
 }
 
 export async function PATCH(
-	// PUTからPATCHに変更
 	request: Request,
 	{ params }: { params: Promise<{ resourceId: string }> },
 ) {
@@ -77,7 +76,7 @@ export async function PATCH(
 		const resolvedParams = await params
 		const { resourceId } = resolvedParams
 		const body = await request.json()
-		const { url, title } = body
+		const { url, title, description } = body
 
 		const existingResource = await prisma.resource.findUnique({
 			where: { id: resourceId },
@@ -94,8 +93,9 @@ export async function PATCH(
 		const updatedResource = await prisma.resource.update({
 			where: { id: resourceId },
 			data: {
-				...(url && { url }), // urlが存在する場合のみ更新
-				...(title !== undefined && { title }), // titleが存在する場合のみ更新
+				...(url && { url }),
+				...(title !== undefined && { title }),
+				...(description !== undefined && { description }),
 			},
 		})
 

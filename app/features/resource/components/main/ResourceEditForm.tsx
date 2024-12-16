@@ -30,6 +30,7 @@ const ResourceEditForm = ({ resource, onClose }: ResourceEditFormProps) => {
 		defaultValues: {
 			url: resource.url,
 			title: resource.title,
+			description: resource.description || '',
 		},
 		mode: 'onChange',
 	})
@@ -98,6 +99,25 @@ const ResourceEditForm = ({ resource, onClose }: ResourceEditFormProps) => {
 							</div>
 						)}
 					/>
+				</div>
+				<div>
+					<TextField>
+						<Label className="text-sm">Description</Label>
+						<Controller
+							name="description"
+							control={control}
+							render={({ field: { value, onChange, onBlur } }) => (
+								<Input
+									value={value}
+									onChange={onChange}
+									onBlur={onBlur}
+									type="text"
+									className="w-full p-2 border rounded mt-1 focus:outline-blue-500"
+									aria-label="Description"
+								/>
+							)}
+						/>
+					</TextField>
 				</div>
 				<div className="mt-[40px] flex gap-2 justify-end">
 					<Button

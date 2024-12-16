@@ -41,6 +41,7 @@ export const updateResource = async (data: {
 	id: string
 	url: string
 	title?: string
+	description?: string
 }): Promise<Resource> => {
 	const response = await fetch(`/api/resources/${data.id}`, {
 		method: 'PATCH',
