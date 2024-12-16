@@ -23,7 +23,7 @@ import {
 } from '@/app/lib/redux/features/resource/resourceSlice'
 import { createResource } from '@/app/lib/redux/features/resource/resourceAPI'
 import type { Resource } from '@/app/lib/redux/features/resource/types/resource'
-
+import GoogleDriveList from '@/app/features/google-drive/components/main/GoogleDriveLIst'
 interface ResourceCreateFormProps {
 	sectionId: string
 	onClose: () => void
@@ -227,6 +227,7 @@ const ResourceCreateForm = ({
 					</div>
 				</Form>
 			)}
+			{activeTab === 'drive' && <GoogleDriveList />}
 		</div>
 	)
 }
