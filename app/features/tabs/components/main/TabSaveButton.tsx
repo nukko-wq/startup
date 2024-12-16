@@ -87,11 +87,11 @@ const TabSaveButton = ({ tab, sectionId }: TabSaveButtonProps) => {
 		>
 			<Button
 				onPress={handleSave}
-				className="outline-none p-2 hover:bg-slate-200 transition-colors duration-200 rounded-full group/bookmark"
+				className="outline-none p-2 hover:bg-gray-200 transition-colors duration-200 rounded-full group/bookmark"
 				aria-label="タブを保存"
 				isDisabled={isSaving}
 			>
-				<Bookmark className="w-5 h-5 text-slate-500 group-hover/bookmark:text-slate-700" />
+				<Bookmark className="w-5 h-5 text-gray-500 group-hover/bookmark:text-gray-700" />
 			</Button>
 			<Tooltip className="bg-slate-800 text-slate-300 text-xs shadow-md rounded-lg px-2 py-1">
 				<OverlayArrow>

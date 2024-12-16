@@ -89,7 +89,7 @@ const TabList = () => {
 					{tabs.map((tab) => (
 						<div
 							key={tab.id}
-							className="block items-center gap-2 pr-2 py-1 truncate hover:bg-slate-100 rounded cursor-grab group outline-none"
+							className="block items-center gap-2 pr-2 py-1 truncate hover:bg-gray-100 rounded cursor-grab group outline-none"
 							onClick={() => handleTabAction(tab)}
 							onKeyDown={(e) => {
 								if (e.key === 'Enter') {
