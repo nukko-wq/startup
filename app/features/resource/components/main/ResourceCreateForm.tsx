@@ -23,10 +23,10 @@ import {
 } from '@/app/lib/redux/features/resource/resourceSlice'
 import { createResource } from '@/app/lib/redux/features/resource/resourceAPI'
 import type { Resource } from '@/app/lib/redux/features/resource/types/resource'
-
+import GoogleDriveList from '@/app/features/google-drive/components/main/GoogleDriveList'
 interface ResourceCreateFormProps {
 	sectionId: string
-	onClose: () => void
+	onClose: (isSubmit?: boolean) => void
 }
 
 const ResourceCreateForm = ({
@@ -89,9 +89,7 @@ const ResourceCreateForm = ({
 				title,
 				url: data.url,
 				faviconUrl,
-				mimeType: null,
 				description: null,
-				isGoogleDrive: false,
 				sectionId,
 				userId: '',
 				order: lastOrder + 1,
@@ -100,7 +98,7 @@ const ResourceCreateForm = ({
 			}
 
 			dispatch(addResource(optimisticResource))
-			onClose()
+			onClose(true)
 
 			const newResource = await createResource({
 				...data,
@@ -210,7 +208,7 @@ const ResourceCreateForm = ({
 						<div className="flex justify-between">
 							<Button
 								type="button"
-								onPress={onClose}
+								onPress={() => onClose(false)}
 								className="px-4 py-2 text-sm border rounded hover:bg-gray-50 outline-none"
 							>
 								キャンセル
@@ -226,6 +224,13 @@ const ResourceCreateForm = ({
 						</div>
 					</div>
 				</Form>
+			)}
+			{activeTab === 'drive' && (
+				<GoogleDriveList
+					sectionId={sectionId}
+					onClose={onClose}
+					lastOrder={lastOrder}
+				/>
 			)}
 		</div>
 	)

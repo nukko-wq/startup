@@ -71,8 +71,7 @@ const ResourceList = ({ sectionId }: ResourceListProps) => {
 							<div className="flex items-end gap-2 truncate">
 								<ResourceIcon
 									faviconUrl={resource.faviconUrl}
-									mimeType={resource.mimeType}
-									isGoogleDrive={resource.isGoogleDrive}
+									url={resource.url}
 								/>
 								<div className="flex flex-col truncate">
 									<span className="truncate">{resource.title}</span>

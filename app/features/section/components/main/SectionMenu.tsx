@@ -12,9 +12,10 @@ import type { Section } from '@/app/lib/redux/features/section/types/section'
 
 interface SectionMenuProps {
 	section: Section
+	onAddResourceClick: () => void
 }
 
-const SectionMenu = ({ section }: SectionMenuProps) => {
+const SectionMenu = ({ section, onAddResourceClick }: SectionMenuProps) => {
 	const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false)
 
 	return (
@@ -31,6 +32,7 @@ const SectionMenu = ({ section }: SectionMenuProps) => {
 						<MenuItem
 							id="add-resource"
 							className="pl-3 pr-2 py-2 outline-none hover:bg-zinc-100 cursor-pointer rounded-t-lg"
+							onAction={onAddResourceClick}
 						>
 							<div className="flex items-center gap-2">
 								<FilePlus className="w-4 h-4" />

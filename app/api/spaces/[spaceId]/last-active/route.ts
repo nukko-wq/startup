@@ -15,8 +15,8 @@ export async function PATCH(
 		}
 
 		const resolvedParams = await params
-		const { workspaceId } = await req.json()
 		const { spaceId } = resolvedParams
+		const { workspaceId } = await req.json()
 
 		// トランザクションで更新
 		const updatedSpace = await prisma.$transaction(async (tx) => {
