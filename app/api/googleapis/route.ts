@@ -8,6 +8,7 @@ export async function GET(request: Request) {
 	try {
 		const { searchParams } = new URL(request.url)
 		const query = searchParams.get('q') || ''
+		const limit = Number.parseInt(searchParams.get('limit') || '20', 10)
 
 		const session = await auth()
 		if (!session?.user?.id) {
@@ -23,7 +24,7 @@ export async function GET(request: Request) {
 				: "mimeType != 'application/vnd.google-apps.folder' and trashed = false"
 
 			const response = await drive.files.list({
-				pageSize: query ? 100 : 10,
+				pageSize: limit,
 				orderBy: 'viewedByMeTime desc',
 				fields: 'files(id, name, webViewLink, mimeType)',
 				q: searchQuery,

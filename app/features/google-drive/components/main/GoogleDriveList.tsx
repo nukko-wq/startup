@@ -42,7 +42,12 @@ const GoogleDriveList = ({
 		[],
 	)
 
+	const SEARCH_LIMIT = 20 // 検索時の制限
+	const DEFAULT_LIMIT = 30 // 初期表示時の制限
+
 	const fetchFiles = async (query?: string) => {
+		const limit = query ? SEARCH_LIMIT : DEFAULT_LIMIT
+
 		const cacheKey = query || ''
 
 		if (fileCache[cacheKey]) {
@@ -52,7 +57,7 @@ const GoogleDriveList = ({
 
 		dispatch(setLoading(true))
 		try {
-			const response = await fetchGoogleDriveFiles(query)
+			const response = await fetchGoogleDriveFiles(query, limit)
 			setFileCache((prev) => ({
 				...prev,
 				[cacheKey]: response.files,
