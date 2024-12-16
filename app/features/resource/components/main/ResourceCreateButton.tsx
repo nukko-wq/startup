@@ -21,25 +21,16 @@ const ResourceCreateButton = forwardRef<
 	ResourceCreateButtonProps
 >(({ section }, ref) => {
 	const [isOpen, setIsOpen] = useState(false)
-	const [isTooltipVisible, setIsTooltipVisible] = useState(false)
 	const isSubmitting = useRef(false)
-
-	const handleTooltipChange = useCallback((isOpen: boolean) => {
-		if (!isOpen && !isSubmitting.current) {
-			setIsTooltipVisible(isOpen)
-		}
-	}, [])
 
 	const handleFormClose = useCallback((isSubmit = false) => {
 		if (isSubmit) {
 			isSubmitting.current = true
-			setIsTooltipVisible(false)
 			setIsOpen(false)
 			setTimeout(() => {
 				isSubmitting.current = false
 			}, 100)
 		} else {
-			setIsTooltipVisible(false)
 			setIsOpen(false)
 		}
 	}, [])
@@ -47,12 +38,7 @@ const ResourceCreateButton = forwardRef<
 	return (
 		<div>
 			<DialogTrigger isOpen={isOpen} onOpenChange={setIsOpen}>
-				<TooltipTrigger
-					isOpen={isTooltipVisible && !isOpen}
-					onOpenChange={handleTooltipChange}
-					delay={700}
-					closeDelay={0}
-				>
+				<TooltipTrigger delay={700} closeDelay={0}>
 					<Button
 						ref={ref}
 						aria-label="Add Resource"
