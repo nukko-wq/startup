@@ -89,7 +89,7 @@ const GoogleDriveList = ({
 				title: file.name,
 				url: file.webViewLink,
 				sectionId,
-				faviconUrl: '/google-drive-icon.png',
+				faviconUrl: '',
 			})
 
 			dispatch(removeResource(optimisticResource.id))
