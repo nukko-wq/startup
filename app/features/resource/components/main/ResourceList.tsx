@@ -15,12 +15,28 @@ import {
 import { CSS } from '@dnd-kit/utilities'
 import { getResourceDescription } from '@/app/lib/utils/getResourceDescription'
 import { useDroppable } from '@dnd-kit/core'
+import type { AnimateLayoutChanges } from '@dnd-kit/sortable'
 
 interface ResourceListProps {
 	sectionId: string
 }
 
-const ResourceItem = ({ resource }: { resource: Resource }) => {
+interface ResourceItemProps {
+	resource: Resource
+	showDropIndicator?: boolean | null
+}
+
+const animateLayoutChanges: AnimateLayoutChanges = ({
+	isSorting,
+	isDragging,
+}) => {
+	if (isSorting || isDragging) {
+		return false
+	}
+	return true
+}
+
+const ResourceItem = ({ resource, showDropIndicator }: ResourceItemProps) => {
 	const {
 		attributes,
 		listeners,
@@ -28,12 +44,15 @@ const ResourceItem = ({ resource }: { resource: Resource }) => {
 		transform,
 		transition,
 		isDragging,
-	} = useSortable({ id: resource.id })
+		over,
+	} = useSortable({
+		id: resource.id,
+		animateLayoutChanges,
+	})
 
 	const style = {
 		transform: CSS.Transform.toString(transform),
 		transition,
-		opacity: isDragging ? 0.5 : 1,
 	}
 
 	const tabs = useAppSelector((state) => state.tabs.tabs)
@@ -80,11 +99,14 @@ const ResourceItem = ({ resource }: { resource: Resource }) => {
 
 	return (
 		<div
+			id={resource.id}
 			ref={setNodeRef}
 			style={style}
 			{...attributes}
 			{...listeners}
-			className="flex flex-grow flex-col group/item cursor-grab"
+			className={`flex flex-grow flex-col group/item cursor-grab
+				${isDragging ? 'opacity-50' : ''}
+			`}
 		>
 			<div className="grid grid-cols-[32px_1fr_74px] items-center px-1 pt-1 pb-2 border-b border-slate-200 last:border-b-0 hover:bg-gray-100">
 				<div className="flex items-center p-2 opacity-0 group-hover/item:opacity-100">
@@ -107,6 +129,9 @@ const ResourceItem = ({ resource }: { resource: Resource }) => {
 					<ResourceDeleteButton resourceId={resource.id} />
 				</div>
 			</div>
+			{showDropIndicator && (
+				<div className="absolute bottom-0 left-0 right-0 h-0.5 bg-blue-400" />
+			)}
 		</div>
 	)
 }
@@ -117,7 +142,7 @@ const ResourceList = ({ sectionId }: ResourceListProps) => {
 	)
 
 	// リソースリスト全体をドロップ可能にする
-	const { setNodeRef, isOver } = useDroppable({
+	const { setNodeRef, isOver, active } = useDroppable({
 		id: `resource-list-${sectionId}`,
 		data: {
 			type: 'resource-list',
@@ -125,13 +150,19 @@ const ResourceList = ({ sectionId }: ResourceListProps) => {
 		},
 	})
 
+	// ドラッグ中のリソースが現在のセクションと異なる場合にのみスペースを追加
+	const isDraggingFromDifferentSection =
+		active && resources.every((r) => r.id !== active.id)
+	const shouldAddSpace = isOver && isDraggingFromDifferentSection
+
 	return (
 		<div
 			ref={setNodeRef}
 			className={`
 				flex flex-col justify-center border-slate-400 rounded-md outline-none 
-				bg-white shadow-sm min-h-[52px]
+				bg-white shadow-sm min-h-[52px] transition-all duration-200
 				${isOver ? 'ring-2 ring-blue-400' : ''}
+				${shouldAddSpace ? 'pb-[52px]' : ''}
 			`}
 			aria-label="リソースリスト"
 		>
@@ -145,7 +176,11 @@ const ResourceList = ({ sectionId }: ResourceListProps) => {
 					strategy={verticalListSortingStrategy}
 				>
 					{resources.map((resource) => (
-						<ResourceItem key={resource.id} resource={resource} />
+						<ResourceItem
+							key={resource.id}
+							resource={resource}
+							showDropIndicator={isOver && isDraggingFromDifferentSection}
+						/>
 					))}
 				</SortableContext>
 			)}

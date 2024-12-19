@@ -22,12 +22,14 @@ import {
 	pointerWithin,
 	DragOverlay,
 	type DragStartEvent,
+	type DragOverEvent,
 } from '@dnd-kit/core'
 import { useDroppable } from '@dnd-kit/core'
 import {
 	moveResource,
 	reorderResources,
 } from '@/app/lib/redux/features/resource/resourceSlice'
+import { defaultAnimateLayoutChanges, useSortable } from '@dnd-kit/sortable'
 
 interface SectionItemProps {
 	section: Section
@@ -123,6 +125,23 @@ const SectionList = () => {
 		}
 	}
 
+	const handleDragOver = (event: DragOverEvent) => {
+		const { active, over } = event
+		if (!over) return
+
+		const activeResource = allResources.find((r) => r.id === active.id)
+		if (!activeResource) return
+
+		const overResource = allResources.find((r) => r.id === over.id)
+		if (overResource && activeResource.sectionId !== overResource.sectionId) {
+			const element = document.getElementById(String(over.id))
+			if (element) {
+				element.style.transform = 'translateY(40px)'
+				element.style.transition = 'transform 150ms ease'
+			}
+		}
+	}
+
 	const handleDragEnd = (event: DragEndEvent) => {
 		const { active, over } = event
 		if (!over) return
@@ -132,19 +151,15 @@ const SectionList = () => {
 
 		const fromSectionId = activeResource.sectionId
 
-		// ドロップ先の判定を修正
 		const isDropOnResourceList = String(over.id).startsWith('resource-list-')
 		const isDropOnSection = sections.some((section) => section.id === over.id)
 
 		let toSectionId: string
 		if (isDropOnResourceList) {
-			// リソースリストへのドロップの場合
 			toSectionId = String(over.id).replace('resource-list-', '')
 		} else if (isDropOnSection) {
-			// 空のセクションへのドロップの場合
 			toSectionId = String(over.id)
 		} else {
-			// 個別のリソースへのドロップの場合
 			const targetResource = allResources.find((r) => r.id === over.id)
 			if (!targetResource) return
 			toSectionId = targetResource.sectionId
@@ -153,15 +168,13 @@ const SectionList = () => {
 		if (!toSectionId) return
 
 		if (fromSectionId !== toSectionId) {
-			// 別のセクションへの移動
 			const targetSectionResources = allResources
 				.filter((r) => r.sectionId === toSectionId)
 				.sort((a, b) => a.order - b.order)
 
-			let newIndex = targetSectionResources.length // デフォルトで最後に追加
+			let newIndex = targetSectionResources.length
 
 			if (!isDropOnResourceList && !isDropOnSection && over.id) {
-				// 特定のリソース位置へのドロップの場合
 				newIndex = targetSectionResources.findIndex((r) => r.id === over.id)
 			}
 
@@ -174,7 +187,6 @@ const SectionList = () => {
 				}),
 			)
 		} else {
-			// 同じセクション内での移動
 			const sectionResources = allResources
 				.filter((r) => r.sectionId === fromSectionId)
 				.sort((a, b) => a.order - b.order)
@@ -194,12 +206,21 @@ const SectionList = () => {
 		}
 
 		setDraggingResource(null)
+
+		for (const resource of allResources) {
+			const element = document.getElementById(String(resource.id))
+			if (element) {
+				element.style.transform = ''
+				element.style.transition = ''
+			}
+		}
 	}
 
 	return (
 		<DndContext
 			collisionDetection={pointerWithin}
 			onDragStart={handleDragStart}
+			onDragOver={handleDragOver}
 			onDragEnd={handleDragEnd}
 		>
 			<div className="flex flex-col w-full gap-2">
