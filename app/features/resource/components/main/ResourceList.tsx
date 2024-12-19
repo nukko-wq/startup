@@ -8,15 +8,36 @@ import ResourceIcon from '@/app/components/elements/ResourceIcon'
 import type { Resource } from '@/app/lib/redux/features/resource/types/resource'
 import ResourceDeleteButton from '@/app/features/resource/components/main/ResourceDeleteButton'
 import ResourceMenu from '@/app/features/resource/components/main/ResourceMenu'
+import { DndContext, closestCenter, type DragEndEvent } from '@dnd-kit/core'
+import {
+	SortableContext,
+	verticalListSortingStrategy,
+	useSortable,
+} from '@dnd-kit/sortable'
+import { CSS } from '@dnd-kit/utilities'
+import { useAppDispatch } from '@/app/lib/redux/hooks'
+import { reorderResources } from '@/app/lib/redux/features/resource/resourceSlice'
 
 interface ResourceListProps {
 	sectionId: string
 }
 
-const ResourceList = ({ sectionId }: ResourceListProps) => {
-	const resources = useAppSelector((state) =>
-		selectSortedResourcesBySectionId(state, sectionId),
-	)
+const ResourceItem = ({ resource }: { resource: Resource }) => {
+	const {
+		attributes,
+		listeners,
+		setNodeRef,
+		transform,
+		transition,
+		isDragging,
+	} = useSortable({ id: resource.id })
+
+	const style = {
+		transform: CSS.Transform.toString(transform),
+		transition,
+		opacity: isDragging ? 0.5 : 1,
+	}
+
 	const tabs = useAppSelector((state) => state.tabs.tabs)
 
 	const handleResourceClick = async (resource: Resource) => {
@@ -87,6 +108,62 @@ const ResourceList = ({ sectionId }: ResourceListProps) => {
 		return 'Webpage'
 	}
 
+	const handleClick = async () => {
+		await handleResourceClick(resource)
+	}
+
+	return (
+		<div
+			ref={setNodeRef}
+			style={style}
+			{...attributes}
+			{...listeners}
+			className="flex flex-grow flex-col group/item cursor-grab"
+		>
+			<div className="grid grid-cols-[32px_1fr_74px] items-center px-1 pt-1 pb-2 border-b border-slate-200 last:border-b-0 hover:bg-gray-100">
+				<div className="flex items-center p-2 opacity-0 group-hover/item:opacity-100">
+					<div className="cursor-grab">
+						<GripVertical className="w-4 h-4 text-slate-500" />
+					</div>
+				</div>
+				{/* biome-ignore lint/a11y/useKeyWithClickEvents: <explanation> */}
+				<div className="flex items-end gap-2 truncate" onClick={handleClick}>
+					<ResourceIcon faviconUrl={resource.faviconUrl} url={resource.url} />
+					<div className="flex flex-col truncate">
+						<span className="truncate">{resource.title}</span>
+						<span className="text-xs text-gray-400">
+							{getResourceDescription(resource)}
+						</span>
+					</div>
+				</div>
+				<div className="flex items-center opacity-0 group-hover/item:opacity-100">
+					<ResourceMenu resource={resource} />
+					<ResourceDeleteButton resourceId={resource.id} />
+				</div>
+			</div>
+		</div>
+	)
+}
+
+const ResourceList = ({ sectionId }: ResourceListProps) => {
+	const resources = useAppSelector((state) =>
+		selectSortedResourcesBySectionId(state, sectionId),
+	)
+	const dispatch = useAppDispatch()
+
+	const handleDragEnd = (event: DragEndEvent) => {
+		const { active, over } = event
+		if (!over || active.id === over.id) return
+
+		dispatch(
+			reorderResources({
+				sectionId,
+				oldIndex: resources.findIndex((r) => r.id === active.id),
+				newIndex: resources.findIndex((r) => r.id === over.id),
+			}),
+		)
+	}
+
 	return (
 		<div className="flex flex-col justify-center border-slate-400 rounded-md outline-none bg-white shadow-sm">
 			{resources.length === 0 ? (
@@ -94,42 +171,19 @@ const ResourceList = ({ sectionId }: ResourceListProps) => {
 					<div className="text-gray-500">Add resources here</div>
 				</div>
 			) : (
-				resources.map((resource) => (
-					<div
-						key={resource.id}
-						className="flex flex-grow flex-col cursor-pointer group/item"
-						onClick={() => handleResourceClick(resource)}
-						onKeyDown={(e) => {
-							if (e.key === 'Enter') {
-								handleResourceClick(resource)
-							}
-						}}
+				<DndContext
+					collisionDetection={closestCenter}
+					onDragEnd={handleDragEnd}
+				>
+					<SortableContext
+						items={resources.map((r) => r.id)}
+						strategy={verticalListSortingStrategy}
 					>
-						<div className="grid grid-cols-[32px_1fr_74px] items-center px-1 pt-1 pb-2 border-b border-slate-200 last:border-b-0 hover:bg-gray-100">
-							<div className="cursor-grab flex items-center p-2 opacity-0 group-hover/item:opacity-100">
-								<Button className="cursor-grab">
-									<GripVertical className="w-4 h-4 text-slate-500" />
-								</Button>
-							</div>
-							<div className="flex items-end gap-2 truncate">
-								<ResourceIcon
-									faviconUrl={resource.faviconUrl}
-									url={resource.url}
-								/>
-								<div className="flex flex-col truncate">
-									<span className="truncate">{resource.title}</span>
-									<span className="text-xs text-gray-400">
-										{getResourceDescription(resource)}
-									</span>
-								</div>
-							</div>
-							<div className="flex items-center opacity-0 group-hover/item:opacity-100">
-								<ResourceMenu resource={resource} />
-								<ResourceDeleteButton resourceId={resource.id} />
-							</div>
-						</div>
-					</div>
-				))
+						{resources.map((resource) => (
+							<ResourceItem key={resource.id} resource={resource} />
+						))}
+					</SortableContext>
+				</DndContext>
 			)}
 		</div>
 	)

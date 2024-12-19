@@ -41,6 +41,35 @@ export const resourceSlice = createSlice({
 				state.resources[index] = action.payload
 			}
 		},
+		reorderResources: (
+			state,
+			action: PayloadAction<{
+				sectionId: string
+				oldIndex: number
+				newIndex: number
+			}>,
+		) => {
+			const { sectionId, oldIndex, newIndex } = action.payload
+			const sectionResources = state.resources
+				.filter((r) => r.sectionId === sectionId)
+				.sort((a, b) => a.order - b.order)
+
+			const [movedResource] = sectionResources.splice(oldIndex, 1)
+			sectionResources.splice(newIndex, 0, movedResource)
+
+			// orderを更新
+			sectionResources.forEach((resource, index) => {
+				const stateIndex = state.resources.findIndex(
+					(r) => r.id === resource.id,
+				)
+				if (stateIndex !== -1) {
+					state.resources[stateIndex] = {
+						...state.resources[stateIndex],
+						order: index,
+					}
+				}
+			})
+		},
 	},
 })
 
@@ -50,5 +79,6 @@ export const {
 	removeResource,
 	replaceResource,
 	updateResource,
+	reorderResources,
 } = resourceSlice.actions
 export default resourceSlice.reducer
