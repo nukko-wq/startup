@@ -14,6 +14,7 @@ import {
 } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
 import { getResourceDescription } from '@/app/lib/utils/getResourceDescription'
+import { useDroppable } from '@dnd-kit/core'
 
 interface ResourceListProps {
 	sectionId: string
@@ -115,11 +116,28 @@ const ResourceList = ({ sectionId }: ResourceListProps) => {
 		selectSortedResourcesBySectionId(state, sectionId),
 	)
 
+	// リソースリスト全体をドロップ可能にする
+	const { setNodeRef, isOver } = useDroppable({
+		id: `resource-list-${sectionId}`,
+		data: {
+			type: 'resource-list',
+			sectionId,
+		},
+	})
+
 	return (
-		<div className="flex flex-col justify-center border-slate-400 rounded-md outline-none bg-white shadow-sm min-h-[52px]">
+		<div
+			ref={setNodeRef}
+			className={`
+				flex flex-col justify-center border-slate-400 rounded-md outline-none 
+				bg-white shadow-sm min-h-[52px]
+				${isOver ? 'ring-2 ring-blue-400' : ''}
+			`}
+			aria-label="リソースリスト"
+		>
 			{resources.length === 0 ? (
 				<div className="flex flex-col justify-center items-center flex-grow h-[52px]">
-					<div className="text-gray-500">Add resources here</div>
+					<div className="text-gray-500">ここにリソースをドロップ</div>
 				</div>
 			) : (
 				<SortableContext

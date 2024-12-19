@@ -4,7 +4,10 @@ import { useAppSelector, useAppDispatch } from '@/app/lib/redux/hooks'
 import { File, GripVertical } from 'lucide-react'
 import { useRef, useState } from 'react'
 import { selectSectionsByActiveSpace } from '@/app/lib/redux/features/section/selector'
-import { selectResourcesByActiveSpace } from '@/app/lib/redux/features/resource/selector'
+import {
+	selectResourcesByActiveSpace,
+	selectSortedResourcesBySectionId,
+} from '@/app/lib/redux/features/resource/selector'
 import type { Section } from '@/app/lib/redux/features/section/types/section'
 import type { Resource } from '@/app/lib/redux/features/resource/types/resource'
 import SectionMenu from '@/app/features/section/components/main/SectionMenu'
@@ -32,12 +35,19 @@ interface SectionItemProps {
 
 const SectionItem = ({ section }: SectionItemProps) => {
 	const resourceCreateButtonRef = useRef<HTMLButtonElement>(null)
-	const { setNodeRef, isOver } = useDroppable({
+
+	const sectionResources = useAppSelector((state) =>
+		selectSortedResourcesBySectionId(state, section.id),
+	)
+	const hasResources = sectionResources.length > 0
+
+	const { setNodeRef: setSectionRef, isOver: isSectionOver } = useDroppable({
 		id: section.id,
 		data: {
 			type: 'section',
 			section,
 		},
+		disabled: false,
 	})
 
 	const handleAddResourceClick = () => {
@@ -46,9 +56,9 @@ const SectionItem = ({ section }: SectionItemProps) => {
 
 	return (
 		<div
-			ref={setNodeRef}
+			ref={setSectionRef}
 			className={`min-w-[260px] max-w-[920px] w-full pl-[16px] pr-[32px] py-5 outline-none
-				${isOver ? 'bg-slate-100 rounded-md transition-colors duration-200' : ''}`}
+				${isSectionOver && !hasResources ? 'bg-slate-100 rounded-md transition-colors duration-200' : ''}`}
 		>
 			<div className="flex justify-between items-center mb-2">
 				<div className="flex items-center ml-4">
@@ -66,7 +76,7 @@ const SectionItem = ({ section }: SectionItemProps) => {
 					/>
 				</div>
 			</div>
-			<div className={`${isOver ? 'ring-2 ring-blue-400 rounded-md' : ''}`}>
+			<div className="relative">
 				<ResourceList sectionId={section.id} />
 			</div>
 		</div>
@@ -121,10 +131,24 @@ const SectionList = () => {
 		if (!activeResource) return
 
 		const fromSectionId = activeResource.sectionId
+
+		// ドロップ先の判定を修正
+		const isDropOnResourceList = String(over.id).startsWith('resource-list-')
 		const isDropOnSection = sections.some((section) => section.id === over.id)
-		const toSectionId = isDropOnSection
-			? String(over.id)
-			: allResources.find((r) => r.id === over.id)?.sectionId
+
+		let toSectionId: string
+		if (isDropOnResourceList) {
+			// リソースリストへのドロップの場合
+			toSectionId = String(over.id).replace('resource-list-', '')
+		} else if (isDropOnSection) {
+			// 空のセクションへのドロップの場合
+			toSectionId = String(over.id)
+		} else {
+			// 個別のリソースへのドロップの場合
+			const targetResource = allResources.find((r) => r.id === over.id)
+			if (!targetResource) return
+			toSectionId = targetResource.sectionId
+		}
 
 		if (!toSectionId) return
 
@@ -134,8 +158,10 @@ const SectionList = () => {
 				.filter((r) => r.sectionId === toSectionId)
 				.sort((a, b) => a.order - b.order)
 
-			let newIndex = 0
-			if (!isDropOnSection && over.id) {
+			let newIndex = targetSectionResources.length // デフォルトで最後に追加
+
+			if (!isDropOnResourceList && !isDropOnSection && over.id) {
+				// 特定のリソース位置へのドロップの場合
 				newIndex = targetSectionResources.findIndex((r) => r.id === over.id)
 			}
 
