@@ -20,7 +20,7 @@ import {
 	moveResource,
 } from '@/app/lib/redux/features/resource/resourceSlice'
 import { useEffect } from 'react'
-
+import { getResourceDescription } from '@/app/lib/utils/getResourceDescription'
 interface ResourceListProps {
 	sectionId: string
 }
@@ -77,38 +77,6 @@ const ResourceItem = ({ resource }: { resource: Resource }) => {
 			// エラーが発生した場合は新しいタブで開く
 			window.open(resource.url, '_blank')
 		}
-	}
-
-	const getResourceDescription = (resource: Resource): string => {
-		if (resource.description) return resource.description
-
-		const url = new URL(resource.url)
-		const hostname = url.hostname
-		const pathname = url.pathname
-
-		if (hostname === 'mail.google.com') {
-			return 'Gmail'
-		}
-		if (hostname === 'drive.google.com') {
-			return 'Google Drive'
-		}
-		if (hostname === 'github.com') {
-			return 'GitHub'
-		}
-
-		if (hostname === 'docs.google.com') {
-			if (pathname.startsWith('/forms/')) {
-				return 'Google Form'
-			}
-			if (pathname.startsWith('/spreadsheets/')) {
-				return 'Google Sheet'
-			}
-			if (pathname.startsWith('/document/')) {
-				return 'Google Doc'
-			}
-		}
-
-		return 'Webpage'
 	}
 
 	const handleClick = async () => {

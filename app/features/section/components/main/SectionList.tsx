@@ -1,15 +1,18 @@
 'use client'
 
 import { useAppSelector } from '@/app/lib/redux/hooks'
-import { File } from 'lucide-react'
+import { File, GripVertical } from 'lucide-react'
 import { useRef, useState } from 'react'
 import { selectSectionsByActiveSpace } from '@/app/lib/redux/features/section/selector'
 import { selectSortedResourcesBySectionId } from '@/app/lib/redux/features/resource/selector'
 import type { Section } from '@/app/lib/redux/features/section/types/section'
+import type { Resource } from '@/app/lib/redux/features/resource/types/resource'
 import SectionMenu from '@/app/features/section/components/main/SectionMenu'
 import SectionNameEdit from '@/app/features/section/components/main/SectionNameEdit'
 import ResourceList from '@/app/features/resource/components/main/ResourceList'
 import ResourceCreateButton from '@/app/features/resource/components/main/ResourceCreateButton'
+import ResourceIcon from '@/app/components/elements/ResourceIcon'
+import { getResourceDescription } from '@/app/lib/utils/getResourceDescription'
 import {
 	DndContext,
 	type DragEndEvent,
@@ -18,8 +21,6 @@ import {
 	type DragStartEvent,
 } from '@dnd-kit/core'
 import { useDroppable } from '@dnd-kit/core'
-import type { Resource } from '@/app/lib/redux/features/resource/types/resource'
-import ResourceIcon from '@/app/components/elements/ResourceIcon'
 
 interface SectionItemProps {
 	section: Section
@@ -70,10 +71,23 @@ const SectionItem = ({ section }: SectionItemProps) => {
 
 const DraggingResourceItem = ({ resource }: { resource: Resource }) => {
 	return (
-		<div className="flex flex-grow flex-col group/item bg-white shadow-lg rounded-md p-2 w-[260px]">
-			<div className="flex items-center gap-2">
-				<ResourceIcon faviconUrl={resource.faviconUrl} url={resource.url} />
-				<span className="truncate">{resource.title}</span>
+		<div className="flex flex-grow flex-col group/item bg-white shadow-lg rounded-md min-w-[260px] w-full max-w-[920px]">
+			<div className="grid grid-cols-[32px_1fr_74px] items-center px-1 pt-1 pb-2">
+				<div className="flex items-center p-2">
+					<div>
+						<GripVertical className="w-4 h-4 text-slate-500" />
+					</div>
+				</div>
+				<div className="flex items-end gap-2 truncate">
+					<ResourceIcon faviconUrl={resource.faviconUrl} url={resource.url} />
+					<div className="flex flex-col truncate">
+						<span className="truncate">{resource.title}</span>
+						<span className="text-xs text-gray-400">
+							{getResourceDescription(resource)}
+						</span>
+					</div>
+				</div>
+				<div className="flex items-center" />
 			</div>
 		</div>
 	)
