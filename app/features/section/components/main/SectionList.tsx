@@ -24,6 +24,11 @@ import {
 	type DragStartEvent,
 	type DragOverEvent,
 } from '@dnd-kit/core'
+import {
+	SortableContext,
+	arrayMove,
+	verticalListSortingStrategy,
+} from '@dnd-kit/sortable'
 import { useDroppable } from '@dnd-kit/core'
 import {
 	moveResource,
@@ -133,12 +138,10 @@ const SectionList = () => {
 		if (!activeResource) return
 
 		const overResource = allResources.find((r) => r.id === over.id)
-		if (overResource && activeResource.sectionId !== overResource.sectionId) {
-			const element = document.getElementById(String(over.id))
-			if (element) {
-				element.style.transform = 'translateY(40px)'
-				element.style.transition = 'transform 150ms ease'
-			}
+		if (!overResource) return
+
+		if (activeResource.sectionId !== overResource.sectionId) {
+			return
 		}
 	}
 

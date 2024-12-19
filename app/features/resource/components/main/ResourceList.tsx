@@ -47,7 +47,10 @@ const ResourceItem = ({ resource, showDropIndicator }: ResourceItemProps) => {
 		over,
 	} = useSortable({
 		id: resource.id,
-		animateLayoutChanges,
+		data: {
+			type: 'resource',
+			resource,
+		},
 	})
 
 	const style = {
@@ -141,7 +144,6 @@ const ResourceList = ({ sectionId }: ResourceListProps) => {
 		selectSortedResourcesBySectionId(state, sectionId),
 	)
 
-	// リソースリスト全体をドロップ可能にする
 	const { setNodeRef, isOver, active } = useDroppable({
 		id: `resource-list-${sectionId}`,
 		data: {
@@ -150,19 +152,16 @@ const ResourceList = ({ sectionId }: ResourceListProps) => {
 		},
 	})
 
-	// ドラッグ中のリソースが現在のセクションと異なる場合にのみスペースを追加
 	const isDraggingFromDifferentSection =
 		active && resources.every((r) => r.id !== active.id)
-	const shouldAddSpace = isOver && isDraggingFromDifferentSection
 
 	return (
 		<div
 			ref={setNodeRef}
 			className={`
 				flex flex-col justify-center border-slate-400 rounded-md outline-none 
-				bg-white shadow-sm min-h-[52px] transition-all duration-200
+				bg-white shadow-sm min-h-[52px]
 				${isOver ? 'ring-2 ring-blue-400' : ''}
-				${shouldAddSpace ? 'pb-[52px]' : ''}
 			`}
 			aria-label="リソースリスト"
 		>
