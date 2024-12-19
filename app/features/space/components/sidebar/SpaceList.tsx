@@ -20,14 +20,16 @@ const SpaceList = ({ workspaceId }: SpaceListProps) => {
 
 	const handleSpaceClick = async (spaceId: string) => {
 		try {
-			await dispatch(
+			dispatch(setActiveSpace(spaceId))
+			dispatch(
 				updateSpaceLastActive({
 					spaceId,
 					workspaceId,
 				}),
-			).unwrap()
-			dispatch(setActiveSpace(spaceId))
-			router.push(`/space/${spaceId}`)
+			)
+			router.push(`/space/${spaceId}`, {
+				scroll: false,
+			})
 		} catch (error) {
 			console.error('スペースの切り替えに失敗しました:', error)
 		}
