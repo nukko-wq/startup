@@ -215,15 +215,21 @@ const ResourceList = ({ sectionId }: ResourceListProps) => {
 	}, [dispatch, resources, sectionId])
 
 	return (
-		<div className="flex flex-col justify-center border-slate-400 rounded-md outline-none bg-white shadow-sm">
-			<SortableContext
-				items={resources.map((r) => r.id)}
-				strategy={verticalListSortingStrategy}
-			>
-				{resources.map((resource) => (
-					<ResourceItem key={resource.id} resource={resource} />
-				))}
-			</SortableContext>
+		<div className="flex flex-col justify-center border-slate-400 rounded-md outline-none bg-white shadow-sm min-h-[52px]">
+			{resources.length === 0 ? (
+				<div className="flex flex-col justify-center items-center flex-grow h-[52px]">
+					<div className="text-gray-500">Add resources here</div>
+				</div>
+			) : (
+				<SortableContext
+					items={resources.map((r) => r.id)}
+					strategy={verticalListSortingStrategy}
+				>
+					{resources.map((resource) => (
+						<ResourceItem key={resource.id} resource={resource} />
+					))}
+				</SortableContext>
+			)}
 		</div>
 	)
 }
