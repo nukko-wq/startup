@@ -4,7 +4,7 @@ import { useAppSelector } from '@/app/lib/redux/hooks'
 import { File, GripVertical } from 'lucide-react'
 import { useRef, useState } from 'react'
 import { selectSectionsByActiveSpace } from '@/app/lib/redux/features/section/selector'
-import { selectSortedResourcesBySectionId } from '@/app/lib/redux/features/resource/selector'
+import { selectResourcesByActiveSpace } from '@/app/lib/redux/features/resource/selector'
 import type { Section } from '@/app/lib/redux/features/section/types/section'
 import type { Resource } from '@/app/lib/redux/features/resource/types/resource'
 import SectionMenu from '@/app/features/section/components/main/SectionMenu'
@@ -98,11 +98,7 @@ const SectionList = () => {
 	const [draggingResource, setDraggingResource] = useState<Resource | null>(
 		null,
 	)
-	const allResources = useAppSelector((state) =>
-		sections.flatMap((section) =>
-			selectSortedResourcesBySectionId(state, section.id),
-		),
-	)
+	const allResources = useAppSelector(selectResourcesByActiveSpace)
 
 	const handleDragStart = (event: DragStartEvent) => {
 		const { active } = event
