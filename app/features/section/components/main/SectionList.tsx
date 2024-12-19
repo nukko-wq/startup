@@ -1,6 +1,6 @@
 'use client'
 
-import { useAppSelector } from '@/app/lib/redux/hooks'
+import { useAppSelector, useAppDispatch } from '@/app/lib/redux/hooks'
 import { File, GripVertical } from 'lucide-react'
 import { useRef, useState } from 'react'
 import { selectSectionsByActiveSpace } from '@/app/lib/redux/features/section/selector'
@@ -21,6 +21,10 @@ import {
 	type DragStartEvent,
 } from '@dnd-kit/core'
 import { useDroppable } from '@dnd-kit/core'
+import {
+	moveResource,
+	reorderResources,
+} from '@/app/lib/redux/features/resource/resourceSlice'
 
 interface SectionItemProps {
 	section: Section
@@ -99,11 +103,11 @@ const SectionList = () => {
 		null,
 	)
 	const allResources = useAppSelector(selectResourcesByActiveSpace)
+	const dispatch = useAppDispatch()
 
 	const handleDragStart = (event: DragStartEvent) => {
 		const { active } = event
 		const resource = allResources.find((r) => r.id === active.id)
-
 		if (resource) {
 			setDraggingResource(resource)
 		}
@@ -113,16 +117,56 @@ const SectionList = () => {
 		const { active, over } = event
 		if (!over) return
 
-		const isDropOnSection = sections.some((section) => section.id === over.id)
+		const activeResource = allResources.find((r) => r.id === active.id)
+		if (!activeResource) return
 
-		const dragEndEvent = new CustomEvent('resourceDragEnd', {
-			detail: {
-				active,
-				over,
-				isDropOnSection,
-			},
-		})
-		document.dispatchEvent(dragEndEvent)
+		const fromSectionId = activeResource.sectionId
+		const isDropOnSection = sections.some((section) => section.id === over.id)
+		const toSectionId = isDropOnSection
+			? String(over.id)
+			: allResources.find((r) => r.id === over.id)?.sectionId
+
+		if (!toSectionId) return
+
+		if (fromSectionId !== toSectionId) {
+			// 別のセクションへの移動
+			const targetSectionResources = allResources
+				.filter((r) => r.sectionId === toSectionId)
+				.sort((a, b) => a.order - b.order)
+
+			let newIndex = 0
+			if (!isDropOnSection && over.id) {
+				newIndex = targetSectionResources.findIndex((r) => r.id === over.id)
+			}
+
+			dispatch(
+				moveResource({
+					resourceId: String(active.id),
+					fromSectionId,
+					toSectionId,
+					newIndex,
+				}),
+			)
+		} else {
+			// 同じセクション内での移動
+			const sectionResources = allResources
+				.filter((r) => r.sectionId === fromSectionId)
+				.sort((a, b) => a.order - b.order)
+
+			const oldIndex = sectionResources.findIndex((r) => r.id === active.id)
+			const newIndex = sectionResources.findIndex((r) => r.id === over.id)
+
+			if (oldIndex !== newIndex) {
+				dispatch(
+					reorderResources({
+						sectionId: fromSectionId,
+						oldIndex,
+						newIndex,
+					}),
+				)
+			}
+		}
+
 		setDraggingResource(null)
 	}
 

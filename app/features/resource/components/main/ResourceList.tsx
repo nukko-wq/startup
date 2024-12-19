@@ -7,20 +7,14 @@ import ResourceIcon from '@/app/components/elements/ResourceIcon'
 import type { Resource } from '@/app/lib/redux/features/resource/types/resource'
 import ResourceDeleteButton from '@/app/features/resource/components/main/ResourceDeleteButton'
 import ResourceMenu from '@/app/features/resource/components/main/ResourceMenu'
-import { DndContext, closestCenter, type DragEndEvent } from '@dnd-kit/core'
 import {
 	SortableContext,
 	verticalListSortingStrategy,
 	useSortable,
 } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
-import { useAppDispatch } from '@/app/lib/redux/hooks'
-import {
-	reorderResources,
-	moveResource,
-} from '@/app/lib/redux/features/resource/resourceSlice'
-import { useEffect } from 'react'
 import { getResourceDescription } from '@/app/lib/utils/getResourceDescription'
+
 interface ResourceListProps {
 	sectionId: string
 }
@@ -120,70 +114,6 @@ const ResourceList = ({ sectionId }: ResourceListProps) => {
 	const resources = useAppSelector((state) =>
 		selectSortedResourcesBySectionId(state, sectionId),
 	)
-	const dispatch = useAppDispatch()
-	// 全セクションのリソースを事前に取得
-	const allSectionResources = useAppSelector(
-		(state) => state.resource.resources,
-	)
-
-	useEffect(() => {
-		const handleDragEnd = (event: CustomEvent) => {
-			const { active, over, isDropOnSection } = event.detail
-			if (!over) return
-
-			const activeResource = resources.find((r) => r.id === active.id)
-			if (!activeResource) return
-
-			const overId = String(over.id)
-			const overSectionId = isDropOnSection
-				? overId
-				: allSectionResources.find((r) => r.id === overId)?.sectionId
-
-			if (overSectionId && overSectionId !== sectionId) {
-				// 別のセクションへのドロップ
-				const targetSectionResources = allSectionResources
-					.filter((r) => r.sectionId === overSectionId)
-					.sort((a, b) => a.order - b.order)
-
-				let newIndex = 0
-				if (!isDropOnSection && overId) {
-					// リソース間へのドロップの場合
-					newIndex = targetSectionResources.findIndex((r) => r.id === overId)
-				}
-
-				dispatch(
-					moveResource({
-						resourceId: String(active.id),
-						fromSectionId: sectionId,
-						toSectionId: overSectionId,
-						newIndex: newIndex,
-					}),
-				)
-			} else if (overSectionId === sectionId) {
-				// 同じセクション内での移動
-				const oldIndex = resources.findIndex((r) => r.id === active.id)
-				const newIndex = resources.findIndex((r) => r.id === overId)
-
-				if (oldIndex !== newIndex) {
-					dispatch(
-						reorderResources({
-							sectionId,
-							oldIndex,
-							newIndex,
-						}),
-					)
-				}
-			}
-		}
-
-		document.addEventListener('resourceDragEnd', handleDragEnd as EventListener)
-		return () => {
-			document.removeEventListener(
-				'resourceDragEnd',
-				handleDragEnd as EventListener,
-			)
-		}
-	}, [dispatch, resources, sectionId, allSectionResources])
 
 	return (
 		<div className="flex flex-col justify-center border-slate-400 rounded-md outline-none bg-white shadow-sm min-h-[52px]">
