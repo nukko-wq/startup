@@ -121,6 +121,10 @@ const ResourceList = ({ sectionId }: ResourceListProps) => {
 		selectSortedResourcesBySectionId(state, sectionId),
 	)
 	const dispatch = useAppDispatch()
+	// 全セクションのリソースを事前に取得
+	const allSectionResources = useAppSelector(
+		(state) => state.resource.resources,
+	)
 
 	useEffect(() => {
 		const handleDragEnd = (event: CustomEvent) => {
@@ -131,44 +135,43 @@ const ResourceList = ({ sectionId }: ResourceListProps) => {
 			if (!activeResource) return
 
 			const overId = String(over.id)
+			const overSectionId = isDropOnSection
+				? overId
+				: allSectionResources.find((r) => r.id === overId)?.sectionId
 
-			if (isDropOnSection) {
-				// セクションへのドロップ
-				if (overId !== sectionId) {
+			if (overSectionId && overSectionId !== sectionId) {
+				// 別のセクションへのドロップ
+				const targetSectionResources = allSectionResources
+					.filter((r) => r.sectionId === overSectionId)
+					.sort((a, b) => a.order - b.order)
+
+				let newIndex = 0
+				if (!isDropOnSection && overId) {
+					// リソース間へのドロップの場合
+					newIndex = targetSectionResources.findIndex((r) => r.id === overId)
+				}
+
+				dispatch(
+					moveResource({
+						resourceId: String(active.id),
+						fromSectionId: sectionId,
+						toSectionId: overSectionId,
+						newIndex: newIndex,
+					}),
+				)
+			} else if (overSectionId === sectionId) {
+				// 同じセクション内での移動
+				const oldIndex = resources.findIndex((r) => r.id === active.id)
+				const newIndex = resources.findIndex((r) => r.id === overId)
+
+				if (oldIndex !== newIndex) {
 					dispatch(
-						moveResource({
-							resourceId: String(active.id),
-							fromSectionId: sectionId,
-							toSectionId: overId,
-							newIndex: 0,
+						reorderResources({
+							sectionId,
+							oldIndex,
+							newIndex,
 						}),
 					)
-				}
-			} else {
-				// リソースへのドロップ
-				const overResource = resources.find((r) => r.id === overId)
-
-				if (overResource) {
-					if (overResource.sectionId === sectionId) {
-						// 同じセクション内での移動
-						dispatch(
-							reorderResources({
-								sectionId,
-								oldIndex: resources.findIndex((r) => r.id === active.id),
-								newIndex: resources.findIndex((r) => r.id === over.id),
-							}),
-						)
-					} else {
-						// 別のセクションのリソースへのドロップ
-						dispatch(
-							moveResource({
-								resourceId: String(active.id),
-								fromSectionId: sectionId,
-								toSectionId: overResource.sectionId,
-								newIndex: resources.findIndex((r) => r.id === over.id),
-							}),
-						)
-					}
 				}
 			}
 		}
@@ -180,7 +183,7 @@ const ResourceList = ({ sectionId }: ResourceListProps) => {
 				handleDragEnd as EventListener,
 			)
 		}
-	}, [dispatch, resources, sectionId])
+	}, [dispatch, resources, sectionId, allSectionResources])
 
 	return (
 		<div className="flex flex-col justify-center border-slate-400 rounded-md outline-none bg-white shadow-sm min-h-[52px]">

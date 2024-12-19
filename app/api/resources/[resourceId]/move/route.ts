@@ -4,62 +4,75 @@ import { getCurrentUser } from '@/lib/session'
 
 export async function POST(
 	request: Request,
-	{ params }: { params: { resourceId: string } },
+	{ params }: { params: Promise<{ resourceId: string }> },
 ) {
 	try {
 		const user = await getCurrentUser()
 		if (!user) {
-			return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+			return new NextResponse('Unauthorized', { status: 401 })
 		}
 
-		const { resourceId } = params
+		const resolvedParams = await params
+		const { resourceId } = resolvedParams
 		const { fromSectionId, toSectionId, newIndex } = await request.json()
 
 		await prisma.$transaction(async (tx) => {
-			// リソースの移動
-			await tx.resource.update({
+			// 移動するリソースを取得
+			const resource = await tx.resource.findUnique({
 				where: { id: resourceId },
-				data: { sectionId: toSectionId },
 			})
+			if (!resource) {
+				throw new Error('Resource not found')
+			}
 
-			// 移動先セクションのリソースの順序を更新
+			// 移動先のセクションの既存リソースを取得
 			const toSectionResources = await tx.resource.findMany({
 				where: { sectionId: toSectionId },
 				orderBy: { order: 'asc' },
 			})
 
-			// 新しい位置に挿入して順序を更新
-			for (let i = newIndex; i < toSectionResources.length; i++) {
-				await tx.resource.update({
-					where: { id: toSectionResources[i].id },
-					data: { order: i + 1 },
-				})
-			}
+			// 新しい位置以降のリソースの順序を更新
+			await tx.resource.updateMany({
+				where: {
+					sectionId: toSectionId,
+					order: { gte: newIndex },
+				},
+				data: {
+					order: { increment: 1 },
+				},
+			})
+
+			// リソースを移動
+			const updatedResource = await tx.resource.update({
+				where: { id: resourceId },
+				data: {
+					sectionId: toSectionId,
+					order: newIndex,
+				},
+			})
 
 			// 移動元セクションのリソースの順序を更新
 			const fromSectionResources = await tx.resource.findMany({
-				where: { sectionId: fromSectionId },
+				where: {
+					sectionId: fromSectionId,
+					order: { gt: resource.order },
+				},
 				orderBy: { order: 'asc' },
 			})
 
-			for (let i = 0; i < fromSectionResources.length; i++) {
+			for (const [index, res] of fromSectionResources.entries()) {
 				await tx.resource.update({
-					where: { id: fromSectionResources[i].id },
-					data: { order: i },
+					where: { id: res.id },
+					data: { order: resource.order + index },
 				})
 			}
+
+			return updatedResource
 		})
 
-		const updatedResource = await prisma.resource.findUnique({
-			where: { id: resourceId },
-		})
-
-		return NextResponse.json(updatedResource)
+		return new NextResponse('Success', { status: 200 })
 	} catch (error) {
-		console.error('リソース移動エラー:', error)
-		return NextResponse.json(
-			{ error: 'リソースの移動に失敗しました' },
-			{ status: 500 },
-		)
+		console.error('Error moving resource:', error)
+		return new NextResponse('Internal Server Error', { status: 500 })
 	}
 }

@@ -88,16 +88,28 @@ export const resourceSlice = createSlice({
 			)
 			if (resourceIndex === -1) return
 
-			// 移動先のセクションのリソースを取得
+			// 移動先のセクションのリソースを取得してソート
 			const toSectionResources = state.resources
 				.filter((r) => r.sectionId === toSectionId)
 				.sort((a, b) => a.order - b.order)
 
-			// リソースのセクションIDを更新
-			state.resources[resourceIndex].sectionId = toSectionId
+			// 移動元のセクションのリソースを取得してソート
+			const fromSectionResources = state.resources
+				.filter((r) => r.sectionId === fromSectionId)
+				.sort((a, b) => a.order - b.order)
 
-			// 移動先セクションでの新しい順序を設定
-			toSectionResources.splice(newIndex, 0, state.resources[resourceIndex])
+			// 移動するリソースを移動元から削除
+			const movedResource = state.resources[resourceIndex]
+			fromSectionResources.splice(
+				fromSectionResources.findIndex((r) => r.id === resourceId),
+				1,
+			)
+
+			// 移動先のセクションに挿入
+			toSectionResources.splice(newIndex, 0, {
+				...movedResource,
+				sectionId: toSectionId,
+			})
 
 			// 移動先セクションの順序を更新
 			toSectionResources.forEach((resource, index) => {
@@ -105,21 +117,24 @@ export const resourceSlice = createSlice({
 					(r) => r.id === resource.id,
 				)
 				if (stateIndex !== -1) {
-					state.resources[stateIndex].order = index
+					state.resources[stateIndex] = {
+						...state.resources[stateIndex],
+						sectionId: toSectionId,
+						order: index,
+					}
 				}
 			})
 
 			// 移動元セクションの順序を更新
-			const fromSectionResources = state.resources
-				.filter((r) => r.sectionId === fromSectionId)
-				.sort((a, b) => a.order - b.order)
-
 			fromSectionResources.forEach((resource, index) => {
 				const stateIndex = state.resources.findIndex(
 					(r) => r.id === resource.id,
 				)
 				if (stateIndex !== -1) {
-					state.resources[stateIndex].order = index
+					state.resources[stateIndex] = {
+						...state.resources[stateIndex],
+						order: index,
+					}
 				}
 			})
 		},
