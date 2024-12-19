@@ -10,6 +10,7 @@ import type { RootState } from '@/app/lib/redux/store'
 import type { Tab } from '@/app/lib/redux/features/tabs/types/tabs'
 import TabCloseButton from '@/app/features/tabs/components/main/TabCloseButton'
 import TabsMenu from '@/app/features/tabs/components/main/TabsMenu'
+import { tabsAPI } from '@/app/lib/redux/features/tabs/tabsAPI'
 
 const TabList = () => {
 	const dispatch = useAppDispatch()
@@ -46,11 +47,9 @@ const TabList = () => {
 	// タブをクリックしたときの処理
 	const handleTabAction = async (tab: Tab) => {
 		try {
-			const response = await fetch('/api/extension/id')
-			const { extensionIds } = await response.json()
-			const extensionId = extensionIds[0]
+			const extensionId = await tabsAPI.getExtensionId()
 
-			if (!extensionId || !chrome?.runtime) {
+			if (!chrome?.runtime) {
 				throw new Error('拡張機能が見つかりません')
 			}
 

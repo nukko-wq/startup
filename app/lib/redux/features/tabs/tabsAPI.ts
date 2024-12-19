@@ -1,16 +1,28 @@
 // /app/lib/redux/features/tabs/tabsAPI.ts
 import type { Tab } from '@/app/lib/redux/features/tabs/types/tabs'
 
+// キャッシュ用の変数
+let cachedExtensionId: string | null = null
+
 export const tabsAPI = {
-	async getTabs(): Promise<Tab[]> {
-		// 拡張機能IDを取得
+	async getExtensionId(): Promise<string> {
+		if (cachedExtensionId) {
+			return cachedExtensionId
+		}
+
 		const response = await fetch('/api/extension/id')
 		const { extensionIds } = await response.json()
-		const extensionId = extensionIds[0]
+		cachedExtensionId = extensionIds[0]
 
-		if (!extensionId) {
+		if (!cachedExtensionId) {
 			throw new Error('拡張機能IDが設定されていません')
 		}
+
+		return cachedExtensionId
+	},
+
+	async getTabs(): Promise<Tab[]> {
+		const extensionId = await this.getExtensionId()
 
 		if (!chrome?.runtime) {
 			throw new Error('拡張機能が見つかりません')
