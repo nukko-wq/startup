@@ -2,7 +2,6 @@
 
 import { useAppSelector } from '@/app/lib/redux/hooks'
 import { selectSortedResourcesBySectionId } from '@/app/lib/redux/features/resource/selector'
-import { Button } from 'react-aria-components'
 import { GripVertical } from 'lucide-react'
 import ResourceIcon from '@/app/components/elements/ResourceIcon'
 import type { Resource } from '@/app/lib/redux/features/resource/types/resource'
@@ -16,7 +15,11 @@ import {
 } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
 import { useAppDispatch } from '@/app/lib/redux/hooks'
-import { reorderResources } from '@/app/lib/redux/features/resource/resourceSlice'
+import {
+	reorderResources,
+	moveResource,
+} from '@/app/lib/redux/features/resource/resourceSlice'
+import { useEffect } from 'react'
 
 interface ResourceListProps {
 	sectionId: string
@@ -151,40 +154,76 @@ const ResourceList = ({ sectionId }: ResourceListProps) => {
 	)
 	const dispatch = useAppDispatch()
 
-	const handleDragEnd = (event: DragEndEvent) => {
-		const { active, over } = event
-		if (!over || active.id === over.id) return
+	useEffect(() => {
+		const handleDragEnd = (event: CustomEvent) => {
+			const { active, over, isDropOnSection } = event.detail
+			if (!over) return
 
-		dispatch(
-			reorderResources({
-				sectionId,
-				oldIndex: resources.findIndex((r) => r.id === active.id),
-				newIndex: resources.findIndex((r) => r.id === over.id),
-			}),
-		)
-	}
+			const activeResource = resources.find((r) => r.id === active.id)
+			if (!activeResource) return
+
+			const overId = String(over.id)
+
+			if (isDropOnSection) {
+				// セクションへのドロップ
+				if (overId !== sectionId) {
+					dispatch(
+						moveResource({
+							resourceId: String(active.id),
+							fromSectionId: sectionId,
+							toSectionId: overId,
+							newIndex: 0,
+						}),
+					)
+				}
+			} else {
+				// リソースへのドロップ
+				const overResource = resources.find((r) => r.id === overId)
+
+				if (overResource) {
+					if (overResource.sectionId === sectionId) {
+						// 同じセクション内での移動
+						dispatch(
+							reorderResources({
+								sectionId,
+								oldIndex: resources.findIndex((r) => r.id === active.id),
+								newIndex: resources.findIndex((r) => r.id === over.id),
+							}),
+						)
+					} else {
+						// 別のセクションのリソースへのドロップ
+						dispatch(
+							moveResource({
+								resourceId: String(active.id),
+								fromSectionId: sectionId,
+								toSectionId: overResource.sectionId,
+								newIndex: resources.findIndex((r) => r.id === over.id),
+							}),
+						)
+					}
+				}
+			}
+		}
+
+		document.addEventListener('resourceDragEnd', handleDragEnd as EventListener)
+		return () => {
+			document.removeEventListener(
+				'resourceDragEnd',
+				handleDragEnd as EventListener,
+			)
+		}
+	}, [dispatch, resources, sectionId])
 
 	return (
 		<div className="flex flex-col justify-center border-slate-400 rounded-md outline-none bg-white shadow-sm">
-			{resources.length === 0 ? (
-				<div className="flex flex-col justify-center items-center flex-grow h-[52px]">
-					<div className="text-gray-500">Add resources here</div>
-				</div>
-			) : (
-				<DndContext
-					collisionDetection={closestCenter}
-					onDragEnd={handleDragEnd}
-				>
-					<SortableContext
-						items={resources.map((r) => r.id)}
-						strategy={verticalListSortingStrategy}
-					>
-						{resources.map((resource) => (
-							<ResourceItem key={resource.id} resource={resource} />
-						))}
-					</SortableContext>
-				</DndContext>
-			)}
+			<SortableContext
+				items={resources.map((r) => r.id)}
+				strategy={verticalListSortingStrategy}
+			>
+				{resources.map((resource) => (
+					<ResourceItem key={resource.id} resource={resource} />
+				))}
+			</SortableContext>
 		</div>
 	)
 }

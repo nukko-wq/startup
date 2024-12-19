@@ -57,3 +57,24 @@ export const updateResource = async (data: {
 
 	return response.json()
 }
+
+export const moveResource = async (data: {
+	resourceId: string
+	fromSectionId: string
+	toSectionId: string
+	newIndex: number
+}): Promise<Resource> => {
+	const response = await fetch(`/api/resources/${data.resourceId}/move`, {
+		method: 'POST',
+		headers: {
+			'Content-Type': 'application/json',
+		},
+		body: JSON.stringify(data),
+	})
+
+	if (!response.ok) {
+		throw new Error('リソースの移動に失敗しました')
+	}
+
+	return response.json()
+}

@@ -70,6 +70,59 @@ export const resourceSlice = createSlice({
 				}
 			})
 		},
+		moveResource: (
+			state,
+			action: PayloadAction<{
+				resourceId: string
+				fromSectionId: string
+				toSectionId: string
+				newIndex: number
+			}>,
+		) => {
+			const { resourceId, fromSectionId, toSectionId, newIndex } =
+				action.payload
+
+			// 移動するリソースのインデックスを取得
+			const resourceIndex = state.resources.findIndex(
+				(r) => r.id === resourceId,
+			)
+			if (resourceIndex === -1) return
+
+			// 移動先のセクションのリソースを取得
+			const toSectionResources = state.resources
+				.filter((r) => r.sectionId === toSectionId)
+				.sort((a, b) => a.order - b.order)
+
+			// リソースのセクションIDを更新
+			state.resources[resourceIndex].sectionId = toSectionId
+
+			// 移動先セクションでの新しい順序を設定
+			toSectionResources.splice(newIndex, 0, state.resources[resourceIndex])
+
+			// 移動先セクションの順序を更新
+			toSectionResources.forEach((resource, index) => {
+				const stateIndex = state.resources.findIndex(
+					(r) => r.id === resource.id,
+				)
+				if (stateIndex !== -1) {
+					state.resources[stateIndex].order = index
+				}
+			})
+
+			// 移動元セクションの順序を更新
+			const fromSectionResources = state.resources
+				.filter((r) => r.sectionId === fromSectionId)
+				.sort((a, b) => a.order - b.order)
+
+			fromSectionResources.forEach((resource, index) => {
+				const stateIndex = state.resources.findIndex(
+					(r) => r.id === resource.id,
+				)
+				if (stateIndex !== -1) {
+					state.resources[stateIndex].order = index
+				}
+			})
+		},
 	},
 })
 
@@ -80,5 +133,6 @@ export const {
 	replaceResource,
 	updateResource,
 	reorderResources,
+	moveResource,
 } = resourceSlice.actions
 export default resourceSlice.reducer
