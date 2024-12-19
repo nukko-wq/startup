@@ -67,10 +67,6 @@ const TabList = () => {
 		}
 	}
 
-	if (status === 'loading') {
-		return <div>読み込み中...</div>
-	}
-
 	if (status === 'failed') {
 		return <div>エラー: {error}</div>
 	}
