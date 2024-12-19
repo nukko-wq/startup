@@ -33,6 +33,9 @@ const ResourceMenu = ({ resource }: { resource: Resource }) => {
 		setIsDialogOpen(isOpen)
 		if (isOpen) {
 			setIsTooltipVisible(false)
+			document.body.classList.add('modal-open')
+		} else {
+			document.body.classList.remove('modal-open')
 		}
 	}, [])
 

@@ -16,6 +16,7 @@ import { CSS } from '@dnd-kit/utilities'
 import { getResourceDescription } from '@/app/lib/utils/getResourceDescription'
 import { useDroppable } from '@dnd-kit/core'
 import type { AnimateLayoutChanges } from '@dnd-kit/sortable'
+import { useState, useEffect } from 'react'
 
 interface ResourceListProps {
 	sectionId: string
@@ -37,6 +38,28 @@ const animateLayoutChanges: AnimateLayoutChanges = ({
 }
 
 const ResourceItem = ({ resource, showDropIndicator }: ResourceItemProps) => {
+	// モーダルの状態を追跡
+	const [isModalOpen, setIsModalOpen] = useState(false)
+
+	// モーダルの状態を監視
+	useEffect(() => {
+		const checkModalState = () => {
+			setIsModalOpen(document.body.classList.contains('modal-open'))
+		}
+
+		// 初期チェック
+		checkModalState()
+
+		// MutationObserverを使用してbody要素のクラス変更を監視
+		const observer = new MutationObserver(checkModalState)
+		observer.observe(document.body, {
+			attributes: true,
+			attributeFilter: ['class'],
+		})
+
+		return () => observer.disconnect()
+	}, [])
+
 	const {
 		attributes,
 		listeners,
@@ -51,6 +74,7 @@ const ResourceItem = ({ resource, showDropIndicator }: ResourceItemProps) => {
 			type: 'resource',
 			resource,
 		},
+		disabled: isModalOpen,
 	})
 
 	const style = {
@@ -118,7 +142,15 @@ const ResourceItem = ({ resource, showDropIndicator }: ResourceItemProps) => {
 					</div>
 				</div>
 				{/* biome-ignore lint/a11y/useKeyWithClickEvents: <explanation> */}
-				<div className="flex items-end gap-2 truncate" onClick={handleClick}>
+				<div
+					className="flex items-end gap-2 truncate"
+					onClick={(e) => {
+						// メニューボタンクリック時はリソースを開かない
+						if (!(e.target as HTMLElement).closest('.resource-menu-buttons')) {
+							handleClick()
+						}
+					}}
+				>
 					<ResourceIcon faviconUrl={resource.faviconUrl} url={resource.url} />
 					<div className="flex flex-col truncate">
 						<span className="truncate">{resource.title}</span>
@@ -127,7 +159,7 @@ const ResourceItem = ({ resource, showDropIndicator }: ResourceItemProps) => {
 						</span>
 					</div>
 				</div>
-				<div className="flex items-center opacity-0 group-hover/item:opacity-100">
+				<div className="flex items-center opacity-0 group-hover/item:opacity-100 resource-menu-buttons">
 					<ResourceMenu resource={resource} />
 					<ResourceDeleteButton resourceId={resource.id} />
 				</div>
