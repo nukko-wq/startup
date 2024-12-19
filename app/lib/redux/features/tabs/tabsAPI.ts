@@ -10,15 +10,36 @@ export const tabsAPI = {
 			return cachedExtensionId
 		}
 
-		const response = await fetch('/api/extension/id')
-		const { extensionIds } = await response.json()
-		cachedExtensionId = extensionIds[0]
+		try {
+			const response = await fetch('/api/extension/id')
+			const { extensionIds } = await response.json()
 
-		if (!cachedExtensionId) {
-			throw new Error('拡張機能IDが設定されていません')
+			// 利用可能な拡張機能IDを検証
+			for (const id of extensionIds) {
+				try {
+					// 拡張機能が実際に利用可能かテスト
+					await new Promise((resolve, reject) => {
+						chrome.runtime.sendMessage(id, { type: 'PING' }, (response) => {
+							if (chrome.runtime.lastError) {
+								reject(chrome.runtime.lastError)
+							} else if (response?.success) {
+								resolve(response)
+							} else {
+								reject(new Error('Invalid response'))
+							}
+						})
+					})
+					cachedExtensionId = id
+					return id
+				} catch (e) {
+					console.warn(`Extension ID ${id} is not available:`, e)
+				}
+			}
+			throw new Error('No valid extension ID found')
+		} catch (error) {
+			console.error('Failed to get extension ID:', error)
+			throw error
 		}
-
-		return cachedExtensionId
 	},
 
 	async getTabs(): Promise<Tab[]> {
