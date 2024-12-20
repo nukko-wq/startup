@@ -98,7 +98,13 @@ const ResourceList = ({ sectionId }: ResourceListProps) => {
 					<div
 						key={resource.id}
 						className="flex flex-grow flex-col cursor-pointer group/item"
-						onClick={() => handleResourceClick(resource)}
+						onClick={(e) => {
+							// メニューやフォーム内のクリックを無視
+							if ((e.target as HTMLElement).closest('.resource-edit-form')) {
+								return
+							}
+							handleResourceClick(resource)
+						}}
 						onKeyDown={(e) => {
 							if (e.key === 'Enter') {
 								handleResourceClick(resource)
