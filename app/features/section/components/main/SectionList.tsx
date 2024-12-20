@@ -8,7 +8,7 @@ const SectionList = () => {
 	const sections = useAppSelector(selectSectionsByActiveSpace)
 
 	return (
-		<div className="flex flex-col w-full gap-2">
+		<div className="flex flex-col w-full gap-6">
 			{sections.map((section) => (
 				<div key={section.id} className="outline-none group">
 					<SectionItem section={section} />

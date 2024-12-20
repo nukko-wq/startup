@@ -44,7 +44,7 @@ const SectionListWrapper = () => {
 	}
 
 	return (
-		<div className="flex flex-col flex-grow w-full max-w-[920px] overflow-y-auto">
+		<div className="flex flex-col flex-grow w-full max-w-[920px] overflow-y-auto py-5 pr-[32px] pl-[16px]">
 			<div className="flex flex-col w-full">
 				<SectionList />
 			</div>
