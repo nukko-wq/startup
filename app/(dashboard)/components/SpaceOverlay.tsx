@@ -30,6 +30,18 @@ const SpaceOverlay = () => {
 	const [selectedIndex, setSelectedIndex] = useState(0)
 	const listRef = useRef<HTMLDivElement>(null)
 
+	// 初期選択インデックスをアクティブなSpaceに設定
+	useEffect(() => {
+		if (isVisible && activeSpaceId) {
+			const activeIndex = spaces.findIndex(
+				(space) => space.id === activeSpaceId,
+			)
+			if (activeIndex !== -1) {
+				setSelectedIndex(activeIndex)
+			}
+		}
+	}, [isVisible, activeSpaceId, spaces])
+
 	// 選択中の要素にフォーカスを当てる
 	useEffect(() => {
 		if (isVisible && listRef.current) {
