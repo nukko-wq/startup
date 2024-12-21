@@ -76,7 +76,7 @@ const Header = () => {
 
 	return (
 		<div className="flex items-center justify-between p-4 w-full">
-			<div className="flex items-center gap-2">
+			<div className="flex items-center">
 				{isEditing ? (
 					<Form
 						className="flex items-center"
@@ -105,7 +105,7 @@ const Header = () => {
 					</Form>
 				) : (
 					<Button
-						className="group flex items-center gap-2 hover:bg-slate-100 rounded-lg px-2 py-1 outline-none"
+						className="group flex items-center gap-2 hover:bg-slate-100 rounded-lg px-2 py-1 outline-none border-b-2 border-transparent"
 						onPress={handleEditStart}
 						aria-label="Space Name"
 					>
