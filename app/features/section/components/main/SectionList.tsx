@@ -9,6 +9,7 @@ const SectionList = () => {
 
 	return (
 		<div className="flex flex-col w-full gap-6">
+			{/*TODO: セクションのドラッグ&ドロップを実装する */}
 			{sections.map((section) => (
 				<div key={section.id} className="outline-none group">
 					<SectionItem section={section} />

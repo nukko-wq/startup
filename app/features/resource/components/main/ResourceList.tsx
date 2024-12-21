@@ -89,11 +89,13 @@ const ResourceList = ({ sectionId }: ResourceListProps) => {
 
 	return (
 		<div className="flex flex-col justify-center border-slate-400 rounded-md outline-none bg-white shadow-sm">
+			{/*TODO: セクションにリソースが0の場合のドラッグ&ドロップを実装する */}
 			{resources.length === 0 ? (
 				<div className="flex flex-col justify-center items-center flex-grow h-[52px]">
 					<div className="text-gray-500">Add resources here</div>
 				</div>
 			) : (
+				//TODO: リソースのドラッグ&ドロップを実装する
 				resources.map((resource) => (
 					<div
 						key={resource.id}
