@@ -1,5 +1,6 @@
 'use client'
 
+import { useEffect } from 'react'
 import { useAppSelector, useAppDispatch } from '@/app/lib/redux/hooks'
 import { hideSpaceOverlay } from '@/app/lib/redux/features/overlay/overlaySlice'
 
@@ -8,6 +9,17 @@ const SpaceOverlay = () => {
 	const isVisible = useAppSelector(
 		(state) => state.overlay.isSpaceOverlayVisible,
 	)
+
+	useEffect(() => {
+		const handleKeyDown = (event: KeyboardEvent) => {
+			if (event.key === 'Escape' && isVisible) {
+				dispatch(hideSpaceOverlay())
+			}
+		}
+
+		window.addEventListener('keydown', handleKeyDown)
+		return () => window.removeEventListener('keydown', handleKeyDown)
+	}, [dispatch, isVisible])
 
 	if (!isVisible) return null
 
