@@ -108,8 +108,9 @@ const SectionList = () => {
 				sectionId: destination.droppableId,
 			})
 
-			// 楽観的更新
+			// 楽観的更新の改善
 			const updatedResources = allResources.map((resource) => {
+				// 移動したリソースの更新
 				if (resource.id === movedResource.id) {
 					return {
 						...resource,
@@ -117,8 +118,30 @@ const SectionList = () => {
 						order: destination.index,
 					}
 				}
+
+				// 移動元セクションのリソースの更新
+				if (resource.sectionId === source.droppableId) {
+					const newIndex = sourceItems.findIndex((r) => r.id === resource.id)
+					return {
+						...resource,
+						order: newIndex === -1 ? resource.order : newIndex,
+					}
+				}
+
+				// 移動先セクションのリソースの更新
+				if (resource.sectionId === destination.droppableId) {
+					const newIndex = destinationItems.findIndex(
+						(r) => r.id === resource.id,
+					)
+					return {
+						...resource,
+						order: newIndex === -1 ? resource.order : newIndex,
+					}
+				}
+
 				return resource
 			})
+
 			dispatch(setResources(updatedResources))
 
 			try {
