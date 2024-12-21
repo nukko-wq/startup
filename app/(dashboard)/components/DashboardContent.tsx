@@ -28,8 +28,6 @@ const DashboardContent = memo(() => {
 
 	useEffect(() => {
 		const handleMessage = (event: MessageEvent<ExtensionMessage>) => {
-			console.log('Received message:', event.data)
-
 			if (
 				event.data.source === 'startup-extension' &&
 				event.data.type === 'SHOW_SPACE_LIST_OVERLAY'
