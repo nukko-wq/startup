@@ -74,11 +74,15 @@ const SectionList = () => {
 			const [movedResource] = newResources.splice(source.index, 1)
 			newResources.splice(destination.index, 0, movedResource)
 
-			// 楽観的更新
+			// 楽観的更新の修正
 			const updatedResources = allResources.map((resource) => {
 				if (resource.sectionId !== source.droppableId) return resource
-				const newResource = newResources.find((r) => r.id === resource.id)
-				return newResource || resource
+				const index = newResources.findIndex((r) => r.id === resource.id)
+				if (index === -1) return resource
+				return {
+					...resource,
+					order: index,
+				}
 			})
 			dispatch(setResources(updatedResources))
 
