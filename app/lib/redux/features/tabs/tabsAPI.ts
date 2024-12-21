@@ -14,10 +14,10 @@ export const tabsAPI = {
 			const response = await fetch('/api/extension/id')
 			const { extensionIds } = await response.json()
 
-			// 利用可能な拡張機能IDを検証
+			// すべての拡張機能IDを順番にチェック
+			const errors: Error[] = []
 			for (const id of extensionIds) {
 				try {
-					// 拡張機能が実際に利用可能かテスト
 					await new Promise((resolve, reject) => {
 						chrome.runtime.sendMessage(id, { type: 'PING' }, (response) => {
 							if (chrome.runtime.lastError) {
@@ -29,13 +29,19 @@ export const tabsAPI = {
 							}
 						})
 					})
+					// 有効なIDが見つかった場合はキャッシュして返す
 					cachedExtensionId = id
 					return id
 				} catch (e) {
+					// エラーを収集して続行
+					errors.push(e as Error)
 					console.warn(`Extension ID ${id} is not available:`, e)
 				}
 			}
-			throw new Error('No valid extension ID found')
+			// すべてのIDが失敗した場合のみエラーを投げる
+			throw new Error(
+				`No valid extension ID found. Errors: ${errors.map((e) => e.message).join(', ')}`,
+			)
 		} catch (error) {
 			console.error('Failed to get extension ID:', error)
 			throw error
