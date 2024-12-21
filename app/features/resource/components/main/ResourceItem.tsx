@@ -1,6 +1,5 @@
 'use client'
 
-import { Button } from 'react-aria-components'
 import { GripVertical } from 'lucide-react'
 import type { DraggableProvided } from '@hello-pangea/dnd'
 import ResourceIcon from '@/app/components/elements/ResourceIcon'
@@ -72,6 +71,7 @@ const ResourceItem = ({ resource, provided }: ResourceItemProps) => {
 		<div
 			ref={provided.innerRef}
 			{...provided.draggableProps}
+			{...provided.dragHandleProps}
 			className="flex flex-grow flex-col cursor-pointer group/item"
 			onClick={(e) => {
 				if ((e.target as HTMLElement).closest('.resource-edit-form')) {
@@ -86,10 +86,7 @@ const ResourceItem = ({ resource, provided }: ResourceItemProps) => {
 			}}
 		>
 			<div className="grid grid-cols-[32px_1fr_74px] items-center px-1 pt-1 pb-2 border-b border-slate-200 last:border-b-0 hover:bg-gray-100">
-				<div
-					{...provided.dragHandleProps}
-					className="cursor-grab flex items-center p-2 opacity-0 group-hover/item:opacity-100"
-				>
+				<div className="flex items-center p-2 opacity-0 group-hover/item:opacity-100">
 					<div className="cursor-grab">
 						<GripVertical className="w-4 h-4 text-slate-500" />
 					</div>
