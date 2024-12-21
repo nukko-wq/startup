@@ -90,9 +90,9 @@ const ResourceItem = ({ resource, provided }: ResourceItemProps) => {
 					{...provided.dragHandleProps}
 					className="cursor-grab flex items-center p-2 opacity-0 group-hover/item:opacity-100"
 				>
-					<Button className="cursor-grab">
+					<div className="cursor-grab">
 						<GripVertical className="w-4 h-4 text-slate-500" />
-					</Button>
+					</div>
 				</div>
 				<div className="flex items-end gap-2 truncate">
 					<ResourceIcon faviconUrl={resource.faviconUrl} url={resource.url} />

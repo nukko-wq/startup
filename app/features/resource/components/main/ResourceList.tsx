@@ -24,24 +24,26 @@ const ResourceList = ({ sectionId }: ResourceListProps) => {
 						snapshot.isDraggingOver ? 'bg-gray-50' : ''
 					}`}
 				>
-					{resources.length === 0 ? (
-						<div className="flex flex-col justify-center items-center flex-grow h-[52px]">
+					{resources.length === 0 && !snapshot.isDraggingOver ? (
+						<div className="flex flex-col justify-center items-center h-[52px]">
 							<div className="text-gray-500">Add resources here</div>
 						</div>
 					) : (
-						resources.map((resource, index) => (
-							<Draggable
-								key={resource.id}
-								draggableId={resource.id}
-								index={index}
-							>
-								{(provided) => (
-									<ResourceItem resource={resource} provided={provided} />
-								)}
-							</Draggable>
-						))
+						<div className={`min-h-[52px] ${resources.length === 0 ? '' : ''}`}>
+							{resources.map((resource, index) => (
+								<Draggable
+									key={resource.id}
+									draggableId={resource.id}
+									index={index}
+								>
+									{(provided) => (
+										<ResourceItem resource={resource} provided={provided} />
+									)}
+								</Draggable>
+							))}
+							{provided.placeholder}
+						</div>
 					)}
-					{provided.placeholder}
 				</div>
 			)}
 		</Droppable>
