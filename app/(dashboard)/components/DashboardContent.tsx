@@ -1,11 +1,19 @@
 'use client'
 
-import { memo } from 'react'
+import { memo, useEffect } from 'react'
 import Sidebar from '@/app/components/sidebar/sidebar'
 import Header from '@/app/components/header/Header'
 import { Suspense } from 'react'
 import TabList from '@/app/features/tabs/components/main/TabList'
 import SectionListWrapper from '@/app/features/section/components/main/SectionListWrapper'
+import SpaceOverlay from '@/app/(dashboard)/components/SpaceOverlay'
+import { useDispatch } from 'react-redux'
+import { showSpaceOverlay } from '@/app/lib/redux/features/overlay/overlaySlice'
+
+interface ExtensionMessage {
+	source: string
+	type: string
+}
 
 const TabListFallback = () => (
 	<div className="flex justify-center w-1/2">
@@ -16,6 +24,25 @@ const TabListFallback = () => (
 )
 
 const DashboardContent = memo(() => {
+	const dispatch = useDispatch()
+
+	useEffect(() => {
+		const handleMessage = (event: MessageEvent<ExtensionMessage>) => {
+			console.log('Received message:', event.data)
+
+			if (
+				event.data.source === 'startup-extension' &&
+				event.data.type === 'SHOW_SPACE_LIST_OVERLAY'
+			) {
+				console.log('Showing space overlay')
+				dispatch(showSpaceOverlay())
+			}
+		}
+
+		window.addEventListener('message', handleMessage)
+		return () => window.removeEventListener('message', handleMessage)
+	}, [dispatch])
+
 	return (
 		<div className="flex w-full h-full">
 			<div className="flex flex-col w-full h-full">
@@ -34,6 +61,7 @@ const DashboardContent = memo(() => {
 					</main>
 				</div>
 			</div>
+			<SpaceOverlay />
 		</div>
 	)
 })
