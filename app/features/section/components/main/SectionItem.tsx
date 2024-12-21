@@ -18,7 +18,7 @@ const SectionItem = ({ section }: SectionItemProps) => {
 	}
 
 	return (
-		<div className="min-w-[260px] max-w-[920px] w-full outline-none">
+		<div className="min-w-[260px] max-w-[920px] w-full outline-none mb-6">
 			<div className="flex justify-between items-center mb-2">
 				<div className="flex items-center ml-4 cursor-grab" slot="drag">
 					<File className="w-6 h-6 text-slate-700" />

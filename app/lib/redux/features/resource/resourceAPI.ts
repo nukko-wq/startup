@@ -9,6 +9,12 @@ interface CreateResourceData {
 	faviconUrl?: string | null
 }
 
+interface ReorderResourcesData {
+	resourceId: string
+	destinationSectionId: string
+	newOrder: number
+}
+
 export const createResource = async (
 	data: CreateResourceData,
 ): Promise<Resource> => {
@@ -53,6 +59,24 @@ export const updateResource = async (data: {
 
 	if (!response.ok) {
 		throw new Error('Failed to update resource')
+	}
+
+	return response.json()
+}
+
+export const reorderResources = async (
+	data: ReorderResourcesData,
+): Promise<Resource[]> => {
+	const response = await fetch('/api/resources/reorder', {
+		method: 'POST',
+		headers: {
+			'Content-Type': 'application/json',
+		},
+		body: JSON.stringify(data),
+	})
+
+	if (!response.ok) {
+		throw new Error('リソースの並び替えに失敗しました')
 	}
 
 	return response.json()
