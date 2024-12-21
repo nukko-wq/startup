@@ -91,7 +91,7 @@ const ResourceItem = ({ resource, provided }: ResourceItemProps) => {
 						<GripVertical className="w-4 h-4 text-slate-500" />
 					</div>
 				</div>
-				<div className="flex items-end gap-2 truncate">
+				<div className="flex items-end gap-2 truncate cursor-pointer">
 					<ResourceIcon faviconUrl={resource.faviconUrl} url={resource.url} />
 					<div className="flex flex-col truncate">
 						<span className="truncate">{resource.title}</span>
