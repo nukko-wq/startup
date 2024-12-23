@@ -1,25 +1,118 @@
 'use client'
 
 import { useAppSelector, useAppDispatch } from '@/app/lib/redux/hooks'
-import { DragDropContext, type DropResult } from '@hello-pangea/dnd'
+import {
+	DragDropContext,
+	Droppable,
+	Draggable,
+	type DropResult,
+} from '@hello-pangea/dnd'
 import {
 	selectDefaultWorkspace,
 	selectNonDefaultWorkspaces,
 } from '@/app/lib/redux/features/workspace/selector'
-import { ChevronRight, Layers } from 'lucide-react'
+import { Layers, GripVertical, ChevronRight } from 'lucide-react'
 import WorkspaceLeftMenu from './WorkspaceLeftMenu'
 import DefaultWorkspaceRightMenu from './DefaultWorkspaceRightMenu'
 import WorkspaceRightMenu from './WorkspaceRightMenu'
 import SpaceList from '@/app/features/space/components/sidebar/SpaceList'
+import { reorderWorkspaces } from '@/app/lib/redux/features/workspace/workSpaceAPI'
+import { reorderSpaces } from '@/app/lib/redux/features/space/spaceAPI'
+import { setWorkspaces } from '@/app/lib/redux/features/workspace/workspaceSlice'
+import { setSpaces } from '@/app/lib/redux/features/space/spaceSlice'
 
 const WorkspaceList = () => {
 	const dispatch = useAppDispatch()
 	const defaultWorkspace = useAppSelector(selectDefaultWorkspace)
 	const nonDefaultWorkspaces = useAppSelector(selectNonDefaultWorkspaces)
+	const allWorkspaces = useAppSelector((state) => state.workspace.workspaces)
+	const allSpaces = useAppSelector((state) => state.space.spaces)
 
-	const onDragEnd = (result: DropResult) => {
-		if (!result.destination) return
-		// SpaceListコンポーネントに処理を委譲
+	const onDragEnd = async (result: DropResult) => {
+		const { source, destination, type } = result
+
+		if (!destination) return
+
+		// ワークスペースの並び替え
+		if (type === 'workspace') {
+			const workspaces = Array.from(nonDefaultWorkspaces)
+			const [movedWorkspace] = workspaces.splice(source.index, 1)
+			workspaces.splice(destination.index, 0, movedWorkspace)
+
+			const updatedWorkspaces = workspaces.map((workspace, index) => ({
+				...workspace,
+				order: index,
+			}))
+
+			// デフォルトワークスペースを含む全ワークスペースの配列を作成
+			const allUpdatedWorkspaces = defaultWorkspace
+				? [defaultWorkspace, ...updatedWorkspaces]
+				: updatedWorkspaces
+
+			// 楽観的更新
+			dispatch(setWorkspaces(allUpdatedWorkspaces))
+
+			try {
+				await dispatch(
+					reorderWorkspaces(
+						workspaces.map((w, index) => ({ id: w.id, order: index })),
+					),
+				).unwrap()
+			} catch (error) {
+				console.error('ワークスペースの並び替えに失敗しました:', error)
+				dispatch(setWorkspaces(allWorkspaces))
+			}
+			return
+		}
+
+		// スペースの並び替え
+		if (type === 'space') {
+			const sourceId = source.droppableId.replace('space-list-', '')
+			const destinationId = destination.droppableId.replace('space-list-', '')
+
+			const sourceSpaces = allSpaces.filter(
+				(space) => space.workspaceId === sourceId,
+			)
+			const [movedSpace] = sourceSpaces.splice(source.index, 1)
+
+			// 楽観的更新のための配列を準備
+			const updatedSpaces = allSpaces.map((space) => {
+				if (space.id === movedSpace.id) {
+					return {
+						...space,
+						workspaceId: destinationId,
+						order: destination.index,
+					}
+				}
+				if (space.workspaceId === sourceId && space.order > source.index) {
+					return { ...space, order: space.order - 1 }
+				}
+				if (
+					space.workspaceId === destinationId &&
+					space.order >= destination.index
+				) {
+					return { ...space, order: space.order + 1 }
+				}
+				return space
+			})
+
+			// 楽観的更新
+			dispatch(setSpaces(updatedSpaces))
+
+			try {
+				await dispatch(
+					reorderSpaces({
+						sourceWorkspaceId: sourceId,
+						destinationWorkspaceId: destinationId,
+						spaceId: movedSpace.id,
+						newOrder: destination.index,
+					}),
+				).unwrap()
+			} catch (error) {
+				console.error('スペースの並び替えに失敗しました:', error)
+				dispatch(setSpaces(allSpaces))
+			}
+		}
 	}
 
 	return (
@@ -40,37 +133,57 @@ const WorkspaceList = () => {
 							</div>
 						</div>
 					</div>
-					{defaultWorkspace && <SpaceList workspaceId={defaultWorkspace.id} />}
+					{defaultWorkspace && (
+						<SpaceList workspaceId={defaultWorkspace.id} type="space" />
+					)}
 				</div>
 
 				{/* 通常のワークスペース */}
-				{nonDefaultWorkspaces.map((workspace) => (
-					<div key={workspace.id}>
-						<div className="flex items-center">
-							<div className="flex flex-col flex-grow justify-between">
-								<div className="flex items-center justify-between group min-h-[40px] mt-1">
-									<div className="flex items-center flex-grow">
-										<div className="flex items-center cursor-grab">
-											<div className="rounded-full py-1 pl-1 pr-2 ml-2">
-												<ChevronRight className="w-6 h-6 text-gray-600" />
-											</div>
-										</div>
-										<div className="flex items-center flex-grow justify-between hover:border-b-2 hover:border-blue-500 pb-1">
-											<span className="font-medium text-gray-500">
-												{workspace.name}
-											</span>
+				<Droppable droppableId="workspace-list" type="workspace">
+					{(provided) => (
+						<div ref={provided.innerRef} {...provided.droppableProps}>
+							{nonDefaultWorkspaces.map((workspace, index) => (
+								<Draggable
+									key={workspace.id}
+									draggableId={`workspace-${workspace.id}`}
+									index={index}
+								>
+									{(provided) => (
+										<div ref={provided.innerRef} {...provided.draggableProps}>
 											<div className="flex items-center">
-												<WorkspaceLeftMenu workspaceId={workspace.id} />
-												<WorkspaceRightMenu workspace={workspace} />
+												<div className="flex flex-col flex-grow justify-between">
+													<div className="flex items-center justify-between group min-h-[40px] mt-1">
+														<div className="flex items-center flex-grow">
+															<div
+																{...provided.dragHandleProps}
+																className="cursor-grab flex items-center"
+															>
+																<ChevronRight className="w-4 h-4 text-slate-500 ml-2" />
+															</div>
+															<div className="flex items-center flex-grow justify-between hover:border-b-2 hover:border-blue-500 pb-1 ml-2">
+																<span className="font-medium text-gray-500">
+																	{workspace.name}
+																</span>
+																<div className="flex items-center">
+																	<WorkspaceLeftMenu
+																		workspaceId={workspace.id}
+																	/>
+																	<WorkspaceRightMenu workspace={workspace} />
+																</div>
+															</div>
+														</div>
+													</div>
+													<SpaceList workspaceId={workspace.id} type="space" />
+												</div>
 											</div>
 										</div>
-									</div>
-								</div>
-								<SpaceList workspaceId={workspace.id} />
-							</div>
+									)}
+								</Draggable>
+							))}
+							{provided.placeholder}
 						</div>
-					</div>
-				))}
+					)}
+				</Droppable>
 			</div>
 		</DragDropContext>
 	)

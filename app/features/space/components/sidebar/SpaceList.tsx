@@ -18,6 +18,7 @@ import SpaceMenu from '@/app/features/space/components/sidebar/SpaceMenu'
 
 interface SpaceListProps {
 	workspaceId: string
+	type: 'space'
 }
 
 const SpaceList = ({ workspaceId }: SpaceListProps) => {
