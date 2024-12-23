@@ -68,7 +68,7 @@ const WorkspaceList = () => {
 				const sourceId = source.droppableId.replace('space-list-', '')
 				const destinationId = destination.droppableId.replace('space-list-', '')
 
-				// 移動元と移動先のスペースを事前にフィルタリング
+				// 移動元と移動先のスペースを事前にフィルタリングして順序付け
 				const sourceSpaces = allSpaces
 					.filter((space) => space.workspaceId === sourceId)
 					.sort((a, b) => a.order - b.order)
@@ -83,17 +83,18 @@ const WorkspaceList = () => {
 					const [movedSpace] = newSpaces.splice(source.index, 1)
 					newSpaces.splice(destination.index, 0, movedSpace)
 
-					// 楽観的更新の修正
+					// 全てのスペースの順序を更新
 					const updatedSpaces = allSpaces.map((space) => {
 						if (space.workspaceId !== sourceId) return space
-						const index = newSpaces.findIndex((s) => s.id === space.id)
+						const newIndex = newSpaces.findIndex((s) => s.id === space.id)
 						return {
 							...space,
-							order: index !== -1 ? index : space.order,
+							order: newIndex,
 						}
 					})
 
-					dispatch(setSpaces(updatedSpaces.sort((a, b) => a.order - b.order)))
+					// 楽観的更新
+					dispatch(setSpaces(updatedSpaces))
 
 					try {
 						await dispatch(
@@ -108,9 +109,8 @@ const WorkspaceList = () => {
 						console.error('スペースの並び替えに失敗しました:', error)
 						dispatch(setSpaces(allSpaces))
 					}
-				}
-				// 異なるワークスペース間での移動
-				else {
+				} else {
+					// 異なるワークスペース間での移動
 					const sourceItems = Array.from(sourceSpaces)
 					const [movedSpace] = sourceItems.splice(source.index, 1)
 					const destinationItems = Array.from(destinationSpaces)
@@ -119,7 +119,7 @@ const WorkspaceList = () => {
 						workspaceId: destinationId,
 					})
 
-					// 楽観的更新の修正
+					// 全てのスペースの順序を更新
 					const updatedSpaces = allSpaces.map((space) => {
 						if (space.id === movedSpace.id) {
 							return {
@@ -150,11 +150,11 @@ const WorkspaceList = () => {
 						return space
 					})
 
-					dispatch(setSpaces(updatedSpaces.sort((a, b) => a.order - b.order)))
+					// 楽観的更新
+					dispatch(setSpaces(updatedSpaces))
 
-					// APIコールを非同期で行う
 					try {
-						const response = await dispatch(
+						await dispatch(
 							reorderSpaces({
 								sourceWorkspaceId: sourceId,
 								destinationWorkspaceId: destinationId,
@@ -162,11 +162,6 @@ const WorkspaceList = () => {
 								newOrder: destination.index,
 							}),
 						).unwrap()
-
-						// APIからの応答で最終的な状態を更新
-						if (response) {
-							dispatch(setSpaces(response))
-						}
 					} catch (error) {
 						console.error('スペースの並び替えに失敗しました:', error)
 						dispatch(setSpaces(allSpaces))
