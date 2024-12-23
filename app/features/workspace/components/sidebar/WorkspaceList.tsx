@@ -21,6 +21,7 @@ import { reorderSpaces } from '@/app/lib/redux/features/space/spaceAPI'
 import { setWorkspaces } from '@/app/lib/redux/features/workspace/workspaceSlice'
 import { setSpaces } from '@/app/lib/redux/features/space/spaceSlice'
 import { useCallback } from 'react'
+import SpaceMenu from '@/app/features/space/components/sidebar/SpaceMenu'
 
 const WorkspaceList = () => {
 	const dispatch = useAppDispatch()
@@ -190,31 +191,10 @@ const WorkspaceList = () => {
 	return (
 		<DragDropContext onDragEnd={onDragEnd}>
 			<div className="">
-				{/* デフォルトワークスペース */}
-				<div className="">
-					<div className="flex items-center">
-						<div className="flex flex-col flex-grow justify-between">
-							<div className="flex items-center justify-between mb-1">
-								<div className="flex items-center">
-									<div className="rounded-full py-1 pl-1 pr-2 ml-2">
-										<Layers className="w-6 h-6 text-gray-500" />
-									</div>
-									<span className="font-medium text-gray-500">Spaces</span>
-								</div>
-								<DefaultWorkspaceRightMenu workspaceId={defaultWorkspace?.id} />
-							</div>
-						</div>
-					</div>
-					{defaultWorkspace && (
-						<SpaceList workspaceId={defaultWorkspace.id} type="space" />
-					)}
-				</div>
-
-				{/* 通常のワークスペース */}
 				<Droppable droppableId="workspace-list" type="workspace">
 					{(provided) => (
 						<div ref={provided.innerRef} {...provided.droppableProps}>
-							{nonDefaultWorkspaces.map((workspace, index) => (
+							{allWorkspaces.map((workspace, index) => (
 								<Draggable
 									key={workspace.id}
 									draggableId={`workspace-${workspace.id}`}
@@ -230,17 +210,31 @@ const WorkspaceList = () => {
 																{...provided.dragHandleProps}
 																className="cursor-grab flex items-center"
 															>
-																<ChevronRight className="w-4 h-4 text-slate-500 ml-2" />
+																{workspace.id === defaultWorkspace?.id ? (
+																	<Layers className="w-6 h-6 text-gray-500" />
+																) : (
+																	<ChevronRight className="w-4 h-4 text-slate-500 ml-2" />
+																)}
 															</div>
 															<div className="flex items-center flex-grow justify-between hover:border-b-2 hover:border-blue-500 pb-1 ml-2">
 																<span className="font-medium text-gray-500">
 																	{workspace.name}
 																</span>
 																<div className="flex items-center">
-																	<WorkspaceLeftMenu
-																		workspaceId={workspace.id}
-																	/>
-																	<WorkspaceRightMenu workspace={workspace} />
+																	{workspace.id === defaultWorkspace?.id ? (
+																		<DefaultWorkspaceRightMenu
+																			workspaceId={workspace.id}
+																		/>
+																	) : (
+																		<>
+																			<WorkspaceLeftMenu
+																				workspaceId={workspace.id}
+																			/>
+																			<WorkspaceRightMenu
+																				workspace={workspace}
+																			/>
+																		</>
+																	)}
 																</div>
 															</div>
 														</div>
