@@ -13,7 +13,6 @@ export async function POST(request: Request) {
 			await request.json()
 
 		const updatedSpaces = await prisma.$transaction(async (tx) => {
-			// 移動するスペースの現在の情報を取得
 			const space = await tx.space.findUnique({
 				where: { id: spaceId },
 			})
@@ -25,10 +24,10 @@ export async function POST(request: Request) {
 			// 同じワークスペース内での移動の場合
 			if (sourceWorkspaceId === destinationWorkspaceId) {
 				if (space.order < newOrder) {
-					// 下に移動する場合
+					// 上から下への移動
 					await tx.space.updateMany({
 						where: {
-							workspaceId: sourceWorkspaceId,
+							workspaceId: destinationWorkspaceId,
 							order: {
 								gt: space.order,
 								lte: newOrder,
@@ -37,10 +36,10 @@ export async function POST(request: Request) {
 						data: { order: { decrement: 1 } },
 					})
 				} else {
-					// 上に移動する場合
+					// 下から上への移動
 					await tx.space.updateMany({
 						where: {
-							workspaceId: sourceWorkspaceId,
+							workspaceId: destinationWorkspaceId,
 							order: {
 								gte: newOrder,
 								lt: space.order,
@@ -49,18 +48,19 @@ export async function POST(request: Request) {
 						data: { order: { increment: 1 } },
 					})
 				}
-			} else {
-				// 異なるワークスペース間での移動の場合
-				// 移動元の後続スペースの順序を更新
+			}
+			// 異なるワークスペース間での移動の場合
+			else {
+				// 元のワークスペースの順序を更新
 				await tx.space.updateMany({
 					where: {
-						workspaceId: sourceWorkspaceId,
+						workspaceId: space.workspaceId,
 						order: { gt: space.order },
 					},
 					data: { order: { decrement: 1 } },
 				})
 
-				// 移動先の既存スペースの順序を更新
+				// 移動先ワークスペースの順序を更新
 				await tx.space.updateMany({
 					where: {
 						workspaceId: destinationWorkspaceId,
@@ -70,7 +70,7 @@ export async function POST(request: Request) {
 				})
 			}
 
-			// スペースを移動
+			// スペースを更新
 			await tx.space.update({
 				where: { id: spaceId },
 				data: {
@@ -79,13 +79,13 @@ export async function POST(request: Request) {
 				},
 			})
 
-			// 更新後のスペースを取得
-			return await tx.space.findMany({
-				where: {
-					userId: user.id,
-				},
-				orderBy: [{ workspaceId: 'asc' }, { order: 'asc' }],
+			// 更新後のスペースを取得して返す
+			const allSpaces = await tx.space.findMany({
+				where: { userId: user.id },
+				orderBy: { order: 'asc' },
 			})
+
+			return allSpaces
 		})
 
 		return NextResponse.json(updatedSpaces)

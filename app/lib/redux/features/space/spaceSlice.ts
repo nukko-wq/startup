@@ -26,7 +26,12 @@ export const spaceSlice = createSlice({
 	initialState,
 	reducers: {
 		setSpaces: (state, action: PayloadAction<Space[]>) => {
-			state.spaces = action.payload
+			state.spaces = action.payload.sort((a, b) => {
+				if (a.workspaceId === b.workspaceId) {
+					return a.order - b.order
+				}
+				return a.workspaceId.localeCompare(b.workspaceId)
+			})
 		},
 		setActiveSpace: (state, action: PayloadAction<string>) => {
 			state.activeSpaceId = action.payload
@@ -148,11 +153,11 @@ export const spaceSlice = createSlice({
 			.addCase(reorderSpaces.pending, (state) => {
 				state.loading = true
 				state.error = null
-				state.previousSpaces = [...state.spaces]
+				state.previousSpaces = JSON.parse(JSON.stringify(state.spaces))
 			})
 			.addCase(reorderSpaces.fulfilled, (state, action) => {
 				state.loading = false
-				state.spaces = action.payload.sort((a, b) => a.order - b.order)
+				state.spaces = action.payload
 				state.previousSpaces = null
 			})
 			.addCase(reorderSpaces.rejected, (state, action) => {

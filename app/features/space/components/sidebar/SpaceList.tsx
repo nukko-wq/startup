@@ -27,7 +27,7 @@ const SpaceList = memo(({ workspaceId, type }: SpaceListProps) => {
 	const dispatch = useAppDispatch()
 	const spaces = useAppSelector((state) =>
 		selectSpacesByWorkspaceId(state, workspaceId),
-	)
+	).sort((a, b) => a.order - b.order)
 	const allSpaces = useAppSelector(selectSpaces)
 	const activeSpaceId = useAppSelector((state) => state.space.activeSpaceId)
 
