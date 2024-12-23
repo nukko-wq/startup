@@ -92,15 +92,27 @@ export const updateSpaceLastActive = createAsyncThunk(
 export const reorderSpaces = createAsyncThunk(
 	'space/reorderSpaces',
 	async ({
-		workspaceId,
-		spaces,
-	}: { workspaceId: string; spaces: { id: string; order: number }[] }) => {
+		sourceWorkspaceId,
+		destinationWorkspaceId,
+		spaceId,
+		newOrder,
+	}: {
+		sourceWorkspaceId: string
+		destinationWorkspaceId: string
+		spaceId: string
+		newOrder: number
+	}) => {
 		const response = await fetch('/api/spaces/reorder', {
 			method: 'POST',
 			headers: {
 				'Content-Type': 'application/json',
 			},
-			body: JSON.stringify({ workspaceId, spaces }),
+			body: JSON.stringify({
+				sourceWorkspaceId,
+				destinationWorkspaceId,
+				spaceId,
+				newOrder,
+			}),
 		})
 
 		if (!response.ok) {

@@ -150,14 +150,15 @@ export const spaceSlice = createSlice({
 			})
 			.addCase(reorderSpaces.fulfilled, (state, action) => {
 				state.loading = false
-				// 既存のスペースと新しいスペースをマージ
-				const existingSpaceIds = new Set(
-					action.payload.map((space) => space.id),
-				)
-				const otherSpaces = state.spaces.filter(
-					(space) => !existingSpaceIds.has(space.id),
-				)
-				state.spaces = [...action.payload, ...otherSpaces]
+				// APIからの応答で状態を更新
+				const updatedSpaces = action.payload.map((newSpace) => {
+					const existingSpace = state.spaces.find(
+						(space) => space.id === newSpace.id,
+					)
+					return existingSpace ? { ...existingSpace, ...newSpace } : newSpace
+				})
+
+				state.spaces = updatedSpaces
 			})
 			.addCase(reorderSpaces.rejected, (state, action) => {
 				state.loading = false
