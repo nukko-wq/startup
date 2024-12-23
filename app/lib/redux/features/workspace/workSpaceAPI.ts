@@ -73,3 +73,23 @@ export const updateWorkspace = createAsyncThunk(
 		return data
 	},
 )
+
+export const reorderWorkspaces = createAsyncThunk(
+	'workspace/reorderWorkspaces',
+	async (workspaces: { id: string; order: number }[]) => {
+		const response = await fetch('/api/workspaces/reorder', {
+			method: 'POST',
+			headers: {
+				'Content-Type': 'application/json',
+			},
+			body: JSON.stringify({ workspaces }),
+		})
+
+		if (!response.ok) {
+			throw new Error('Failed to reorder workspaces')
+		}
+
+		const data: Workspace[] = await response.json()
+		return data
+	},
+)

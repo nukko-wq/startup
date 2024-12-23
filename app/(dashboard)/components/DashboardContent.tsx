@@ -48,7 +48,7 @@ const DashboardContent = memo(() => {
 					<Sidebar />
 					<main className="flex flex-col flex-grow items-center bg-slate-100">
 						<Header />
-						<div className="flex flex-grow w-full h-[calc(100vh-68px)]">
+						<div className="flex flex-grow w-full h-[calc(100vh-70px)]">
 							<Suspense fallback={<TabListFallback />}>
 								<TabList />
 							</Suspense>

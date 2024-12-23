@@ -8,7 +8,9 @@ import {
 	createWorkspace,
 	deleteWorkspace,
 	updateWorkspace,
+	reorderWorkspaces,
 } from '@/app/lib/redux/features/workspace/workSpaceAPI'
+import type { AsyncThunk } from '@reduxjs/toolkit'
 
 const initialState: WorkspaceState = {
 	workspaces: [],
@@ -89,6 +91,18 @@ export const workspaceSlice = createSlice({
 				state.loading = false
 			})
 			.addCase(updateWorkspace.rejected, (state, action) => {
+				state.loading = false
+				state.error = action.error.message || null
+			})
+			.addCase(reorderWorkspaces.pending, (state) => {
+				state.loading = true
+				state.error = null
+			})
+			.addCase(reorderWorkspaces.fulfilled, (state, action) => {
+				state.workspaces = action.payload
+				state.loading = false
+			})
+			.addCase(reorderWorkspaces.rejected, (state, action) => {
 				state.loading = false
 				state.error = action.error.message || null
 			})
