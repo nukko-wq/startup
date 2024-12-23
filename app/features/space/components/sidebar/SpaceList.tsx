@@ -30,8 +30,6 @@ const SpaceList = ({ workspaceId, type }: SpaceListProps) => {
 	const allSpaces = useAppSelector(selectSpaces)
 	const activeSpaceId = useAppSelector((state) => state.space.activeSpaceId)
 
-	const sortedSpaces = [...spaces].sort((a, b) => a.order - b.order)
-
 	const handleSpaceClick = async (spaceId: string) => {
 		try {
 			dispatch(setActiveSpace(spaceId))
@@ -59,7 +57,7 @@ const SpaceList = ({ workspaceId, type }: SpaceListProps) => {
 					ref={provided.innerRef}
 					{...provided.droppableProps}
 				>
-					{sortedSpaces.length === 0 ? (
+					{spaces.length === 0 ? (
 						<div className="ml-11 mr-4 min-h-[40px] flex items-center">
 							{snapshot.isDraggingOver ? (
 								<div className="text-gray-400">Drop space here</div>
@@ -68,12 +66,15 @@ const SpaceList = ({ workspaceId, type }: SpaceListProps) => {
 							)}
 						</div>
 					) : (
-						sortedSpaces.map((space, index) => (
+						spaces.map((space, index) => (
 							<Draggable key={space.id} draggableId={space.id} index={index}>
-								{(provided) => (
+								{(provided, snapshot) => (
 									<div
 										ref={provided.innerRef}
 										{...provided.draggableProps}
+										style={{
+											...provided.draggableProps.style,
+										}}
 										className={`
 											flex flex-grow justify-between text-gray-400 cursor-pointer 
 											hover:bg-gray-700 hover:bg-opacity-75 group transition duration-200 pl-3

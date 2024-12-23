@@ -96,8 +96,9 @@ const WorkspaceList = () => {
 				})
 				dispatch(setSpaces(updatedSpaces))
 
+				// APIコールを非同期で行う
 				try {
-					await dispatch(
+					const response = await dispatch(
 						reorderSpaces({
 							sourceWorkspaceId: sourceId,
 							destinationWorkspaceId: destinationId,
@@ -105,6 +106,11 @@ const WorkspaceList = () => {
 							newOrder: destination.index,
 						}),
 					).unwrap()
+
+					// APIからの応答で最終的な状態を更新
+					if (response) {
+						dispatch(setSpaces(response))
+					}
 				} catch (error) {
 					console.error('スペースの並び替えに失敗しました:', error)
 					dispatch(setSpaces(allSpaces))
@@ -156,8 +162,9 @@ const WorkspaceList = () => {
 
 				dispatch(setSpaces(updatedSpaces))
 
+				// APIコールを非同期で行う
 				try {
-					await dispatch(
+					const response = await dispatch(
 						reorderSpaces({
 							sourceWorkspaceId: sourceId,
 							destinationWorkspaceId: destinationId,
@@ -165,6 +172,11 @@ const WorkspaceList = () => {
 							newOrder: destination.index,
 						}),
 					).unwrap()
+
+					// APIからの応答で最終的な状態を更新
+					if (response) {
+						dispatch(setSpaces(response))
+					}
 				} catch (error) {
 					console.error('スペースの並び替えに失敗しました:', error)
 					dispatch(setSpaces(allSpaces))
