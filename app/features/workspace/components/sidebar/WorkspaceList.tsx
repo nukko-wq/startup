@@ -70,53 +70,83 @@ const WorkspaceList = () => {
 			const sourceId = source.droppableId.replace('space-list-', '')
 			const destinationId = destination.droppableId.replace('space-list-', '')
 
-			// 移動するスペースを見つける
-			const spaceToMove = allSpaces.find((space) => space.id === draggableId)
-			if (!spaceToMove) return
+			// 同じワークスペース内での並び替え
+			if (sourceId === destinationId) {
+				const spacesByWorkspace = allSpaces
+					.filter((space) => space.workspaceId === sourceId)
+					.sort((a, b) => a.order - b.order)
 
-			// 更新後のスペースの配列を作成
-			const updatedSpaces = allSpaces.map((space) => {
-				// 移動元のワークスペースのスペース
-				if (space.workspaceId === sourceId) {
-					if (space.id === draggableId) {
-						// 移動するスペース自体
-						return {
-							...space,
-							workspaceId: destinationId,
-							order: destination.index,
+				const newSpaces = Array.from(spacesByWorkspace)
+				const [movedSpace] = newSpaces.splice(source.index, 1)
+				newSpaces.splice(destination.index, 0, movedSpace)
+
+				// 楽観的更新
+				const updatedSpaces = allSpaces.map((space) => {
+					if (space.workspaceId !== sourceId) return space
+					const index = newSpaces.findIndex((s) => s.id === space.id)
+					if (index === -1) return space
+					return { ...space, order: index }
+				})
+
+				dispatch(setSpaces(updatedSpaces))
+
+				try {
+					await dispatch(
+						reorderSpaces({
+							sourceWorkspaceId: sourceId,
+							destinationWorkspaceId: destinationId,
+							spaceId: draggableId,
+							newOrder: destination.index,
+						}),
+					).unwrap()
+				} catch (error) {
+					console.error('スペースの並び替えに失敗しました:', error)
+					dispatch(setSpaces(allSpaces))
+				}
+			} else {
+				// 移動するスペースを見つける
+				const spaceToMove = allSpaces.find((space) => space.id === draggableId)
+				if (!spaceToMove) return
+
+				// 更新後のスペースの配列を作成
+				const updatedSpaces = allSpaces.map((space) => {
+					// 異なるワークスペース間での移動
+					if (space.workspaceId === sourceId) {
+						if (space.id === draggableId) {
+							return {
+								...space,
+								workspaceId: destinationId,
+								order: destination.index,
+							}
+						}
+						if (space.order > spaceToMove.order) {
+							return { ...space, order: space.order - 1 }
 						}
 					}
-					// 移動元で、移動するスペースより後ろにあるスペース
-					if (space.order > spaceToMove.order) {
-						return { ...space, order: space.order - 1 }
+					if (space.workspaceId === destinationId) {
+						if (space.order >= destination.index) {
+							return { ...space, order: space.order + 1 }
+						}
 					}
-				}
-				// 移動先のワークスペースのスペース
-				if (space.workspaceId === destinationId) {
-					// 移動先の位置以降にあるスペース
-					if (space.order >= destination.index) {
-						return { ...space, order: space.order + 1 }
-					}
-				}
-				return space
-			})
+					return space
+				})
 
-			// 楽観的更新
-			dispatch(setSpaces(updatedSpaces))
+				// 楽観的更新
+				dispatch(setSpaces(updatedSpaces))
 
-			try {
-				await dispatch(
-					reorderSpaces({
-						sourceWorkspaceId: sourceId,
-						destinationWorkspaceId: destinationId,
-						spaceId: draggableId,
-						newOrder: destination.index,
-					}),
-				).unwrap()
-			} catch (error) {
-				console.error('スペースの並び替えに失敗しました:', error)
-				// エラー時は元の状態に戻す
-				dispatch(setSpaces(allSpaces))
+				try {
+					await dispatch(
+						reorderSpaces({
+							sourceWorkspaceId: sourceId,
+							destinationWorkspaceId: destinationId,
+							spaceId: draggableId,
+							newOrder: destination.index,
+						}),
+					).unwrap()
+				} catch (error) {
+					console.error('スペースの並び替えに失敗しました:', error)
+					dispatch(setSpaces(allSpaces))
+				}
 			}
 		}
 	}
