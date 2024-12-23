@@ -8,6 +8,7 @@ import {
 	deleteSpace,
 	updateSpaceLastActive,
 	updateSpace,
+	reorderSpaces,
 } from '@/app/lib/redux/features/space/spaceAPI'
 
 const initialState: SpaceState = {
@@ -140,6 +141,25 @@ export const spaceSlice = createSlice({
 				}
 			})
 			.addCase(updateSpace.rejected, (state, action) => {
+				state.loading = false
+				state.error = action.error.message || 'エラーが発生しました'
+			})
+			.addCase(reorderSpaces.pending, (state) => {
+				state.loading = true
+				state.error = null
+			})
+			.addCase(reorderSpaces.fulfilled, (state, action) => {
+				state.loading = false
+				// 既存のスペースと新しいスペースをマージ
+				const existingSpaceIds = new Set(
+					action.payload.map((space) => space.id),
+				)
+				const otherSpaces = state.spaces.filter(
+					(space) => !existingSpaceIds.has(space.id),
+				)
+				state.spaces = [...action.payload, ...otherSpaces]
+			})
+			.addCase(reorderSpaces.rejected, (state, action) => {
 				state.loading = false
 				state.error = action.error.message || 'エラーが発生しました'
 			})

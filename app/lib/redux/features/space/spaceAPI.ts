@@ -88,3 +88,26 @@ export const updateSpaceLastActive = createAsyncThunk(
 		return data
 	},
 )
+
+export const reorderSpaces = createAsyncThunk(
+	'space/reorderSpaces',
+	async ({
+		workspaceId,
+		spaces,
+	}: { workspaceId: string; spaces: { id: string; order: number }[] }) => {
+		const response = await fetch('/api/spaces/reorder', {
+			method: 'POST',
+			headers: {
+				'Content-Type': 'application/json',
+			},
+			body: JSON.stringify({ workspaceId, spaces }),
+		})
+
+		if (!response.ok) {
+			throw new Error('スペースの並び替えに失敗しました')
+		}
+
+		const data: Space[] = await response.json()
+		return data
+	},
+)
