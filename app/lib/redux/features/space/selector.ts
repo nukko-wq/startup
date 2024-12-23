@@ -8,9 +8,7 @@ export const selectActiveSpaceId = (state: RootState) =>
 export const selectSpacesByWorkspaceId = createSelector(
 	[selectSpaces, (_state: RootState, workspaceId: string) => workspaceId],
 	(spaces, workspaceId) => {
-		return [...spaces]
-			.filter((space) => space.workspaceId === workspaceId)
-			.sort((a, b) => a.order - b.order)
+		return spaces.filter((space) => space.workspaceId === workspaceId)
 	},
 )
 
@@ -22,7 +20,5 @@ export const selectActiveSpace = createSelector(
 
 export const selectSortedSpacesByWorkspaceId = createSelector(
 	[selectSpacesByWorkspaceId],
-	(spaces) => {
-		return [...spaces].sort((a, b) => a.order - b.order)
-	},
+	(spaces) => [...spaces].sort((a, b) => a.order - b.order),
 )
