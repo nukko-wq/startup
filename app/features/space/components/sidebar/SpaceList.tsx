@@ -3,17 +3,11 @@ import { GripVertical } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { useAppSelector, useAppDispatch } from '@/app/lib/redux/hooks'
 import {
-	selectSpacesByWorkspaceId,
 	selectSpaces,
+	selectSortedSpacesByWorkspaceId,
 } from '@/app/lib/redux/features/space/selector'
-import {
-	setSpaces,
-	setActiveSpace,
-} from '@/app/lib/redux/features/space/spaceSlice'
-import {
-	updateSpaceLastActive,
-	reorderSpaces,
-} from '@/app/lib/redux/features/space/spaceAPI'
+import { setActiveSpace } from '@/app/lib/redux/features/space/spaceSlice'
+import { updateSpaceLastActive } from '@/app/lib/redux/features/space/spaceAPI'
 import SpaceMenu from '@/app/features/space/components/sidebar/SpaceMenu'
 import { memo } from 'react'
 
@@ -26,8 +20,8 @@ const SpaceList = memo(({ workspaceId, type }: SpaceListProps) => {
 	const router = useRouter()
 	const dispatch = useAppDispatch()
 	const spaces = useAppSelector((state) =>
-		selectSpacesByWorkspaceId(state, workspaceId),
-	).sort((a, b) => a.order - b.order)
+		selectSortedSpacesByWorkspaceId(state, workspaceId),
+	)
 	const allSpaces = useAppSelector(selectSpaces)
 	const activeSpaceId = useAppSelector((state) => state.space.activeSpaceId)
 

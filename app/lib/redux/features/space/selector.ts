@@ -19,3 +19,10 @@ export const selectActiveSpace = createSelector(
 	(spaces, activeSpaceId) =>
 		activeSpaceId ? spaces.find((space) => space.id === activeSpaceId) : null,
 )
+
+export const selectSortedSpacesByWorkspaceId = createSelector(
+	[selectSpacesByWorkspaceId],
+	(spaces) => {
+		return [...spaces].sort((a, b) => a.order - b.order)
+	},
+)
