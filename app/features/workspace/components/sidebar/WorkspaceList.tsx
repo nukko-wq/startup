@@ -70,43 +70,30 @@ const WorkspaceList = () => {
 			const sourceId = source.droppableId.replace('space-list-', '')
 			const destinationId = destination.droppableId.replace('space-list-', '')
 
-			if (sourceId === destinationId) {
-				const workspaceSpaces = allSpaces
-					.filter((space) => space.workspaceId === sourceId)
-					.sort((a, b) => a.order - b.order)
+			const sourceSpaces = allSpaces
+				.filter((space) => space.workspaceId === sourceId)
+				.sort((a, b) => a.order - b.order)
 
+			const destinationSpaces = allSpaces
+				.filter((space) => space.workspaceId === destinationId)
+				.sort((a, b) => a.order - b.order)
+
+			// 同じワークスペース内での並び替え
+			if (sourceId === destinationId) {
+				const newSpaces = Array.from(sourceSpaces)
+				const [movedSpace] = newSpaces.splice(source.index, 1)
+				newSpaces.splice(destination.index, 0, movedSpace)
+
+				// 楽観的更新
 				const updatedSpaces = allSpaces.map((space) => {
 					if (space.workspaceId !== sourceId) return space
-
-					if (space.id === draggableId) {
-						return { ...space, order: destination.index }
+					const index = newSpaces.findIndex((s) => s.id === space.id)
+					if (index === -1) return space
+					return {
+						...space,
+						order: index,
 					}
-
-					const currentIndex = workspaceSpaces.findIndex(
-						(s) => s.id === space.id,
-					)
-					if (currentIndex === -1) return space
-
-					if (source.index < destination.index) {
-						// 下に移動する場合
-						if (
-							currentIndex > source.index &&
-							currentIndex <= destination.index
-						) {
-							return { ...space, order: currentIndex - 1 }
-						}
-					} else {
-						// 上に移動する場合
-						if (
-							currentIndex >= destination.index &&
-							currentIndex < source.index
-						) {
-							return { ...space, order: currentIndex + 1 }
-						}
-					}
-					return space
 				})
-
 				dispatch(setSpaces(updatedSpaces))
 
 				try {
@@ -122,35 +109,51 @@ const WorkspaceList = () => {
 					console.error('スペースの並び替えに失敗しました:', error)
 					dispatch(setSpaces(allSpaces))
 				}
-			} else {
-				// 移動するスペースを見つける
-				const spaceToMove = allSpaces.find((space) => space.id === draggableId)
-				if (!spaceToMove) return
-
-				// 更新後のスペースの配列を作成
-				const updatedSpaces = allSpaces.map((space) => {
-					// 異なるワークスペース間での移動
-					if (space.workspaceId === sourceId) {
-						if (space.id === draggableId) {
-							return {
-								...space,
-								workspaceId: destinationId,
-								order: destination.index,
-							}
-						}
-						if (space.order > spaceToMove.order) {
-							return { ...space, order: space.order - 1 }
-						}
-					}
-					if (space.workspaceId === destinationId) {
-						if (space.order >= destination.index) {
-							return { ...space, order: space.order + 1 }
-						}
-					}
-					return space
+			}
+			// 異なるワークスペース間での移動
+			else {
+				const sourceItems = Array.from(sourceSpaces)
+				const [movedSpace] = sourceItems.splice(source.index, 1)
+				const destinationItems = Array.from(destinationSpaces)
+				destinationItems.splice(destination.index, 0, {
+					...movedSpace,
+					workspaceId: destinationId,
 				})
 
 				// 楽観的更新
+				const updatedSpaces = allSpaces.map((space) => {
+					// 移動したスペースの更新
+					if (space.id === movedSpace.id) {
+						return {
+							...space,
+							workspaceId: destinationId,
+							order: destination.index,
+						}
+					}
+
+					// 移動元ワークスペースのスペースの更新
+					if (space.workspaceId === sourceId) {
+						const newIndex = sourceItems.findIndex((s) => s.id === space.id)
+						return {
+							...space,
+							order: newIndex === -1 ? space.order : newIndex,
+						}
+					}
+
+					// 移動先ワークスペースのスペースの更新
+					if (space.workspaceId === destinationId) {
+						const newIndex = destinationItems.findIndex(
+							(s) => s.id === space.id,
+						)
+						return {
+							...space,
+							order: newIndex === -1 ? space.order : newIndex,
+						}
+					}
+
+					return space
+				})
+
 				dispatch(setSpaces(updatedSpaces))
 
 				try {
