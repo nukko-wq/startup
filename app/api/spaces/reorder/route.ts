@@ -12,7 +12,7 @@ export async function POST(request: Request) {
 		const { sourceWorkspaceId, destinationWorkspaceId, spaceId, newOrder } =
 			await request.json()
 
-		await prisma.$transaction(async (tx) => {
+		const updatedSpaces = await prisma.$transaction(async (tx) => {
 			// 移動するスペースの現在の情報を取得
 			const space = await tx.space.findUnique({
 				where: { id: spaceId },
@@ -22,56 +22,75 @@ export async function POST(request: Request) {
 				throw new Error('スペースが見つかりません')
 			}
 
-			// 移動元ワークスペースの順序を更新
-			await tx.space.updateMany({
-				where: {
-					workspaceId: sourceWorkspaceId,
-					order: { gt: space.order },
-				},
-				data: { order: { decrement: 1 } },
-			})
+			// 同じワークスペース内での移動の場合
+			if (sourceWorkspaceId === destinationWorkspaceId) {
+				if (space.order < newOrder) {
+					// 下に移動する場合
+					await tx.space.updateMany({
+						where: {
+							workspaceId: sourceWorkspaceId,
+							order: {
+								gt: space.order,
+								lte: newOrder,
+							},
+						},
+						data: { order: { decrement: 1 } },
+					})
+				} else {
+					// 上に移動する場合
+					await tx.space.updateMany({
+						where: {
+							workspaceId: sourceWorkspaceId,
+							order: {
+								gte: newOrder,
+								lt: space.order,
+							},
+						},
+						data: { order: { increment: 1 } },
+					})
+				}
+			} else {
+				// 異なるワークスペース間での移動の場合
+				// 移動元の後続スペースの順序を更新
+				await tx.space.updateMany({
+					where: {
+						workspaceId: sourceWorkspaceId,
+						order: { gt: space.order },
+					},
+					data: { order: { decrement: 1 } },
+				})
 
-			// 移動先ワークスペースの既存のスペースを取得
-			const destinationSpaces = await tx.space.findMany({
-				where: { workspaceId: destinationWorkspaceId },
-				orderBy: { order: 'asc' },
-			})
-
-			// 移動先の新しい順序を決定
-			let finalOrder = newOrder
-			if (destinationSpaces.length === 0) {
-				finalOrder = 0 // スペースが存在しない場合は0から開始
+				// 移動先の既存スペースの順序を更新
+				await tx.space.updateMany({
+					where: {
+						workspaceId: destinationWorkspaceId,
+						order: { gte: newOrder },
+					},
+					data: { order: { increment: 1 } },
+				})
 			}
-
-			// 移動先ワークスペースの順序を更新
-			await tx.space.updateMany({
-				where: {
-					workspaceId: destinationWorkspaceId,
-					order: { gte: finalOrder },
-				},
-				data: { order: { increment: 1 } },
-			})
 
 			// スペースを移動
 			await tx.space.update({
 				where: { id: spaceId },
 				data: {
 					workspaceId: destinationWorkspaceId,
-					order: finalOrder,
+					order: newOrder,
 				},
 			})
-		})
 
-		// 更新後のスペースを取得
-		const updatedSpaces = await prisma.space.findMany({
-			where: {
-				userId: user.id,
-			},
-			orderBy: [{ workspaceId: 'asc' }, { order: 'asc' }],
+			// 更新後のスペースを取得
+			return await tx.space.findMany({
+				where: {
+					userId: user.id,
+				},
+				orderBy: [{ workspaceId: 'asc' }, { order: 'asc' }],
+			})
 		})
 
 		return NextResponse.json(updatedSpaces)
 	} catch (error) {
+		console.error('Error in reorder spaces:', error)
 		return NextResponse.json(
 			{ error: 'スペースの順序更新に失敗しました' },
 			{ status: 500 },

@@ -18,6 +18,7 @@ const initialState: SpaceState = {
 	loading: false,
 	error: null,
 	optimisticSpaces: [],
+	previousSpaces: null,
 }
 
 export const spaceSlice = createSlice({
@@ -147,22 +148,20 @@ export const spaceSlice = createSlice({
 			.addCase(reorderSpaces.pending, (state) => {
 				state.loading = true
 				state.error = null
+				state.previousSpaces = state.spaces
 			})
 			.addCase(reorderSpaces.fulfilled, (state, action) => {
 				state.loading = false
-				// APIからの応答で状態を更新
-				const updatedSpaces = action.payload.map((newSpace) => {
-					const existingSpace = state.spaces.find(
-						(space) => space.id === newSpace.id,
-					)
-					return existingSpace ? { ...existingSpace, ...newSpace } : newSpace
-				})
-
-				state.spaces = updatedSpaces
+				state.spaces = action.payload
+				state.previousSpaces = null
 			})
 			.addCase(reorderSpaces.rejected, (state, action) => {
 				state.loading = false
 				state.error = action.error.message || 'エラーが発生しました'
+				if (state.previousSpaces) {
+					state.spaces = state.previousSpaces
+				}
+				state.previousSpaces = null
 			})
 	},
 })

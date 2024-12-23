@@ -91,35 +91,45 @@ export const updateSpaceLastActive = createAsyncThunk(
 
 export const reorderSpaces = createAsyncThunk(
 	'space/reorderSpaces',
-	async ({
-		sourceWorkspaceId,
-		destinationWorkspaceId,
-		spaceId,
-		newOrder,
-	}: {
-		sourceWorkspaceId: string
-		destinationWorkspaceId: string
-		spaceId: string
-		newOrder: number
-	}) => {
-		const response = await fetch('/api/spaces/reorder', {
-			method: 'POST',
-			headers: {
-				'Content-Type': 'application/json',
-			},
-			body: JSON.stringify({
-				sourceWorkspaceId,
-				destinationWorkspaceId,
-				spaceId,
-				newOrder,
-			}),
-		})
+	async (
+		{
+			sourceWorkspaceId,
+			destinationWorkspaceId,
+			spaceId,
+			newOrder,
+		}: {
+			sourceWorkspaceId: string
+			destinationWorkspaceId: string
+			spaceId: string
+			newOrder: number
+		},
+		{ rejectWithValue },
+	) => {
+		try {
+			const response = await fetch('/api/spaces/reorder', {
+				method: 'POST',
+				headers: {
+					'Content-Type': 'application/json',
+				},
+				body: JSON.stringify({
+					sourceWorkspaceId,
+					destinationWorkspaceId,
+					spaceId,
+					newOrder,
+				}),
+			})
 
-		if (!response.ok) {
-			throw new Error('スペースの並び替えに失敗しました')
+			if (!response.ok) {
+				const error = await response.json()
+				return rejectWithValue(
+					error.error || 'スペースの並び替えに失敗しました',
+				)
+			}
+
+			const data: Space[] = await response.json()
+			return data
+		} catch (error) {
+			return rejectWithValue('スペースの並び替えに失敗しました')
 		}
-
-		const data: Space[] = await response.json()
-		return data
 	},
 )

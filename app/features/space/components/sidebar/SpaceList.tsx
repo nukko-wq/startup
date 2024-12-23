@@ -21,7 +21,7 @@ interface SpaceListProps {
 	type: 'space'
 }
 
-const SpaceList = ({ workspaceId }: SpaceListProps) => {
+const SpaceList = ({ workspaceId, type }: SpaceListProps) => {
 	const router = useRouter()
 	const dispatch = useAppDispatch()
 	const spaces = useAppSelector((state) =>
@@ -48,7 +48,7 @@ const SpaceList = ({ workspaceId }: SpaceListProps) => {
 	}
 
 	return (
-		<Droppable droppableId={`space-list-${workspaceId}`} isDropDisabled={false}>
+		<Droppable droppableId={`space-list-${workspaceId}`} type={type}>
 			{(provided, snapshot) => (
 				<div
 					className={`flex flex-col min-h-[40px] ${

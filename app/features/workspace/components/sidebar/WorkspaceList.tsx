@@ -29,7 +29,7 @@ const WorkspaceList = () => {
 	const allSpaces = useAppSelector((state) => state.space.spaces)
 
 	const onDragEnd = async (result: DropResult) => {
-		const { source, destination, type } = result
+		const { source, destination, type, draggableId } = result
 
 		if (!destination) return
 
@@ -70,28 +70,33 @@ const WorkspaceList = () => {
 			const sourceId = source.droppableId.replace('space-list-', '')
 			const destinationId = destination.droppableId.replace('space-list-', '')
 
-			const sourceSpaces = allSpaces.filter(
-				(space) => space.workspaceId === sourceId,
-			)
-			const [movedSpace] = sourceSpaces.splice(source.index, 1)
+			// 移動するスペースを見つける
+			const spaceToMove = allSpaces.find((space) => space.id === draggableId)
+			if (!spaceToMove) return
 
-			// 楽観的更新のための配列を準備
+			// 更新後のスペースの配列を作成
 			const updatedSpaces = allSpaces.map((space) => {
-				if (space.id === movedSpace.id) {
-					return {
-						...space,
-						workspaceId: destinationId,
-						order: destination.index,
+				// 移動元のワークスペースのスペース
+				if (space.workspaceId === sourceId) {
+					if (space.id === draggableId) {
+						// 移動するスペース自体
+						return {
+							...space,
+							workspaceId: destinationId,
+							order: destination.index,
+						}
+					}
+					// 移動元で、移動するスペースより後ろにあるスペース
+					if (space.order > spaceToMove.order) {
+						return { ...space, order: space.order - 1 }
 					}
 				}
-				if (space.workspaceId === sourceId && space.order > source.index) {
-					return { ...space, order: space.order - 1 }
-				}
-				if (
-					space.workspaceId === destinationId &&
-					space.order >= destination.index
-				) {
-					return { ...space, order: space.order + 1 }
+				// 移動先のワークスペースのスペース
+				if (space.workspaceId === destinationId) {
+					// 移動先の位置以降にあるスペース
+					if (space.order >= destination.index) {
+						return { ...space, order: space.order + 1 }
+					}
 				}
 				return space
 			})
@@ -104,12 +109,13 @@ const WorkspaceList = () => {
 					reorderSpaces({
 						sourceWorkspaceId: sourceId,
 						destinationWorkspaceId: destinationId,
-						spaceId: movedSpace.id,
+						spaceId: draggableId,
 						newOrder: destination.index,
 					}),
 				).unwrap()
 			} catch (error) {
 				console.error('スペースの並び替えに失敗しました:', error)
+				// エラー時は元の状態に戻す
 				dispatch(setSpaces(allSpaces))
 			}
 		}
