@@ -20,6 +20,7 @@ import { reorderWorkspaces } from '@/app/lib/redux/features/workspace/workSpaceA
 import { reorderSpaces } from '@/app/lib/redux/features/space/spaceAPI'
 import { setWorkspaces } from '@/app/lib/redux/features/workspace/workspaceSlice'
 import { setSpaces } from '@/app/lib/redux/features/space/spaceSlice'
+import { useCallback } from 'react'
 
 const WorkspaceList = () => {
 	const dispatch = useAppDispatch()
@@ -28,162 +29,167 @@ const WorkspaceList = () => {
 	const allWorkspaces = useAppSelector((state) => state.workspace.workspaces)
 	const allSpaces = useAppSelector((state) => state.space.spaces)
 
-	const onDragEnd = async (result: DropResult) => {
-		const { source, destination, type, draggableId } = result
+	const onDragEnd = useCallback(
+		async (result: DropResult) => {
+			const { source, destination, type, draggableId } = result
 
-		if (!destination) return
+			if (!destination) return
 
-		// ワークスペースの並び替え
-		if (type === 'workspace') {
-			const workspaces = Array.from(nonDefaultWorkspaces)
-			const [movedWorkspace] = workspaces.splice(source.index, 1)
-			workspaces.splice(destination.index, 0, movedWorkspace)
+			// ワークスペースの並び替え
+			if (type === 'workspace') {
+				const workspaces = Array.from(nonDefaultWorkspaces)
+				const [movedWorkspace] = workspaces.splice(source.index, 1)
+				workspaces.splice(destination.index, 0, movedWorkspace)
 
-			const updatedWorkspaces = workspaces.map((workspace, index) => ({
-				...workspace,
-				order: index,
-			}))
+				const updatedWorkspaces = workspaces.map((workspace, index) => ({
+					...workspace,
+					order: index,
+				}))
 
-			// デフォルトワークスペースを含む全ワークスペースの配列を作成
-			const allUpdatedWorkspaces = defaultWorkspace
-				? [defaultWorkspace, ...updatedWorkspaces]
-				: updatedWorkspaces
-
-			// 楽観的更新
-			dispatch(setWorkspaces(allUpdatedWorkspaces))
-
-			try {
-				await dispatch(
-					reorderWorkspaces(
-						workspaces.map((w, index) => ({ id: w.id, order: index })),
-					),
-				).unwrap()
-			} catch (error) {
-				console.error('ワークスペースの並び替えに失敗しました:', error)
-				dispatch(setWorkspaces(allWorkspaces))
-			}
-			return
-		}
-
-		// スペースの並び替え
-		if (type === 'space') {
-			const sourceId = source.droppableId.replace('space-list-', '')
-			const destinationId = destination.droppableId.replace('space-list-', '')
-
-			const sourceSpaces = allSpaces
-				.filter((space) => space.workspaceId === sourceId)
-				.sort((a, b) => a.order - b.order)
-
-			const destinationSpaces = allSpaces
-				.filter((space) => space.workspaceId === destinationId)
-				.sort((a, b) => a.order - b.order)
-
-			// 同じワークスペース内での並び替え
-			if (sourceId === destinationId) {
-				const newSpaces = Array.from(sourceSpaces)
-				const [movedSpace] = newSpaces.splice(source.index, 1)
-				newSpaces.splice(destination.index, 0, movedSpace)
+				// デフォルトワークスペースを含む全ワークスペースの配列を作成
+				const allUpdatedWorkspaces = defaultWorkspace
+					? [defaultWorkspace, ...updatedWorkspaces]
+					: updatedWorkspaces
 
 				// 楽観的更新
-				const updatedSpaces = allSpaces.map((space) => {
-					if (space.workspaceId !== sourceId) return space
-					const index = newSpaces.findIndex((s) => s.id === space.id)
-					if (index === -1) return space
-					return {
-						...space,
-						order: index,
-					}
-				})
-				dispatch(setSpaces(updatedSpaces))
+				dispatch(setWorkspaces(allUpdatedWorkspaces))
 
-				// APIコールを非同期で行う
 				try {
-					const response = await dispatch(
-						reorderSpaces({
-							sourceWorkspaceId: sourceId,
-							destinationWorkspaceId: destinationId,
-							spaceId: draggableId,
-							newOrder: destination.index,
-						}),
+					await dispatch(
+						reorderWorkspaces(
+							workspaces.map((w, index) => ({ id: w.id, order: index })),
+						),
 					).unwrap()
-
-					// APIからの応答で最終的な状態を更新
-					if (response) {
-						dispatch(setSpaces(response))
-					}
 				} catch (error) {
-					console.error('スペースの並び替えに失敗しました:', error)
-					dispatch(setSpaces(allSpaces))
+					console.error('ワークスペースの並び替えに失敗しました:', error)
+					dispatch(setWorkspaces(allWorkspaces))
+				}
+				return
+			}
+
+			// スペースの並び替え
+			if (type === 'space') {
+				const sourceId = source.droppableId.replace('space-list-', '')
+				const destinationId = destination.droppableId.replace('space-list-', '')
+
+				// 移動元と移動先のスペースを事前にフィルタリング
+				const sourceSpaces = allSpaces
+					.filter((space) => space.workspaceId === sourceId)
+					.sort((a, b) => a.order - b.order)
+
+				const destinationSpaces = allSpaces
+					.filter((space) => space.workspaceId === destinationId)
+					.sort((a, b) => a.order - b.order)
+
+				// 同じワークスペース内での並び替え
+				if (sourceId === destinationId) {
+					const newSpaces = Array.from(sourceSpaces)
+					const [movedSpace] = newSpaces.splice(source.index, 1)
+					newSpaces.splice(destination.index, 0, movedSpace)
+
+					// 楽観的更新
+					const updatedSpaces = allSpaces.map((space) => {
+						if (space.workspaceId !== sourceId) return space
+						const index = newSpaces.findIndex((s) => s.id === space.id)
+						if (index === -1) return space
+						return {
+							...space,
+							order: index,
+						}
+					})
+
+					dispatch(setSpaces(updatedSpaces))
+
+					try {
+						await dispatch(
+							reorderSpaces({
+								sourceWorkspaceId: sourceId,
+								destinationWorkspaceId: destinationId,
+								spaceId: draggableId,
+								newOrder: destination.index,
+							}),
+						).unwrap()
+					} catch (error) {
+						console.error('スペースの並び替えに失敗しました:', error)
+						dispatch(setSpaces(allSpaces))
+					}
+				}
+				// 異なるワークスペース間での移動
+				else {
+					const sourceItems = Array.from(sourceSpaces)
+					const [movedSpace] = sourceItems.splice(source.index, 1)
+					const destinationItems = Array.from(destinationSpaces)
+					destinationItems.splice(destination.index, 0, {
+						...movedSpace,
+						workspaceId: destinationId,
+					})
+
+					// 楽観的更新
+					const updatedSpaces = allSpaces.map((space) => {
+						// 移動したスペースの更新
+						if (space.id === movedSpace.id) {
+							return {
+								...space,
+								workspaceId: destinationId,
+								order: destination.index,
+							}
+						}
+
+						// 移動元ワークスペースのスペースの更新
+						if (space.workspaceId === sourceId) {
+							const newIndex = sourceItems.findIndex((s) => s.id === space.id)
+							return {
+								...space,
+								order: newIndex === -1 ? space.order : newIndex,
+							}
+						}
+
+						// 移動先ワークスペースのスペースの更新
+						if (space.workspaceId === destinationId) {
+							const newIndex = destinationItems.findIndex(
+								(s) => s.id === space.id,
+							)
+							return {
+								...space,
+								order: newIndex === -1 ? space.order : newIndex,
+							}
+						}
+
+						return space
+					})
+
+					dispatch(setSpaces(updatedSpaces))
+
+					// APIコールを非同期で行う
+					try {
+						const response = await dispatch(
+							reorderSpaces({
+								sourceWorkspaceId: sourceId,
+								destinationWorkspaceId: destinationId,
+								spaceId: draggableId,
+								newOrder: destination.index,
+							}),
+						).unwrap()
+
+						// APIからの応答で最終的な状態を更新
+						if (response) {
+							dispatch(setSpaces(response))
+						}
+					} catch (error) {
+						console.error('スペースの並び替えに失敗しました:', error)
+						dispatch(setSpaces(allSpaces))
+					}
 				}
 			}
-			// 異なるワークスペース間での移動
-			else {
-				const sourceItems = Array.from(sourceSpaces)
-				const [movedSpace] = sourceItems.splice(source.index, 1)
-				const destinationItems = Array.from(destinationSpaces)
-				destinationItems.splice(destination.index, 0, {
-					...movedSpace,
-					workspaceId: destinationId,
-				})
-
-				// 楽観的更新
-				const updatedSpaces = allSpaces.map((space) => {
-					// 移動したスペースの更新
-					if (space.id === movedSpace.id) {
-						return {
-							...space,
-							workspaceId: destinationId,
-							order: destination.index,
-						}
-					}
-
-					// 移動元ワークスペースのスペースの更新
-					if (space.workspaceId === sourceId) {
-						const newIndex = sourceItems.findIndex((s) => s.id === space.id)
-						return {
-							...space,
-							order: newIndex === -1 ? space.order : newIndex,
-						}
-					}
-
-					// 移動先ワークスペースのスペースの更新
-					if (space.workspaceId === destinationId) {
-						const newIndex = destinationItems.findIndex(
-							(s) => s.id === space.id,
-						)
-						return {
-							...space,
-							order: newIndex === -1 ? space.order : newIndex,
-						}
-					}
-
-					return space
-				})
-
-				dispatch(setSpaces(updatedSpaces))
-
-				// APIコールを非同期で行う
-				try {
-					const response = await dispatch(
-						reorderSpaces({
-							sourceWorkspaceId: sourceId,
-							destinationWorkspaceId: destinationId,
-							spaceId: draggableId,
-							newOrder: destination.index,
-						}),
-					).unwrap()
-
-					// APIからの応答で最終的な状態を更新
-					if (response) {
-						dispatch(setSpaces(response))
-					}
-				} catch (error) {
-					console.error('スペースの並び替えに失敗しました:', error)
-					dispatch(setSpaces(allSpaces))
-				}
-			}
-		}
-	}
+		},
+		[
+			dispatch,
+			allSpaces,
+			allWorkspaces,
+			defaultWorkspace,
+			nonDefaultWorkspaces,
+		],
+	)
 
 	return (
 		<DragDropContext onDragEnd={onDragEnd}>
