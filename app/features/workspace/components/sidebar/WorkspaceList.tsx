@@ -38,7 +38,7 @@ const WorkspaceList = () => {
 
 			// ワークスペースの並び替え
 			if (type === 'workspace') {
-				const workspaces = Array.from(nonDefaultWorkspaces)
+				const workspaces = Array.from(allWorkspaces)
 				const [movedWorkspace] = workspaces.splice(source.index, 1)
 				workspaces.splice(destination.index, 0, movedWorkspace)
 
@@ -47,13 +47,8 @@ const WorkspaceList = () => {
 					order: index,
 				}))
 
-				// デフォルトワークスペースを含む全ワークスペースの配列を作成
-				const allUpdatedWorkspaces = defaultWorkspace
-					? [defaultWorkspace, ...updatedWorkspaces]
-					: updatedWorkspaces
-
 				// 楽観的更新
-				dispatch(setWorkspaces(allUpdatedWorkspaces))
+				dispatch(setWorkspaces(updatedWorkspaces))
 
 				try {
 					await dispatch(
@@ -179,13 +174,7 @@ const WorkspaceList = () => {
 				}
 			}
 		},
-		[
-			dispatch,
-			allSpaces,
-			allWorkspaces,
-			defaultWorkspace,
-			nonDefaultWorkspaces,
-		],
+		[dispatch, allSpaces, allWorkspaces],
 	)
 
 	return (
@@ -218,7 +207,13 @@ const WorkspaceList = () => {
 															</div>
 															<div className="flex items-center flex-grow justify-between hover:border-b-2 hover:border-blue-500 pb-1 ml-2">
 																<span className="font-medium text-gray-500">
-																	{workspace.name}
+																	{workspace.id === defaultWorkspace?.id ? (
+																		<span className="text-gray-500">
+																			Spaces
+																		</span>
+																	) : (
+																		workspace.name
+																	)}
 																</span>
 																<div className="flex items-center">
 																	{workspace.id === defaultWorkspace?.id ? (
