@@ -87,18 +87,17 @@ const WorkspaceList = () => {
 					const [movedSpace] = newSpaces.splice(source.index, 1)
 					newSpaces.splice(destination.index, 0, movedSpace)
 
-					// 楽観的更新
+					// 楽観的更新の修正
 					const updatedSpaces = allSpaces.map((space) => {
 						if (space.workspaceId !== sourceId) return space
 						const index = newSpaces.findIndex((s) => s.id === space.id)
-						if (index === -1) return space
 						return {
 							...space,
-							order: index,
+							order: index !== -1 ? index : space.order,
 						}
 					})
 
-					dispatch(setSpaces(updatedSpaces))
+					dispatch(setSpaces(updatedSpaces.sort((a, b) => a.order - b.order)))
 
 					try {
 						await dispatch(
@@ -124,9 +123,8 @@ const WorkspaceList = () => {
 						workspaceId: destinationId,
 					})
 
-					// 楽観的更新
+					// 楽観的更新の修正
 					const updatedSpaces = allSpaces.map((space) => {
-						// 移動したスペースの更新
 						if (space.id === movedSpace.id) {
 							return {
 								...space,
@@ -135,30 +133,28 @@ const WorkspaceList = () => {
 							}
 						}
 
-						// 移動元ワークスペースのスペースの更新
 						if (space.workspaceId === sourceId) {
 							const newIndex = sourceItems.findIndex((s) => s.id === space.id)
 							return {
 								...space,
-								order: newIndex === -1 ? space.order : newIndex,
+								order: newIndex !== -1 ? newIndex : space.order,
 							}
 						}
 
-						// 移動先ワークスペースのスペースの更新
 						if (space.workspaceId === destinationId) {
 							const newIndex = destinationItems.findIndex(
 								(s) => s.id === space.id,
 							)
 							return {
 								...space,
-								order: newIndex === -1 ? space.order : newIndex,
+								order: newIndex !== -1 ? newIndex : space.order,
 							}
 						}
 
 						return space
 					})
 
-					dispatch(setSpaces(updatedSpaces))
+					dispatch(setSpaces(updatedSpaces.sort((a, b) => a.order - b.order)))
 
 					// APIコールを非同期で行う
 					try {
