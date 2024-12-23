@@ -15,13 +15,14 @@ import {
 	reorderSpaces,
 } from '@/app/lib/redux/features/space/spaceAPI'
 import SpaceMenu from '@/app/features/space/components/sidebar/SpaceMenu'
+import { memo } from 'react'
 
 interface SpaceListProps {
 	workspaceId: string
 	type: 'space'
 }
 
-const SpaceList = ({ workspaceId, type }: SpaceListProps) => {
+const SpaceList = memo(({ workspaceId, type }: SpaceListProps) => {
 	const router = useRouter()
 	const dispatch = useAppDispatch()
 	const spaces = useAppSelector((state) =>
@@ -72,6 +73,7 @@ const SpaceList = ({ workspaceId, type }: SpaceListProps) => {
 									<div
 										ref={provided.innerRef}
 										{...provided.draggableProps}
+										{...provided.dragHandleProps}
 										style={{
 											...provided.draggableProps.style,
 										}}
@@ -94,7 +96,6 @@ const SpaceList = ({ workspaceId, type }: SpaceListProps) => {
 										<div className="flex flex-grow items-center justify-between py-1 group">
 											<div className="flex items-center flex-grow">
 												<div
-													{...provided.dragHandleProps}
 													className="cursor-grab flex items-center pr-3"
 													aria-label="drag handle"
 												>
@@ -116,6 +117,6 @@ const SpaceList = ({ workspaceId, type }: SpaceListProps) => {
 			)}
 		</Droppable>
 	)
-}
+})
 
 export default SpaceList
