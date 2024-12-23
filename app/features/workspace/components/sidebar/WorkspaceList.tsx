@@ -188,18 +188,27 @@ const WorkspaceList = () => {
 									key={workspace.id}
 									draggableId={`workspace-${workspace.id}`}
 									index={index}
+									isDragDisabled={workspace.isDefault}
 								>
-									{(provided) => (
-										<div ref={provided.innerRef} {...provided.draggableProps}>
+									{(provided, snapshot) => (
+										<div
+											ref={provided.innerRef}
+											{...provided.draggableProps}
+											className={`
+												${workspace.isDefault ? 'cursor-default' : ''}
+											`}
+										>
 											<div className="flex items-center">
 												<div className="flex flex-col flex-grow justify-between">
 													<div className="flex items-center justify-between group min-h-[40px] mt-1">
 														<div className="flex items-center flex-grow">
 															<div
-																{...provided.dragHandleProps}
-																className="cursor-grab flex items-center"
+																{...(workspace.isDefault
+																	? {}
+																	: provided.dragHandleProps)}
+																className={`${workspace.isDefault ? '' : 'cursor-grab'} flex items-center`}
 															>
-																{workspace.id === defaultWorkspace?.id ? (
+																{workspace.isDefault ? (
 																	<Layers className="w-6 h-6 text-gray-500" />
 																) : (
 																	<ChevronRight className="w-4 h-4 text-slate-500 ml-2" />
