@@ -70,22 +70,41 @@ const WorkspaceList = () => {
 			const sourceId = source.droppableId.replace('space-list-', '')
 			const destinationId = destination.droppableId.replace('space-list-', '')
 
-			// 同じワークスペース内での並び替え
 			if (sourceId === destinationId) {
-				const spacesByWorkspace = allSpaces
+				const workspaceSpaces = allSpaces
 					.filter((space) => space.workspaceId === sourceId)
 					.sort((a, b) => a.order - b.order)
 
-				const newSpaces = Array.from(spacesByWorkspace)
-				const [movedSpace] = newSpaces.splice(source.index, 1)
-				newSpaces.splice(destination.index, 0, movedSpace)
-
-				// 楽観的更新
 				const updatedSpaces = allSpaces.map((space) => {
 					if (space.workspaceId !== sourceId) return space
-					const index = newSpaces.findIndex((s) => s.id === space.id)
-					if (index === -1) return space
-					return { ...space, order: index }
+
+					if (space.id === draggableId) {
+						return { ...space, order: destination.index }
+					}
+
+					const currentIndex = workspaceSpaces.findIndex(
+						(s) => s.id === space.id,
+					)
+					if (currentIndex === -1) return space
+
+					if (source.index < destination.index) {
+						// 下に移動する場合
+						if (
+							currentIndex > source.index &&
+							currentIndex <= destination.index
+						) {
+							return { ...space, order: currentIndex - 1 }
+						}
+					} else {
+						// 上に移動する場合
+						if (
+							currentIndex >= destination.index &&
+							currentIndex < source.index
+						) {
+							return { ...space, order: currentIndex + 1 }
+						}
+					}
+					return space
 				})
 
 				dispatch(setSpaces(updatedSpaces))

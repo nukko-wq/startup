@@ -148,11 +148,11 @@ export const spaceSlice = createSlice({
 			.addCase(reorderSpaces.pending, (state) => {
 				state.loading = true
 				state.error = null
-				state.previousSpaces = state.spaces
+				state.previousSpaces = [...state.spaces]
 			})
 			.addCase(reorderSpaces.fulfilled, (state, action) => {
 				state.loading = false
-				state.spaces = action.payload
+				state.spaces = action.payload.sort((a, b) => a.order - b.order)
 				state.previousSpaces = null
 			})
 			.addCase(reorderSpaces.rejected, (state, action) => {
