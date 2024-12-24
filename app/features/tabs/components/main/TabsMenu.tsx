@@ -6,15 +6,14 @@ import {
 	MenuTrigger,
 	Popover,
 } from 'react-aria-components'
+import { tabsAPI } from '@/app/lib/redux/features/tabs/tabsAPI'
 
 const TabsMenu = () => {
 	const handleSortByDomain = async () => {
 		try {
-			const response = await fetch('/api/extension/id')
-			const { extensionIds } = await response.json()
-			const extensionId = extensionIds[0]
+			const extensionId = await tabsAPI.getExtensionId()
 
-			if (!extensionId || !chrome?.runtime) {
+			if (!chrome?.runtime) {
 				throw new Error('拡張機能が見つかりません')
 			}
 
@@ -34,11 +33,9 @@ const TabsMenu = () => {
 
 	const handleCloseAllTabs = async () => {
 		try {
-			const response = await fetch('/api/extension/id')
-			const { extensionIds } = await response.json()
-			const extensionId = extensionIds[0]
+			const extensionId = await tabsAPI.getExtensionId()
 
-			if (!extensionId || !chrome?.runtime) {
+			if (!chrome?.runtime) {
 				throw new Error('拡張機能が見つかりません')
 			}
 

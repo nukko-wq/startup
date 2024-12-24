@@ -8,6 +8,7 @@ import {
 	Tooltip,
 	TooltipTrigger,
 } from 'react-aria-components'
+import { tabsAPI } from '@/app/lib/redux/features/tabs/tabsAPI'
 
 interface TabCloseButtonProps {
 	tabId: number
@@ -22,11 +23,7 @@ const TabCloseButton = ({ tabId }: TabCloseButtonProps) => {
 
 		try {
 			setIsClosing(true)
-
-			// 拡張機能IDを取得
-			const response = await fetch('/api/extension/id')
-			const { extensionIds } = await response.json()
-			const extensionId = extensionIds[0]
+			const extensionId = await tabsAPI.getExtensionId()
 
 			if (!extensionId) {
 				throw new Error('拡張機能IDが設定されていません')

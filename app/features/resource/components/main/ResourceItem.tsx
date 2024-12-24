@@ -7,6 +7,7 @@ import type { Resource } from '@/app/lib/redux/features/resource/types/resource'
 import ResourceDeleteButton from '@/app/features/resource/components/main/ResourceDeleteButton'
 import ResourceMenu from '@/app/features/resource/components/main/ResourceMenu'
 import { useAppSelector } from '@/app/lib/redux/hooks'
+import { tabsAPI } from '@/app/lib/redux/features/tabs/tabsAPI'
 
 interface ResourceItemProps {
 	resource: Resource
@@ -21,11 +22,9 @@ const ResourceItem = ({ resource, provided }: ResourceItemProps) => {
 			const existingTab = tabs.find((tab) => tab.url === resource.url)
 
 			if (existingTab) {
-				const response = await fetch('/api/extension/id')
-				const { extensionIds } = await response.json()
-				const extensionId = extensionIds[0]
+				const extensionId = await tabsAPI.getExtensionId()
 
-				if (!extensionId || !window.chrome?.runtime) {
+				if (!window.chrome?.runtime) {
 					throw new Error('拡張機能が見つかりません')
 				}
 
