@@ -1,5 +1,6 @@
 // app/hooks/useExtensionId.ts
 import { useState, useEffect } from 'react'
+import { tabsAPI } from '@/app/lib/redux/features/tabs/tabsAPI'
 
 export const useExtensionId = () => {
 	const [extensionId, setExtensionId] = useState<string | null>(null)
@@ -7,11 +8,8 @@ export const useExtensionId = () => {
 	useEffect(() => {
 		const fetchExtensionId = async () => {
 			try {
-				const response = await fetch('/api/extension/id')
-				const data = await response.json()
-				if (data.extensionIds?.[0]) {
-					setExtensionId(data.extensionIds[0])
-				}
+				const id = await tabsAPI.getExtensionId()
+				setExtensionId(id)
 			} catch (error) {
 				console.error('拡張機能IDの取得に失敗しました:', error)
 			}
