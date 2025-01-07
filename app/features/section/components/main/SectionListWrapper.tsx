@@ -6,8 +6,8 @@ import {
 	addSection,
 	deleteSection,
 } from '@/app/lib/redux/features/section/sectionSlice'
+import { selectSectionsByActiveSpace } from '@/app/lib/redux/features/section/selector'
 import { useAppDispatch, useAppSelector } from '@/app/lib/redux/hooks'
-import type { RootState } from '@/app/lib/redux/store'
 import { Plus } from 'lucide-react'
 import { useParams } from 'next/navigation'
 import { Button } from 'react-aria-components'
@@ -17,7 +17,8 @@ const SectionListWrapper = () => {
 	const dispatch = useAppDispatch()
 	const params = useParams()
 	const spaceId = params.spaceId as string
-	const sections = useAppSelector((state: RootState) => state.section.sections)
+	const sections = useAppSelector(selectSectionsByActiveSpace)
+	const isLoading = sections.length === 0
 
 	const handleCreateSection = async () => {
 		const optimisticSection = {
@@ -47,15 +48,17 @@ const SectionListWrapper = () => {
 			<div className="flex flex-col w-full">
 				<SectionList />
 			</div>
-			<div className="flex justify-center mt-4">
-				<Button
-					onPress={handleCreateSection}
-					className="flex items-center gap-1 px-4 py-2 outline-none text-gray-500 hover:text-gray-700 transition-colors"
-				>
-					<Plus className="w-3 h-3" />
-					<span>RESOURCE SECTION</span>
-				</Button>
-			</div>
+			{!isLoading && (
+				<div className="flex justify-center mt-4">
+					<Button
+						onPress={handleCreateSection}
+						className="flex items-center gap-1 px-4 py-2 outline-none text-gray-500 hover:text-gray-700 transition-colors"
+					>
+						<Plus className="w-3 h-3" />
+						<span>RESOURCE SECTION</span>
+					</Button>
+				</div>
+			)}
 		</div>
 	)
 }
