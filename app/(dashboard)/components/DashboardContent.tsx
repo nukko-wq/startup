@@ -1,14 +1,14 @@
 'use client'
 
-import { memo, useEffect } from 'react'
-import Sidebar from '@/app/components/sidebar/sidebar'
-import Header from '@/app/components/header/Header'
-import { Suspense } from 'react'
-import TabList from '@/app/features/tabs/components/main/TabList'
-import SectionListWrapper from '@/app/features/section/components/main/SectionListWrapper'
 import SpaceOverlay from '@/app/(dashboard)/components/SpaceOverlay'
-import { useDispatch } from 'react-redux'
+import Header from '@/app/components/header/Header'
+import Sidebar from '@/app/components/sidebar/sidebar'
+import SectionListWrapper from '@/app/features/section/components/main/SectionListWrapper'
+import TabList from '@/app/features/tabs/components/main/TabList'
 import { showSpaceOverlay } from '@/app/lib/redux/features/overlay/overlaySlice'
+import { memo, useEffect } from 'react'
+import { Suspense } from 'react'
+import { useDispatch } from 'react-redux'
 
 interface ExtensionMessage {
 	source: string
@@ -16,9 +16,9 @@ interface ExtensionMessage {
 }
 
 const TabListFallback = () => (
-	<div className="flex justify-center w-1/2">
-		<div className="flex-grow py-5 pr-[16px] pl-[32px] max-w-[920px] animate-pulse">
-			<div className="h-[400px] bg-gray-100 rounded-md" />
+	<div className="flex w-1/2 justify-center">
+		<div className="max-w-[920px] flex-grow animate-pulse py-5 pr-[16px] pl-[32px]">
+			<div className="h-[400px] rounded-md bg-gray-100" />
 		</div>
 	</div>
 )
@@ -42,17 +42,17 @@ const DashboardContent = memo(() => {
 	}, [dispatch])
 
 	return (
-		<div className="flex w-full h-full">
-			<div className="flex flex-col w-full h-full">
-				<div className="grid grid-cols-[260px_1fr] min-[1921px]:grid-cols-[320px_1fr] bg-slate-50">
+		<div className="flex h-full w-full">
+			<div className="flex h-full w-full flex-col">
+				<div className="grid grid-cols-[260px_1fr] bg-slate-50 min-[1921px]:grid-cols-[320px_1fr]">
 					<Sidebar />
-					<main className="flex flex-col flex-grow items-center bg-slate-100">
+					<main className="flex flex-grow flex-col items-center bg-slate-100">
 						<Header />
-						<div className="flex flex-grow w-full h-[calc(100vh-70px)]">
+						<div className="flex h-[calc(100vh-70px)] w-full flex-grow">
 							<Suspense fallback={<TabListFallback />}>
 								<TabList />
 							</Suspense>
-							<div className="flex justify-center w-1/2">
+							<div className="flex w-1/2 justify-center">
 								<SectionListWrapper />
 							</div>
 						</div>

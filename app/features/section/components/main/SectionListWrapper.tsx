@@ -44,17 +44,17 @@ const SectionListWrapper = () => {
 	}
 
 	return (
-		<div className="flex flex-col flex-grow w-full max-w-[920px] overflow-y-auto py-5 pr-[32px] pl-[16px]">
-			<div className="flex flex-col w-full">
+		<div className="flex w-full max-w-[920px] flex-grow flex-col overflow-y-auto py-5 pr-[32px] pl-[16px]">
+			<div className="flex w-full flex-col">
 				<SectionList />
 			</div>
 			{!isLoading && (
-				<div className="flex justify-center mt-4">
+				<div className="mt-4 flex justify-center">
 					<Button
 						onPress={handleCreateSection}
-						className="flex items-center gap-1 px-4 py-2 outline-none text-gray-500 hover:text-gray-700 transition-colors"
+						className="flex items-center gap-1 px-4 py-2 text-gray-500 outline-none transition-colors hover:text-gray-700"
 					>
-						<Plus className="w-3 h-3" />
+						<Plus className="h-3 w-3" />
 						<span>RESOURCE SECTION</span>
 					</Button>
 				</div>
