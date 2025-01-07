@@ -1,16 +1,16 @@
 'use client'
 
-import { useEffect } from 'react'
-import { useAppDispatch, useAppSelector } from '@/app/lib/redux/hooks'
-import { Diamond, GripVertical } from 'lucide-react'
-import { Button } from 'react-aria-components'
-import { fetchTabs, updateTabs } from '@/app/lib/redux/features/tabs/tabsSlice'
-import TabSaveButton from '@/app/features/tabs/components/main/TabSaveButton'
-import type { RootState } from '@/app/lib/redux/store'
-import type { Tab } from '@/app/lib/redux/features/tabs/types/tabs'
 import TabCloseButton from '@/app/features/tabs/components/main/TabCloseButton'
+import TabSaveButton from '@/app/features/tabs/components/main/TabSaveButton'
 import TabsMenu from '@/app/features/tabs/components/main/TabsMenu'
 import { tabsAPI } from '@/app/lib/redux/features/tabs/tabsAPI'
+import { fetchTabs, updateTabs } from '@/app/lib/redux/features/tabs/tabsSlice'
+import type { Tab } from '@/app/lib/redux/features/tabs/types/tabs'
+import { useAppDispatch, useAppSelector } from '@/app/lib/redux/hooks'
+import type { RootState } from '@/app/lib/redux/store'
+import { Diamond, GripVertical } from 'lucide-react'
+import { useEffect } from 'react'
+import { Button } from 'react-aria-components'
 
 const TabList = () => {
 	const dispatch = useAppDispatch()
@@ -117,7 +117,7 @@ const TabList = () => {
 											) : (
 												<div className="w-4 h-4 bg-gray-200 rounded-full" />
 											)}
-											<span className="truncate">{tab.title}</span>
+											<span className="truncate text-sm">{tab.title}</span>
 										</div>
 									</div>
 									<div className="flex items-center">
