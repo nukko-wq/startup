@@ -1,9 +1,9 @@
 'use client'
 
-import { useAppSelector } from '@/app/lib/redux/hooks'
-import { selectSortedResourcesBySectionId } from '@/app/lib/redux/features/resource/selector'
-import { Droppable, Draggable } from '@hello-pangea/dnd'
 import ResourceItem from '@/app/features/resource/components/main/ResourceItem'
+import { selectSortedResourcesBySectionId } from '@/app/lib/redux/features/resource/selector'
+import { useAppSelector } from '@/app/lib/redux/hooks'
+import { Draggable, Droppable } from '@hello-pangea/dnd'
 
 interface ResourceListProps {
 	sectionId: string
@@ -29,7 +29,7 @@ const ResourceList = ({ sectionId }: ResourceListProps) => {
 							<div className="text-gray-500">Add resources here</div>
 						</div>
 					) : (
-						<div className={`min-h-[52px] ${resources.length === 0 ? '' : ''}`}>
+						<div className={`min-h-[48px] ${resources.length === 0 ? '' : ''}`}>
 							{resources.map((resource, index) => (
 								<Draggable
 									key={resource.id}
