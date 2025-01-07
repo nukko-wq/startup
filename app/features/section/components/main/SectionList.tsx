@@ -159,7 +159,7 @@ const SectionList = () => {
 			<Droppable droppableId="sections" type="section">
 				{(provided) => (
 					<div
-						className="flex flex-col w-full"
+						className="flex w-full flex-col"
 						{...provided.droppableProps}
 						ref={provided.innerRef}
 					>
@@ -174,7 +174,7 @@ const SectionList = () => {
 										ref={provided.innerRef}
 										{...provided.draggableProps}
 										{...provided.dragHandleProps}
-										className="outline-none group"
+										className="group outline-none"
 									>
 										<SectionItem section={section} />
 									</div>
