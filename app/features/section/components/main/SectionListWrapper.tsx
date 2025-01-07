@@ -1,18 +1,17 @@
 'use client'
 
-import { Plus } from 'lucide-react'
-import { Button } from 'react-aria-components'
-import { useAppDispatch, useAppSelector } from '@/app/lib/redux/hooks'
-import { v4 as uuidv4 } from 'uuid'
+import SectionList from '@/app/features/section/components/main/SectionList'
+import { createSection } from '@/app/lib/redux/features/section/sectionAPI'
 import {
 	addSection,
-	updateSection,
 	deleteSection,
 } from '@/app/lib/redux/features/section/sectionSlice'
-import { createSection } from '@/app/lib/redux/features/section/sectionAPI'
-import SectionList from '@/app/features/section/components/main/SectionList'
-import { useParams } from 'next/navigation'
+import { useAppDispatch, useAppSelector } from '@/app/lib/redux/hooks'
 import type { RootState } from '@/app/lib/redux/store'
+import { Plus } from 'lucide-react'
+import { useParams } from 'next/navigation'
+import { Button } from 'react-aria-components'
+import { v4 as uuidv4 } from 'uuid'
 
 const SectionListWrapper = () => {
 	const dispatch = useAppDispatch()

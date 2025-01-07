@@ -1,22 +1,18 @@
 'use client'
 
+import SectionItem from '@/app/features/section/components/main/SectionItem'
+import { reorderResources } from '@/app/lib/redux/features/resource/resourceAPI'
+import { setResources } from '@/app/lib/redux/features/resource/resourceSlice'
+import { reorderSections } from '@/app/lib/redux/features/section/sectionAPI'
+import { setSections } from '@/app/lib/redux/features/section/sectionSlice'
+import { selectSectionsByActiveSpace } from '@/app/lib/redux/features/section/selector'
+import { useAppDispatch, useAppSelector } from '@/app/lib/redux/hooks'
 import {
 	DragDropContext,
-	Droppable,
 	Draggable,
 	type DropResult,
+	Droppable,
 } from '@hello-pangea/dnd'
-import { useAppSelector, useAppDispatch } from '@/app/lib/redux/hooks'
-import SectionItem from '@/app/features/section/components/main/SectionItem'
-import { selectSectionsByActiveSpace } from '@/app/lib/redux/features/section/selector'
-import {
-	updateSection,
-	setSections,
-} from '@/app/lib/redux/features/section/sectionSlice'
-import { reorderSections } from '@/app/lib/redux/features/section/sectionAPI'
-import { selectSortedResourcesBySectionId } from '@/app/lib/redux/features/resource/selector'
-import { setResources } from '@/app/lib/redux/features/resource/resourceSlice'
-import { reorderResources } from '@/app/lib/redux/features/resource/resourceAPI'
 
 const SectionList = () => {
 	const sections = useAppSelector(selectSectionsByActiveSpace)
