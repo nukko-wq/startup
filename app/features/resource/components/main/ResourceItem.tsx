@@ -1,13 +1,13 @@
 'use client'
 
-import { GripVertical } from 'lucide-react'
-import type { DraggableProvided } from '@hello-pangea/dnd'
 import ResourceIcon from '@/app/components/elements/ResourceIcon'
-import type { Resource } from '@/app/lib/redux/features/resource/types/resource'
 import ResourceDeleteButton from '@/app/features/resource/components/main/ResourceDeleteButton'
 import ResourceMenu from '@/app/features/resource/components/main/ResourceMenu'
-import { useAppSelector } from '@/app/lib/redux/hooks'
+import type { Resource } from '@/app/lib/redux/features/resource/types/resource'
 import { tabsAPI } from '@/app/lib/redux/features/tabs/tabsAPI'
+import { useAppSelector } from '@/app/lib/redux/hooks'
+import type { DraggableProvided } from '@hello-pangea/dnd'
+import { GripVertical } from 'lucide-react'
 
 interface ResourceItemProps {
 	resource: Resource
@@ -93,7 +93,7 @@ const ResourceItem = ({ resource, provided }: ResourceItemProps) => {
 				<div className="flex items-end gap-2 truncate cursor-pointer">
 					<ResourceIcon faviconUrl={resource.faviconUrl} url={resource.url} />
 					<div className="flex flex-col truncate">
-						<span className="truncate">{resource.title}</span>
+						<span className="truncate text-sm">{resource.title}</span>
 						<span className="text-xs text-gray-400">
 							{getResourceDescription(resource)}
 						</span>
