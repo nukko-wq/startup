@@ -72,21 +72,21 @@ const TabList = () => {
 	}
 
 	return (
-		<div className="flex justify-center w-1/2">
-			<div className="flex-grow py-5 pr-[16px] pl-[32px] max-w-[920px]">
-				<div className="flex items-center justify-between gap-2 ml-4 mb-2">
+		<div className="flex w-1/2 justify-center">
+			<div className="max-w-[920px] flex-grow overflow-y-auto py-5 pr-[16px] pl-[32px]">
+				<div className="mb-2 ml-4 flex items-center justify-between gap-2">
 					<div className="flex items-center gap-2">
-						<Diamond className="w-6 h-6" />
+						<Diamond className="h-6 w-6" />
 						<div className="text-[17px] text-slate-700">Tabs</div>
 					</div>
 					<TabsMenu />
 				</div>
 				{tabs.length > 0 && (
-					<div className="border-slate-400 rounded-md flex flex-col bg-white shadow-sm">
+					<div className="flex flex-col rounded-md border-slate-400 bg-white shadow-sm">
 						{tabs.map((tab) => (
 							<div
 								key={tab.id}
-								className="block items-center gap-2 pr-2 py-1 truncate hover:bg-gray-100 rounded cursor-grab group outline-none"
+								className="group block cursor-grab items-center gap-2 truncate rounded py-1 pr-2 outline-none hover:bg-gray-100"
 								onClick={() => handleTabAction(tab)}
 								onKeyDown={(e) => {
 									if (e.key === 'Enter') {
@@ -97,14 +97,14 @@ const TabList = () => {
 								<div className="grid grid-cols-[1fr_72px] items-center gap-2">
 									<div className="flex items-center gap-2 truncate">
 										<div
-											className="cursor-grab flex items-center opacity-0 group-hover:opacity-100 pl-3"
+											className="flex cursor-grab items-center pl-3 opacity-0 group-hover:opacity-100"
 											aria-label="Drag Wrapper"
 										>
 											<Button
 												className="cursor-grab"
 												aria-label="ドラッグハンドル"
 											>
-												<GripVertical className="w-4 h-4 text-slate-500" />
+												<GripVertical className="h-4 w-4 text-slate-500" />
 											</Button>
 										</div>
 										<div className="flex items-center gap-2 truncate">
@@ -112,10 +112,10 @@ const TabList = () => {
 												<img
 													src={tab.faviconUrl}
 													alt=""
-													className="w-4 h-4 flex-grow"
+													className="h-4 w-4 flex-grow"
 												/>
 											) : (
-												<div className="w-4 h-4 bg-gray-200 rounded-full" />
+												<div className="h-4 w-4 rounded-full bg-gray-200" />
 											)}
 											<span className="truncate text-sm">{tab.title}</span>
 										</div>
@@ -134,7 +134,7 @@ const TabList = () => {
 					</div>
 				)}
 				{tabs.length === 0 && (
-					<div className="border-slate-400 rounded-md flex flex-col bg-white shadow-sm h-[56px] justify-center items-center">
+					<div className="flex h-[56px] flex-col items-center justify-center rounded-md border-slate-400 bg-white shadow-sm">
 						<p className="text-slate-400 text-sm">Start browsing</p>
 					</div>
 				)}
