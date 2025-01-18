@@ -1,32 +1,27 @@
 'use client'
 
-import { useAppSelector, useAppDispatch } from '@/app/lib/redux/hooks'
+import SpaceList from '@/app/features/space/components/sidebar/SpaceList'
+import { reorderSpaces } from '@/app/lib/redux/features/space/spaceAPI'
+import { setSpaces } from '@/app/lib/redux/features/space/spaceSlice'
+import { selectDefaultWorkspace } from '@/app/lib/redux/features/workspace/selector'
+import { reorderWorkspaces } from '@/app/lib/redux/features/workspace/workSpaceAPI'
+import { setWorkspaces } from '@/app/lib/redux/features/workspace/workspaceSlice'
+import { useAppDispatch, useAppSelector } from '@/app/lib/redux/hooks'
 import {
 	DragDropContext,
-	Droppable,
 	Draggable,
 	type DropResult,
+	Droppable,
 } from '@hello-pangea/dnd'
-import {
-	selectDefaultWorkspace,
-	selectNonDefaultWorkspaces,
-} from '@/app/lib/redux/features/workspace/selector'
-import { Layers, GripVertical, ChevronRight } from 'lucide-react'
-import WorkspaceLeftMenu from './WorkspaceLeftMenu'
-import DefaultWorkspaceRightMenu from './DefaultWorkspaceRightMenu'
-import WorkspaceRightMenu from './WorkspaceRightMenu'
-import SpaceList from '@/app/features/space/components/sidebar/SpaceList'
-import { reorderWorkspaces } from '@/app/lib/redux/features/workspace/workSpaceAPI'
-import { reorderSpaces } from '@/app/lib/redux/features/space/spaceAPI'
-import { setWorkspaces } from '@/app/lib/redux/features/workspace/workspaceSlice'
-import { setSpaces } from '@/app/lib/redux/features/space/spaceSlice'
+import { ChevronRight, Layers } from 'lucide-react'
 import { useCallback } from 'react'
-import SpaceMenu from '@/app/features/space/components/sidebar/SpaceMenu'
+import DefaultWorkspaceRightMenu from './DefaultWorkspaceRightMenu'
+import WorkspaceLeftMenu from './WorkspaceLeftMenu'
+import WorkspaceRightMenu from './WorkspaceRightMenu'
 
 const WorkspaceList = () => {
 	const dispatch = useAppDispatch()
 	const defaultWorkspace = useAppSelector(selectDefaultWorkspace)
-	const nonDefaultWorkspaces = useAppSelector(selectNonDefaultWorkspaces)
 	const allWorkspaces = useAppSelector((state) => state.workspace.workspaces)
 	const allSpaces = useAppSelector((state) => state.space.spaces)
 
@@ -172,7 +167,7 @@ const WorkspaceList = () => {
 											<div className="flex items-center">
 												<div className="flex flex-col flex-grow justify-between">
 													<div className="flex items-center justify-between group min-h-[40px] mt-1">
-														<div className="flex items-center flex-grow">
+														<div className="flex items-center flex-grow pl-3">
 															<div
 																{...(workspace.isDefault
 																	? {}
@@ -182,10 +177,10 @@ const WorkspaceList = () => {
 																{workspace.isDefault ? (
 																	<Layers className="w-6 h-6 text-gray-500" />
 																) : (
-																	<ChevronRight className="w-4 h-4 text-slate-500 ml-2" />
+																	<ChevronRight className="w-4 h-4 text-slate-500 ml-[4px] mr-[4px]" />
 																)}
 															</div>
-															<div className="flex items-center flex-grow justify-between hover:border-b-2 hover:border-blue-500 pb-1 ml-2">
+															<div className="flex items-center flex-grow justify-between hover:border-b-2 hover:border-blue-500 pt-[2px] ml-2 border-b-2 border-transparent">
 																<span className="font-medium text-gray-500">
 																	{workspace.id === defaultWorkspace?.id ? (
 																		<span className="text-gray-500">
