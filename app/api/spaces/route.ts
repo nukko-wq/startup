@@ -1,9 +1,7 @@
-// POST: スペース作成
-import { NextResponse } from 'next/server'
-import { prisma } from '@/lib/prisma'
-import type { Space } from '@prisma/client'
 import { serializeSpace } from '@/app/lib/utils/space'
+import { prisma } from '@/lib/prisma'
 import { getCurrentUser } from '@/lib/session'
+import { NextResponse } from 'next/server'
 
 export async function POST(request: Request) {
 	try {
@@ -15,7 +13,7 @@ export async function POST(request: Request) {
 		const { name, workspaceId } = await request.json()
 
 		// トランザクションで処理
-		const space = await prisma.$transaction(async (tx) => {
+		const result = await prisma.$transaction(async (tx) => {
 			// 同じワークスペース内の全スペースのisLastActiveをfalseに設定
 			await tx.space.updateMany({
 				where: { workspaceId },
@@ -23,7 +21,7 @@ export async function POST(request: Request) {
 			})
 
 			// 新しいスペースを作成
-			return await tx.space.create({
+			const newSpace = await tx.space.create({
 				data: {
 					name,
 					workspace: {
@@ -43,9 +41,35 @@ export async function POST(request: Request) {
 					isLastActive: true,
 				},
 			})
+
+			// デフォルトのセクションを作成
+			const newSection = await tx.section.create({
+				data: {
+					name: 'General',
+					order: 0,
+					space: {
+						connect: {
+							id: newSpace.id,
+						},
+					},
+					user: {
+						connect: {
+							email: user.email,
+						},
+					},
+				},
+			})
+
+			return {
+				space: newSpace,
+				section: newSection,
+			}
 		})
 
-		return NextResponse.json(serializeSpace(space))
+		return NextResponse.json({
+			...serializeSpace(result.space),
+			section: result.section,
+		})
 	} catch (error) {
 		return NextResponse.json(
 			{ error: 'スペースの作成に失敗しました' },

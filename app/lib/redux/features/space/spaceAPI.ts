@@ -1,5 +1,16 @@
-import { createAsyncThunk } from '@reduxjs/toolkit'
+import type { Section } from '@/app/lib/redux/features/section/types/section'
 import type { Space } from '@/app/lib/redux/features/space/types/space'
+import { createAsyncThunk } from '@reduxjs/toolkit'
+
+interface CreateSpaceResponse {
+	id: string
+	name: string
+	order: number
+	workspaceId: string
+	isLastActive: boolean
+	isDefault: boolean
+	section: Section
+}
 
 export const createSpace = createAsyncThunk(
 	'space/createSpace',
@@ -16,7 +27,7 @@ export const createSpace = createAsyncThunk(
 			throw new Error('スペースの作成に失敗しました')
 		}
 
-		const data: Space = await response.json()
+		const data: CreateSpaceResponse = await response.json()
 
 		// 作成したスペースをアクティブに設定
 		await fetch(`/api/spaces/${data.id}/last-active`, {
