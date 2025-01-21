@@ -21,6 +21,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
 					].join(' '),
 					access_type: 'offline',
 					prompt: 'consent',
+					response_type: 'code',
 				},
 			},
 		}),

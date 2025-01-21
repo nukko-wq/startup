@@ -17,6 +17,7 @@ import {
 import { createResource } from '@/app/lib/redux/features/resource/resourceAPI'
 import type { Resource } from '@/app/lib/redux/features/resource/types/resource'
 import debounce from 'lodash/debounce'
+import { signOut } from 'next-auth/react'
 
 interface GoogleDriveListProps {
 	sectionId: string
@@ -64,7 +65,22 @@ const GoogleDriveList = ({
 			}))
 			dispatch(setFiles(response.files))
 		} catch (error) {
-			// エラー処理
+			if (error instanceof Error) {
+				if (
+					error.message === '再認証が必要です' ||
+					error.message === 'トークンの更新に失敗しました'
+				) {
+					// ユーザーに再ログインを促す
+					dispatch(
+						setError(
+							'セッションの有効期限が切れました。再度ログインしてください。',
+						),
+					)
+					signOut() // NextAuthのsignOut関数を呼び出し
+				} else {
+					dispatch(setError(error.message))
+				}
+			}
 		} finally {
 			dispatch(setLoading(false))
 		}

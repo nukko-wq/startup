@@ -1,5 +1,16 @@
-import { createAsyncThunk } from '@reduxjs/toolkit'
+import type { Section } from '@/app/lib/redux/features/section/types/section'
 import type { Space } from '@/app/lib/redux/features/space/types/space'
+import { createAsyncThunk } from '@reduxjs/toolkit'
+
+interface CreateSpaceResponse {
+	id: string
+	name: string
+	order: number
+	workspaceId: string
+	isLastActive: boolean
+	isDefault: boolean
+	section: Section
+}
 
 export const createSpace = createAsyncThunk(
 	'space/createSpace',
@@ -16,7 +27,7 @@ export const createSpace = createAsyncThunk(
 			throw new Error('スペースの作成に失敗しました')
 		}
 
-		const data: Space = await response.json()
+		const data: CreateSpaceResponse = await response.json()
 
 		// 作成したスペースをアクティブに設定
 		await fetch(`/api/spaces/${data.id}/last-active`, {
@@ -86,5 +97,50 @@ export const updateSpaceLastActive = createAsyncThunk(
 
 		const data: Space = await response.json()
 		return data
+	},
+)
+
+export const reorderSpaces = createAsyncThunk(
+	'space/reorderSpaces',
+	async (
+		{
+			sourceWorkspaceId,
+			destinationWorkspaceId,
+			spaceId,
+			newOrder,
+		}: {
+			sourceWorkspaceId: string
+			destinationWorkspaceId: string
+			spaceId: string
+			newOrder: number
+		},
+		{ rejectWithValue },
+	) => {
+		try {
+			const response = await fetch('/api/spaces/reorder', {
+				method: 'POST',
+				headers: {
+					'Content-Type': 'application/json',
+				},
+				body: JSON.stringify({
+					sourceWorkspaceId,
+					destinationWorkspaceId,
+					spaceId,
+					newOrder,
+				}),
+			})
+
+			if (!response.ok) {
+				const error = await response.json()
+				return rejectWithValue(
+					error.error || 'スペースの並び替えに失敗しました',
+				)
+			}
+
+			const data: Space[] = await response.json()
+			return data
+		} catch (error) {
+			return rejectWithValue('スペースの並び替えに失敗しました')
+		}
 	},
 )

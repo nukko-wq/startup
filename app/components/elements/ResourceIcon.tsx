@@ -65,7 +65,7 @@ export default function ResourceIcon({
 					width={32}
 					height={32}
 					alt="page_outline"
-					className="absolute -left-1 -top-1 h-[32px] w-[32px]"
+					className="absolute -left-1 -top-1 h-[32px] w-[32px] max-w-[32px] max-h-[32px]"
 					loading={loading}
 				/>
 			</div>
@@ -79,7 +79,7 @@ export default function ResourceIcon({
 				width={32}
 				height={32}
 				alt="page_outline"
-				className="absolute -left-1 -top-1 h-[32px] w-[32px]"
+				className="absolute -left-1 -top-1 h-[32px] w-[32px] max-w-[32px] max-h-[32px]"
 				loading={loading}
 			/>
 			<div className="relative w-4 h-4">

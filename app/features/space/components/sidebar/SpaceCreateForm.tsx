@@ -1,12 +1,13 @@
+import { addSection } from '@/app/lib/redux/features/section/sectionSlice'
+import { createSpace } from '@/app/lib/redux/features/space/spaceAPI'
+import { addOptimisticSpace } from '@/app/lib/redux/features/space/spaceSlice'
+import { useAppDispatch, useAppSelector } from '@/app/lib/redux/hooks'
+import type { RootState } from '@/app/lib/redux/store'
+import { useRouter } from 'next/navigation'
 import { useState } from 'react'
 import { Button, Form, Input, Label, TextField } from 'react-aria-components'
 import { Controller, useForm } from 'react-hook-form'
-import { useAppDispatch, useAppSelector } from '@/app/lib/redux/hooks'
-import { createSpace } from '@/app/lib/redux/features/space/spaceAPI'
-import { addOptimisticSpace } from '@/app/lib/redux/features/space/spaceSlice'
 import { v4 as uuidv4 } from 'uuid'
-import type { RootState } from '@/app/lib/redux/store'
-import { useRouter } from 'next/navigation'
 
 interface SpaceCreateFormProps {
 	workspaceId: string
@@ -62,6 +63,10 @@ const SpaceCreateForm = ({ workspaceId, onClose }: SpaceCreateFormProps) => {
 					workspaceId,
 				}),
 			).unwrap()
+
+			if (result.section) {
+				dispatch(addSection(result.section))
+			}
 
 			router.push(`/space/${result.id}`)
 		} catch (error) {

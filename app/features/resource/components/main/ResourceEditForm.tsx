@@ -68,7 +68,10 @@ const ResourceEditForm = ({ resource, onClose }: ResourceEditFormProps) => {
 	}
 
 	return (
-		<Form onSubmit={handleSubmit(onSubmit)} className="flex flex-col flex-grow">
+		<Form
+			onSubmit={handleSubmit(onSubmit)}
+			className="flex flex-col flex-grow resource-edit-form"
+		>
 			<div className="flex items-center gap-2 border-b border-gray-200">
 				<div className="border border-slate-200 rounded-sm ml-4 w-8 h-8 flex items-center justify-center">
 					<Earth className="w-4 h-4 text-slate-700" />

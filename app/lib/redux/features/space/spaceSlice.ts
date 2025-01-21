@@ -8,6 +8,7 @@ import {
 	deleteSpace,
 	updateSpaceLastActive,
 	updateSpace,
+	reorderSpaces,
 } from '@/app/lib/redux/features/space/spaceAPI'
 
 const initialState: SpaceState = {
@@ -17,6 +18,7 @@ const initialState: SpaceState = {
 	loading: false,
 	error: null,
 	optimisticSpaces: [],
+	previousSpaces: null,
 }
 
 export const spaceSlice = createSlice({
@@ -142,6 +144,19 @@ export const spaceSlice = createSlice({
 			.addCase(updateSpace.rejected, (state, action) => {
 				state.loading = false
 				state.error = action.error.message || 'エラーが発生しました'
+			})
+			.addCase(reorderSpaces.pending, (state) => {
+				state.previousSpaces = state.spaces
+			})
+			.addCase(reorderSpaces.fulfilled, (state, action) => {
+				state.spaces = action.payload
+				state.previousSpaces = null
+			})
+			.addCase(reorderSpaces.rejected, (state) => {
+				if (state.previousSpaces) {
+					state.spaces = state.previousSpaces
+				}
+				state.previousSpaces = null
 			})
 	},
 })

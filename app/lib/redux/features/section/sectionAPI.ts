@@ -1,4 +1,6 @@
 // app/lib/redux/features/section/sectionAPI.ts
+import type { Section } from '@/app/lib/redux/features/section/types/section'
+
 export const createSection = async (name: string, spaceId: string) => {
 	const response = await fetch('/api/sections', {
 		method: 'POST',
@@ -43,13 +45,19 @@ export const updateSectionName = async (sectionId: string, name: string) => {
 	return response.json()
 }
 
-export const reorderSections = async (spaceId: string) => {
+export const reorderSections = async (spaceId: string, sections: Section[]) => {
 	const response = await fetch('/api/sections/reorder', {
 		method: 'POST',
 		headers: {
 			'Content-Type': 'application/json',
 		},
-		body: JSON.stringify({ spaceId }),
+		body: JSON.stringify({
+			spaceId,
+			sections: sections.map((section, index) => ({
+				id: section.id,
+				order: index,
+			})),
+		}),
 	})
 
 	if (!response.ok) {
