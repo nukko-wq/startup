@@ -17,8 +17,7 @@ const SectionListWrapper = () => {
 	const dispatch = useAppDispatch()
 	const params = useParams()
 	const spaceId = params.spaceId as string
-	const sections = useAppSelector(selectSectionsByActiveSpace)
-	const isLoading = sections.length === 0
+	const { sections, isLoaded } = useAppSelector(selectSectionsByActiveSpace)
 
 	const handleCreateSection = async () => {
 		const optimisticSection = {
@@ -48,7 +47,7 @@ const SectionListWrapper = () => {
 			<div className="flex w-full flex-col">
 				<SectionList />
 			</div>
-			{!isLoading && (
+			{isLoaded && (
 				<div className="mt-4 flex justify-center">
 					<Button
 						onPress={handleCreateSection}

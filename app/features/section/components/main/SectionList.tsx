@@ -15,7 +15,7 @@ import {
 } from '@hello-pangea/dnd'
 
 const SectionList = () => {
-	const sections = useAppSelector(selectSectionsByActiveSpace)
+	const { sections } = useAppSelector(selectSectionsByActiveSpace)
 	const dispatch = useAppDispatch()
 	const activeSpaceId = useAppSelector((state) => state.space.activeSpaceId)
 	const allResources = useAppSelector((state) => state.resource.resources)
@@ -45,11 +45,9 @@ const SectionList = () => {
 					activeSpaceId,
 					updatedItems,
 				)
-				// APIからの応答で最新のセクションデータを更新
 				dispatch(setSections(updatedSections))
 			} catch (error) {
 				console.error('セクションの並び替えに失敗しました:', error)
-				// エラーの場合は元の配列に戻す
 				dispatch(setSections(sections))
 			}
 			return
