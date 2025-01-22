@@ -14,7 +14,7 @@ import {
 	Droppable,
 } from '@hello-pangea/dnd'
 import { ChevronRight, Layers } from 'lucide-react'
-import { useCallback } from 'react'
+import { useCallback, useState } from 'react'
 import DefaultWorkspaceRightMenu from './DefaultWorkspaceRightMenu'
 import WorkspaceLeftMenu from './WorkspaceLeftMenu'
 import WorkspaceRightMenu from './WorkspaceRightMenu'
@@ -24,6 +24,23 @@ const WorkspaceList = () => {
 	const defaultWorkspace = useAppSelector(selectDefaultWorkspace)
 	const allWorkspaces = useAppSelector((state) => state.workspace.workspaces)
 	const allSpaces = useAppSelector((state) => state.space.spaces)
+	// 折りたたみ状態を管理するstate
+	const [collapsedWorkspaces, setCollapsedWorkspaces] = useState<Set<string>>(
+		new Set(),
+	)
+
+	// 折りたたみトグル関数
+	const toggleCollapse = (workspaceId: string) => {
+		setCollapsedWorkspaces((prev) => {
+			const newSet = new Set(prev)
+			if (newSet.has(workspaceId)) {
+				newSet.delete(workspaceId)
+			} else {
+				newSet.add(workspaceId)
+			}
+			return newSet
+		})
+	}
 
 	const onDragEnd = useCallback(
 		async (result: DropResult) => {
@@ -172,12 +189,24 @@ const WorkspaceList = () => {
 																{...(workspace.isDefault
 																	? {}
 																	: provided.dragHandleProps)}
-																className={`${workspace.isDefault ? '' : 'cursor-grab'} flex items-center`}
+																className={`${
+																	workspace.isDefault ? '' : 'cursor-grab'
+																} flex items-center`}
+																onClick={() =>
+																	!workspace.isDefault &&
+																	toggleCollapse(workspace.id)
+																}
 															>
 																{workspace.isDefault ? (
 																	<Layers className="w-6 h-6 text-gray-500" />
 																) : (
-																	<ChevronRight className="w-4 h-4 text-slate-500 ml-[4px] mr-[4px]" />
+																	<ChevronRight
+																		className={`w-4 h-4 text-slate-500 ml-[4px] mr-[4px] transition-transform ${
+																			collapsedWorkspaces.has(workspace.id)
+																				? ''
+																				: 'rotate-90'
+																		}`}
+																	/>
 																)}
 															</div>
 															<div className="flex items-center flex-grow justify-between hover:border-b-2 hover:border-blue-500 pt-[2px] ml-2 border-b-2 border-transparent">
@@ -209,7 +238,13 @@ const WorkspaceList = () => {
 															</div>
 														</div>
 													</div>
-													<SpaceList workspaceId={workspace.id} type="space" />
+													{/* SpaceListを条件付きでレンダリング */}
+													{!collapsedWorkspaces.has(workspace.id) && (
+														<SpaceList
+															workspaceId={workspace.id}
+															type="space"
+														/>
+													)}
 												</div>
 											</div>
 										</div>
