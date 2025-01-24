@@ -1,23 +1,23 @@
 'use client'
 
+import { createResource } from '@/app/lib/redux/features/resource/resourceAPI'
+import {
+	addResource,
+	removeResource,
+	replaceResource,
+} from '@/app/lib/redux/features/resource/resourceSlice'
+import type { Resource } from '@/app/lib/redux/features/resource/types/resource'
+import type { Tab } from '@/app/lib/redux/features/tabs/types/tabs'
+import { useAppDispatch, useAppSelector } from '@/app/lib/redux/hooks'
+import type { RootState } from '@/app/lib/redux/store'
 import { Bookmark } from 'lucide-react'
 import { useState } from 'react'
-import { useAppDispatch, useAppSelector } from '@/app/lib/redux/hooks'
 import {
 	Button,
 	OverlayArrow,
 	Tooltip,
 	TooltipTrigger,
 } from 'react-aria-components'
-import { createResource } from '@/app/lib/redux/features/resource/resourceAPI'
-import {
-	addResource,
-	replaceResource,
-	removeResource,
-} from '@/app/lib/redux/features/resource/resourceSlice'
-import type { Tab } from '@/app/lib/redux/features/tabs/types/tabs'
-import type { Resource } from '@/app/lib/redux/features/resource/types/resource'
-import type { RootState } from '@/app/lib/redux/store'
 
 interface TabSaveButtonProps {
 	tab: Tab
@@ -87,7 +87,7 @@ const TabSaveButton = ({ tab, sectionId }: TabSaveButtonProps) => {
 		>
 			<Button
 				onPress={handleSave}
-				className="outline-hidden p-2 hover:bg-gray-200 transition-colors duration-200 rounded-full group/bookmark"
+				className="outline-hidden p-2 hover:bg-gray-200 transition-colors duration-200 rounded-full group/bookmark cursor-pointer"
 				aria-label="タブを保存"
 				isDisabled={isSaving}
 			>
