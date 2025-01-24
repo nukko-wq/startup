@@ -1,14 +1,11 @@
-import { Droppable, Draggable, type DropResult } from '@hello-pangea/dnd'
+import SpaceMenu from '@/app/features/space/components/sidebar/SpaceMenu'
+import { selectSortedSpacesByWorkspaceId } from '@/app/lib/redux/features/space/selector'
+import { updateSpaceLastActive } from '@/app/lib/redux/features/space/spaceAPI'
+import { setActiveSpace } from '@/app/lib/redux/features/space/spaceSlice'
+import { useAppDispatch, useAppSelector } from '@/app/lib/redux/hooks'
+import { Draggable, Droppable } from '@hello-pangea/dnd'
 import { GripVertical } from 'lucide-react'
 import { useRouter } from 'next/navigation'
-import { useAppSelector, useAppDispatch } from '@/app/lib/redux/hooks'
-import {
-	selectSpaces,
-	selectSortedSpacesByWorkspaceId,
-} from '@/app/lib/redux/features/space/selector'
-import { setActiveSpace } from '@/app/lib/redux/features/space/spaceSlice'
-import { updateSpaceLastActive } from '@/app/lib/redux/features/space/spaceAPI'
-import SpaceMenu from '@/app/features/space/components/sidebar/SpaceMenu'
 import { memo } from 'react'
 
 interface SpaceListProps {
@@ -22,7 +19,6 @@ const SpaceList = memo(({ workspaceId, type }: SpaceListProps) => {
 	const spaces = useAppSelector((state) =>
 		selectSortedSpacesByWorkspaceId(state, workspaceId),
 	)
-	const allSpaces = useAppSelector(selectSpaces)
 	const activeSpaceId = useAppSelector((state) => state.space.activeSpaceId)
 
 	const handleSpaceClick = async (spaceId: string) => {
