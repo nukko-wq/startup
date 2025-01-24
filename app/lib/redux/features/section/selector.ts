@@ -13,11 +13,12 @@ export const selectSectionsByActiveSpace = createSelector(
 	[selectSections, selectActiveSpaceId],
 	(sections, activeSpaceId) => {
 		if (!activeSpaceId) return { sections: [], isLoaded: false }
+		const filteredSections = sections.filter(
+			(section) => section.spaceId === activeSpaceId,
+		)
 		return {
-			sections: sections
-				.filter((section) => section.spaceId === activeSpaceId)
-				.sort((a, b) => a.order - b.order),
-			isLoaded: true,
+			sections: filteredSections.sort((a, b) => a.order - b.order),
+			isLoaded: filteredSections.length > 0,
 		}
 	},
 )
