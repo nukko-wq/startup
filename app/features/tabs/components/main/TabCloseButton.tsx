@@ -1,5 +1,6 @@
 'use client'
 
+import { tabsAPI } from '@/app/lib/redux/features/tabs/tabsAPI'
 import { X } from 'lucide-react'
 import { useState } from 'react'
 import {
@@ -8,7 +9,6 @@ import {
 	Tooltip,
 	TooltipTrigger,
 } from 'react-aria-components'
-import { tabsAPI } from '@/app/lib/redux/features/tabs/tabsAPI'
 
 interface TabCloseButtonProps {
 	tabId: number
@@ -58,7 +58,7 @@ const TabCloseButton = ({ tabId }: TabCloseButtonProps) => {
 		>
 			<Button
 				onPress={handleClose}
-				className="outline-hidden p-2 hover:bg-gray-200 rounded-full transition-colors duration-200 group/close"
+				className="outline-hidden p-2 hover:bg-gray-200 rounded-full transition-colors duration-200 group/close cursor-pointer"
 				aria-label="タブを閉じる"
 				isDisabled={isClosing}
 			>
