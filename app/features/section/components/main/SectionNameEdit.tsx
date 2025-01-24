@@ -1,14 +1,14 @@
-import { useState } from 'react'
-import { Pencil } from 'lucide-react'
-import { Button, Form, Input, Text } from 'react-aria-components'
-import { useForm, Controller } from 'react-hook-form'
-import { useAppDispatch } from '@/app/lib/redux/hooks'
-import {
-	updateSection,
-	revertSection,
-} from '@/app/lib/redux/features/section/sectionSlice'
 import { updateSectionName } from '@/app/lib/redux/features/section/sectionAPI'
+import {
+	revertSection,
+	updateSection,
+} from '@/app/lib/redux/features/section/sectionSlice'
 import type { Section } from '@/app/lib/redux/features/section/types/section'
+import { useAppDispatch } from '@/app/lib/redux/hooks'
+import { Pencil } from 'lucide-react'
+import { useState } from 'react'
+import { Button, Form, Input, Text } from 'react-aria-components'
+import { Controller, useForm } from 'react-hook-form'
 
 interface SectionNameEditProps {
 	section: Section
@@ -63,7 +63,7 @@ const SectionNameEdit = ({ section }: SectionNameEditProps) => {
 						render={({ field }) => (
 							<Input
 								{...field}
-								className="text-[17px] px-3 py-1 bg-transparent border-b-2 outline-hidden border-blue-500 text-slate-800"
+								className="text-[17px] px-3 py-2 bg-transparent border-b-2 outline-hidden border-blue-500 text-slate-800"
 								autoFocus
 								onBlur={() => {
 									field.onBlur()
@@ -80,7 +80,7 @@ const SectionNameEdit = ({ section }: SectionNameEditProps) => {
 				</Form>
 			) : (
 				<Button
-					className="group/section-name flex items-center gap-2 hover:bg-slate-100 rounded-sm px-3 py-2 outline-hidden"
+					className="group/section-name flex items-center gap-2 hover:bg-slate-100 rounded-sm px-3 py-2 outline-hidden cursor-pointer border-b-2 border-transparent"
 					onPress={handleEditStart}
 					aria-label="Section Name"
 				>
