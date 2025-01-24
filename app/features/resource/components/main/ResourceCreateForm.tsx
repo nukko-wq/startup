@@ -1,12 +1,16 @@
 'use client'
 
-import { useState, useRef, useEffect } from 'react'
-import { zodResolver } from '@hookform/resolvers/zod'
-import { useForm, Controller } from 'react-hook-form'
+import IconGoogle from '@/app/components/elements/IconGoogle'
+import GoogleDriveList from '@/app/features/google-drive/components/main/GoogleDriveList'
+import { createResource } from '@/app/lib/redux/features/resource/resourceAPI'
 import {
-	resourceSchema,
-	type ResourceFormData,
-} from '../../schemas/resourceSchema'
+	addResource,
+	removeResource,
+} from '@/app/lib/redux/features/resource/resourceSlice'
+import type { Resource } from '@/app/lib/redux/features/resource/types/resource'
+import { useAppDispatch, useAppSelector } from '@/app/lib/redux/hooks'
+import { zodResolver } from '@hookform/resolvers/zod'
+import { useEffect, useRef, useState } from 'react'
 import {
 	Button,
 	Form,
@@ -15,15 +19,11 @@ import {
 	Link,
 	TextField,
 } from 'react-aria-components'
-import IconGoogle from '@/app/components/elements/IconGoogle'
-import { useAppDispatch, useAppSelector } from '@/app/lib/redux/hooks'
+import { Controller, useForm } from 'react-hook-form'
 import {
-	addResource,
-	removeResource,
-} from '@/app/lib/redux/features/resource/resourceSlice'
-import { createResource } from '@/app/lib/redux/features/resource/resourceAPI'
-import type { Resource } from '@/app/lib/redux/features/resource/types/resource'
-import GoogleDriveList from '@/app/features/google-drive/components/main/GoogleDriveList'
+	type ResourceFormData,
+	resourceSchema,
+} from '../../schemas/resourceSchema'
 interface ResourceCreateFormProps {
 	sectionId: string
 	onClose: (isSubmit?: boolean) => void
@@ -124,7 +124,7 @@ const ResourceCreateForm = ({
 			>
 				<div className="text-xl font-bold p-4 text-slate-700">Add Resource</div>
 				<Button
-					className={`w-full text-muted-foreground p-2 flex items-center gap-2 outline-none ${
+					className={`w-full text-muted-foreground p-2 flex items-center gap-2 outline-hidden cursor-pointer ${
 						activeTab === 'url' ? 'bg-slate-200' : ''
 					}`}
 					onPress={() => setActiveTab('url')}
@@ -134,7 +134,7 @@ const ResourceCreateForm = ({
 					<div>URL</div>
 				</Button>
 				<Button
-					className={`w-full text-muted-foreground p-2 flex items-center gap-1 outline-none ${
+					className={`w-full text-muted-foreground p-2 flex items-center gap-1 outline-hidden cursor-pointer ${
 						activeTab === 'drive' ? 'bg-slate-200' : ''
 					}`}
 					onPress={() => setActiveTab('drive')}
@@ -210,14 +210,14 @@ const ResourceCreateForm = ({
 							<Button
 								type="button"
 								onPress={() => onClose(false)}
-								className="px-4 py-2 text-sm border rounded hover:bg-gray-50 outline-none"
+								className="px-4 py-2 text-sm border rounded-sm hover:bg-gray-50 outline-hidden cursor-pointer"
 							>
 								キャンセル
 							</Button>
 							<Button
 								type="submit"
 								isDisabled={isSubmitting || !isValid}
-								className={`px-4 py-2 text-sm border rounded bg-blue-500 text-white hover:bg-blue-600 focus:outline-blue-500
+								className={`px-4 py-2 text-sm border rounded bg-blue-500 text-white hover:bg-blue-600 focus:outline-blue-500 cursor-pointer
 									${isSubmitting || !isValid ? 'opacity-50' : ''}`}
 							>
 								{isSubmitting ? '作成中...' : 'ADD RESOURCE'}

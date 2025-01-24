@@ -1,5 +1,7 @@
-import { forwardRef, useCallback, useRef, useState } from 'react'
+import ResourceCreateForm from '@/app/features/resource/components/main/ResourceCreateForm'
+import type { Section } from '@/app/lib/redux/features/section/types/section'
 import { FilePlus } from 'lucide-react'
+import { forwardRef, useCallback, useRef, useState } from 'react'
 import {
 	Button,
 	Dialog,
@@ -9,8 +11,6 @@ import {
 	Tooltip,
 	TooltipTrigger,
 } from 'react-aria-components'
-import ResourceCreateForm from '@/app/features/resource/components/main/ResourceCreateForm'
-import type { Section } from '@/app/lib/redux/features/section/types/section'
 
 interface ResourceCreateButtonProps {
 	section: Section
@@ -42,7 +42,7 @@ const ResourceCreateButton = forwardRef<
 					<Button
 						ref={ref}
 						aria-label="Add Resource"
-						className="outline-none hover:bg-slate-200 transition-colors duration-200 rounded-full p-2"
+						className="outline-hidden hover:bg-slate-200 transition-colors duration-200 rounded-full p-2 cursor-pointer"
 					>
 						<FilePlus className="w-6 h-6 text-slate-700" />
 					</Button>
@@ -63,7 +63,7 @@ const ResourceCreateButton = forwardRef<
 					</Tooltip>
 				</TooltipTrigger>
 				<Popover placement="start">
-					<Dialog className="outline-none">
+					<Dialog className="outline-hidden">
 						<div className="bg-white flex items-center justify-center rounded-lg shadow-md">
 							<ResourceCreateForm
 								sectionId={section.id}

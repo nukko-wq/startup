@@ -172,7 +172,7 @@ const SectionList = () => {
 										ref={provided.innerRef}
 										{...provided.draggableProps}
 										{...provided.dragHandleProps}
-										className="group outline-none"
+										className="group outline-hidden"
 									>
 										<SectionItem section={section} />
 									</div>

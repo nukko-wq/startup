@@ -1,7 +1,9 @@
 'use client'
 
-import { useState, useCallback, useRef } from 'react'
+import ResourceEditForm from '@/app/features/resource/components/main/ResourceEditForm'
+import type { Resource } from '@/app/lib/redux/features/resource/types/resource'
 import { Pencil } from 'lucide-react'
+import { useCallback, useRef, useState } from 'react'
 import {
 	Button,
 	Dialog,
@@ -12,8 +14,6 @@ import {
 	Tooltip,
 	TooltipTrigger,
 } from 'react-aria-components'
-import ResourceEditForm from '@/app/features/resource/components/main/ResourceEditForm'
-import type { Resource } from '@/app/lib/redux/features/resource/types/resource'
 
 const ResourceMenu = ({ resource }: { resource: Resource }) => {
 	const [isTooltipVisible, setIsTooltipVisible] = useState(false)
@@ -60,7 +60,7 @@ const ResourceMenu = ({ resource }: { resource: Resource }) => {
 			>
 				<Button
 					aria-label="Edit"
-					className="outline-none p-2 hover:bg-gray-200 transition-colors duration-200 rounded-full group/edit"
+					className="outline-hidden p-2 hover:bg-gray-200 transition-colors duration-200 rounded-full group/edit cursor-pointer"
 				>
 					<Pencil className="w-5 h-5 text-gray-500 group-hover/edit:text-gray-700" />
 				</Button>
@@ -85,8 +85,8 @@ const ResourceMenu = ({ resource }: { resource: Resource }) => {
 				isDismissable
 				className="fixed flex top-0 left-0 w-screen h-screen z-100 bg-black/20 items-center justify-center"
 			>
-				<Modal className="flex items-center justify-center outline-none">
-					<Dialog className="outline-none">
+				<Modal className="flex items-center justify-center outline-hidden">
+					<Dialog className="outline-hidden">
 						<div className="bg-white flex items-center justify-center rounded-lg shadow-md w-[700px]">
 							<ResourceEditForm resource={resource} onClose={handleFormClose} />
 						</div>

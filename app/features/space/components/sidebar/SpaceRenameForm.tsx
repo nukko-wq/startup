@@ -1,9 +1,9 @@
+import { updateSpace } from '@/app/lib/redux/features/space/spaceAPI'
+import { updateSpaceName } from '@/app/lib/redux/features/space/spaceSlice'
+import { useAppDispatch } from '@/app/lib/redux/hooks'
 import { useState } from 'react'
 import { Button, Form, Input, Label, TextField } from 'react-aria-components'
 import { Controller, useForm } from 'react-hook-form'
-import { useAppDispatch } from '@/app/lib/redux/hooks'
-import { updateSpace } from '@/app/lib/redux/features/space/spaceAPI'
-import { updateSpaceName } from '@/app/lib/redux/features/space/spaceSlice'
 
 interface SpaceRenameFormProps {
 	spaceId: string
@@ -65,7 +65,7 @@ const SpaceRenameForm = ({
 						<Label className="text-sm">スペース名</Label>
 						<Input
 							{...field}
-							className="w-full px-3 py-2 border rounded focus:outline-blue-500"
+							className="w-full px-3 py-2 border rounded-sm focus:outline-blue-500"
 						/>
 						{fieldState.error && (
 							<div className="text-red-500 text-sm">
@@ -79,14 +79,14 @@ const SpaceRenameForm = ({
 				<Button
 					type="button"
 					onPress={onClose}
-					className="px-4 py-2 bg-gray-200 rounded hover:bg-gray-300 outline-none"
+					className="px-4 py-2 bg-gray-200 rounded-sm hover:bg-gray-300 outline-hidden cursor-pointer"
 					isDisabled={isSubmitting}
 				>
 					キャンセル
 				</Button>
 				<Button
 					type="submit"
-					className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 outline-none flex items-center gap-2"
+					className="px-4 py-2 bg-blue-500 text-white rounded-sm hover:bg-blue-600 outline-hidden flex items-center gap-2 cursor-pointer"
 					isDisabled={!isValid || isSubmitting}
 				>
 					{isSubmitting ? '更新中...' : '保存'}

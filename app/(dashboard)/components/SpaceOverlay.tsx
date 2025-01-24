@@ -147,7 +147,7 @@ const SpaceOverlay = () => {
 								className={`
 									bg-white p-4 rounded-lg shadow cursor-pointer
 									${index === selectedIndex ? 'ring-2 ring-blue-500 bg-gray-200' : 'hover:bg-gray-50'}
-									focus:outline-none focus:ring-2 focus:ring-blue-500
+									focus:outline-hidden focus:ring-2 focus:ring-blue-500
 								`}
 								onClick={() => handleSpaceClick(space.id)}
 							>

@@ -1,12 +1,12 @@
 'use client'
 
-import { Button, Form, Input, Text } from 'react-aria-components'
-import { Pencil } from 'lucide-react'
-import { useState } from 'react'
-import { useAppSelector, useAppDispatch } from '@/app/lib/redux/hooks'
 import { selectActiveSpace } from '@/app/lib/redux/features/space/selector'
 import { updateSpace } from '@/app/lib/redux/features/space/spaceAPI'
 import { updateSpaceName } from '@/app/lib/redux/features/space/spaceSlice'
+import { useAppDispatch, useAppSelector } from '@/app/lib/redux/hooks'
+import { Pencil } from 'lucide-react'
+import { useState } from 'react'
+import { Button, Form, Input, Text } from 'react-aria-components'
 
 const Header = () => {
 	const dispatch = useAppDispatch()
@@ -95,7 +95,7 @@ const Header = () => {
 								}
 							}}
 							onBlur={handleEditCancel}
-							className="text-xl font-bold py-1 pl-6 text-slate-800 bg-transparent border-b-2 border-blue-500 outline-none"
+							className="text-xl font-bold py-1 pl-6 text-slate-800 bg-transparent border-b-2 border-blue-500 outline-hidden"
 							onFocus={(e) => {
 								const input = e.target as HTMLInputElement
 								const length = input.value.length
@@ -105,7 +105,7 @@ const Header = () => {
 					</Form>
 				) : (
 					<Button
-						className="group flex items-center gap-2 hover:bg-slate-100 rounded-lg px-2 py-1 outline-none border-b-2 border-transparent"
+						className="group flex items-center gap-2 hover:bg-slate-100 rounded-lg px-2 py-1 outline-hidden border-b-2 border-transparent cursor-pointer"
 						onPress={handleEditStart}
 						aria-label="Space Name"
 					>

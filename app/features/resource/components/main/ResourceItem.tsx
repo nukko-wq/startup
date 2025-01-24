@@ -71,7 +71,7 @@ const ResourceItem = ({ resource, provided }: ResourceItemProps) => {
 			ref={provided.innerRef}
 			{...provided.draggableProps}
 			{...provided.dragHandleProps}
-			className="flex flex-grow flex-col cursor-pointer group/item"
+			className="flex grow flex-col cursor-pointer group/item"
 			onClick={(e) => {
 				if ((e.target as HTMLElement).closest('.resource-edit-form')) {
 					return

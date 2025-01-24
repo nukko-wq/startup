@@ -1,5 +1,6 @@
-import { useState } from 'react'
+import type { Section } from '@/app/lib/redux/features/section/types/section'
 import { EllipsisVertical, FilePlus, Trash2 } from 'lucide-react'
+import { useState } from 'react'
 import {
 	Button,
 	Menu,
@@ -8,7 +9,6 @@ import {
 	Popover,
 } from 'react-aria-components'
 import SectionDeleteDialog from './SectionDeleteDialog'
-import type { Section } from '@/app/lib/redux/features/section/types/section'
 
 interface SectionMenuProps {
 	section: Section
@@ -23,15 +23,15 @@ const SectionMenu = ({ section, onAddResourceClick }: SectionMenuProps) => {
 			<MenuTrigger>
 				<Button
 					aria-label="Menu"
-					className="outline-none p-2 hover:bg-slate-200 transition-colors duration-200 rounded-full"
+					className="outline-hidden p-2 hover:bg-slate-200 transition-colors duration-200 rounded-full cursor-pointer"
 				>
 					<EllipsisVertical className="w-6 h-6 text-slate-700" />
 				</Button>
 				<Popover>
-					<Menu className="bg-slate-50 outline-none border rounded-lg shadow-md min-w-[200px] text-sm">
+					<Menu className="bg-slate-50 outline-hidden border rounded-lg shadow-md min-w-[200px] text-sm">
 						<MenuItem
 							id="add-resource"
-							className="pl-3 pr-2 py-2 outline-none hover:bg-slate-100 cursor-pointer rounded-t-lg"
+							className="pl-3 pr-2 py-2 outline-hidden hover:bg-slate-100 cursor-pointer rounded-t-lg"
 							onAction={onAddResourceClick}
 						>
 							<div className="flex items-center gap-2">
@@ -41,7 +41,7 @@ const SectionMenu = ({ section, onAddResourceClick }: SectionMenuProps) => {
 						</MenuItem>
 						<MenuItem
 							id="delete-section"
-							className="pl-3 pr-2 py-2 outline-none hover:bg-slate-100 text-red-600 cursor-pointer rounded-b-lg"
+							className="pl-3 pr-2 py-2 outline-hidden hover:bg-slate-100 text-red-600 cursor-pointer rounded-b-lg"
 							onAction={() => setIsDeleteDialogOpen(true)}
 						>
 							<div className="flex items-center gap-2">

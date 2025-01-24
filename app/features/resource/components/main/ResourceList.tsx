@@ -20,7 +20,7 @@ const ResourceList = ({ sectionId }: ResourceListProps) => {
 				<div
 					ref={provided.innerRef}
 					{...provided.droppableProps}
-					className={`flex flex-col justify-center border-slate-400 rounded-md outline-none bg-white shadow-sm ${
+					className={`flex flex-col justify-center border-slate-400 rounded-md outline-hidden bg-white shadow-xs ${
 						snapshot.isDraggingOver ? 'bg-gray-50' : ''
 					}`}
 				>

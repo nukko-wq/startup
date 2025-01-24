@@ -1,4 +1,8 @@
+import { deleteSpace } from '@/app/lib/redux/features/space/spaceAPI'
+import { addOptimisticDelete } from '@/app/lib/redux/features/space/spaceSlice'
+import { useAppDispatch } from '@/app/lib/redux/hooks'
 import { AlertTriangle } from 'lucide-react'
+import { useRouter } from 'next/navigation'
 import { useState } from 'react'
 import {
 	Button,
@@ -8,10 +12,6 @@ import {
 	Modal,
 	ModalOverlay,
 } from 'react-aria-components'
-import { useAppDispatch } from '@/app/lib/redux/hooks'
-import { deleteSpace } from '@/app/lib/redux/features/space/spaceAPI'
-import { addOptimisticDelete } from '@/app/lib/redux/features/space/spaceSlice'
-import { useRouter } from 'next/navigation'
 
 interface SpaceDeleteDialogProps {
 	spaceId: string
@@ -48,9 +48,9 @@ const SpaceDeleteDialog = ({
 	return (
 		<DialogTrigger isOpen={isOpen} onOpenChange={onOpenChange}>
 			<Button className="hidden">Open Dialog</Button>
-			<ModalOverlay className="fixed inset-0 z-10 overflow-y-auto bg-black/25 flex min-h-full items-center justify-center p-4 text-center backdrop-blur">
+			<ModalOverlay className="fixed inset-0 z-10 overflow-y-auto bg-black/25 flex min-h-full items-center justify-center p-4 text-center backdrop-blur-sm">
 				<Modal className="w-full max-w-md overflow-hidden rounded-2xl bg-white p-6 text-left align-middle shadow-xl">
-					<Dialog role="alertdialog" className="outline-none relative">
+					<Dialog role="alertdialog" className="outline-hidden relative">
 						{({ close }) => (
 							<>
 								<Heading
@@ -68,14 +68,14 @@ const SpaceDeleteDialog = ({
 								<div className="mt-6 flex justify-end gap-2">
 									<Button
 										onPress={close}
-										className="px-4 py-2 bg-slate-200 text-slate-800 rounded-md hover:bg-slate-300 outline-none"
+										className="px-4 py-2 bg-slate-200 text-slate-800 rounded-md hover:bg-slate-300 outline-hidden cursor-pointer"
 										isDisabled={isDeleting}
 									>
 										キャンセル
 									</Button>
 									<Button
 										onPress={() => handleDelete(close)}
-										className="px-4 py-2 bg-red-500 text-white rounded-md hover:bg-red-600 outline-none disabled:opacity-50"
+										className="px-4 py-2 bg-red-500 text-white rounded-md hover:bg-red-600 outline-hidden disabled:opacity-50 cursor-pointer"
 										isDisabled={isDeleting}
 									>
 										{isDeleting ? '削除中...' : '削除'}

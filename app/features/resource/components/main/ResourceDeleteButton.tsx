@@ -1,13 +1,13 @@
 'use client'
 
-import { useAppDispatch, useAppSelector } from '@/app/lib/redux/hooks'
-import {
-	removeResource,
-	addResource,
-} from '@/app/lib/redux/features/resource/resourceSlice'
 import { deleteResource } from '@/app/lib/redux/features/resource/resourceAPI'
+import {
+	addResource,
+	removeResource,
+} from '@/app/lib/redux/features/resource/resourceSlice'
+import { useAppDispatch, useAppSelector } from '@/app/lib/redux/hooks'
 import { Trash2 } from 'lucide-react'
-import React, { useState } from 'react'
+import { useState } from 'react'
 import {
 	Button,
 	OverlayArrow,
@@ -59,7 +59,7 @@ const ResourceDeleteButton = ({ resourceId }: ResourceDeleteButtonProps) => {
 			closeDelay={0}
 		>
 			<Button
-				className={`p-2 mr-1 transition-colors duration-200 rounded-full outline-none group/delete
+				className={`p-2 mr-1 transition-colors duration-200 rounded-full outline-hidden group/delete cursor-pointer
 					${isDeleting ? 'opacity-50 cursor-not-allowed' : 'hover:bg-gray-200'}`}
 				onPress={handleDelete}
 				isDisabled={isDeleting}
