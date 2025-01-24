@@ -1,3 +1,4 @@
+import { tabsAPI } from '@/app/lib/redux/features/tabs/tabsAPI'
 import { EllipsisVertical, FilePlus, Trash2 } from 'lucide-react'
 import {
 	Button,
@@ -6,7 +7,6 @@ import {
 	MenuTrigger,
 	Popover,
 } from 'react-aria-components'
-import { tabsAPI } from '@/app/lib/redux/features/tabs/tabsAPI'
 
 const TabsMenu = () => {
 	const handleSortByDomain = async () => {
@@ -57,7 +57,7 @@ const TabsMenu = () => {
 		<MenuTrigger>
 			<Button
 				aria-label="Menu"
-				className="outline-hidden p-2 hover:bg-zinc-200 transition-colors duration-200 rounded-full"
+				className="outline-hidden p-2 hover:bg-zinc-200 transition-colors duration-200 rounded-full cursor-pointer"
 			>
 				<EllipsisVertical className="w-6 h-6 text-zinc-700" />
 			</Button>
