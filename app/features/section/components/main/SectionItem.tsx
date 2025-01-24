@@ -18,7 +18,7 @@ const SectionItem = ({ section }: SectionItemProps) => {
 	}
 
 	return (
-		<div className="mb-6 w-full min-w-[260px] max-w-[920px] outline-none">
+		<div className="mb-6 w-full min-w-[260px] max-w-[920px] outline-hidden">
 			<div className="mb-2 flex items-center justify-between">
 				<div className="ml-4 flex cursor-grab items-center" slot="drag">
 					<File className="h-6 w-6 text-slate-700" />

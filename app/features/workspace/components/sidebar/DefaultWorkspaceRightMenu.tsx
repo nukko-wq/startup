@@ -1,3 +1,5 @@
+import SpaceCreateForm from '@/app/features/space/components/sidebar/SpaceCreateForm'
+import WorkspaceCreateForm from '@/app/features/workspace/components/sidebar/WorkspaceCreateForm'
 import { Plus, SquarePlus } from 'lucide-react'
 import { useState } from 'react'
 import {
@@ -11,8 +13,6 @@ import {
 	ModalOverlay,
 	Popover,
 } from 'react-aria-components'
-import WorkspaceCreateForm from '@/app/features/workspace/components/sidebar/WorkspaceCreateForm'
-import SpaceCreateForm from '@/app/features/space/components/sidebar/SpaceCreateForm'
 
 const DefaultWorkspaceRightMenu = ({
 	workspaceId,
@@ -34,14 +34,14 @@ const DefaultWorkspaceRightMenu = ({
 	return (
 		<>
 			<MenuTrigger>
-				<Button className="outline-none p-1 mr-2 bg-gray-700 hover:bg-gray-600 transition-colors duration-200 rounded-full">
+				<Button className="outline-hidden p-1 my-1 mr-2 bg-gray-700 hover:bg-gray-600 transition-colors duration-200 rounded-full cursor-pointer">
 					<Plus className="w-5 h-5 text-slate-50" />
 				</Button>
 				<Popover>
-					<Menu className="bg-slate-50 outline-none border shadow-md min-w-[200px] rounded-sm">
+					<Menu className="bg-slate-50 outline-hidden border shadow-md min-w-[200px] rounded-xs">
 						<MenuItem
 							onAction={handleNewSpace}
-							className="p-2 outline-none hover:bg-slate-200 cursor-pointer"
+							className="p-2 outline-hidden hover:bg-slate-200 cursor-pointer"
 						>
 							<div className="flex items-center gap-2 text-slate-800">
 								<SquarePlus className="w-4 h-4" />
@@ -50,7 +50,7 @@ const DefaultWorkspaceRightMenu = ({
 						</MenuItem>
 						<MenuItem
 							onAction={handleNewWorkspace}
-							className="p-2 outline-none hover:bg-slate-200 cursor-pointer"
+							className="p-2 outline-hidden hover:bg-slate-200 cursor-pointer"
 						>
 							<div className="flex items-center gap-2 text-slate-800">
 								<SquarePlus className="w-4 h-4" />
@@ -63,9 +63,9 @@ const DefaultWorkspaceRightMenu = ({
 
 			<DialogTrigger isOpen={isWorkspaceOpen} onOpenChange={setIsWorkspaceOpen}>
 				<Button className="hidden">Open Dialog</Button>
-				<ModalOverlay className="fixed inset-0 bg-black/25 flex min-h-full items-center justify-center p-4 text-center backdrop-blur">
+				<ModalOverlay className="fixed inset-0 bg-black/25 flex min-h-full items-center justify-center p-4 text-center backdrop-blur-sm">
 					<Modal className="w-full max-w-md overflow-hidden rounded-2xl bg-white p-6 text-left align-middle shadow-xl">
-						<Dialog className="outline-none">
+						<Dialog className="outline-hidden">
 							<div>
 								<h2 className="text-lg font-semibold mb-4">
 									新しいワークスペースを作成
@@ -82,9 +82,9 @@ const DefaultWorkspaceRightMenu = ({
 			{workspaceId && (
 				<DialogTrigger isOpen={isSpaceOpen} onOpenChange={setIsSpaceOpen}>
 					<Button className="hidden">Open Dialog</Button>
-					<ModalOverlay className="fixed inset-0 bg-black/25 flex min-h-full items-center justify-center p-4 text-center backdrop-blur">
+					<ModalOverlay className="fixed inset-0 bg-black/25 flex min-h-full items-center justify-center p-4 text-center backdrop-blur-sm">
 						<Modal className="w-full max-w-md overflow-hidden rounded-2xl bg-white p-6 text-left align-middle shadow-xl">
-							<Dialog className="outline-none">
+							<Dialog className="outline-hidden">
 								<div>
 									<h2 className="text-lg font-semibold mb-4">
 										新しいスペースを作成

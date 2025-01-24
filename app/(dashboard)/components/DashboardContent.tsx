@@ -17,7 +17,7 @@ interface ExtensionMessage {
 
 const TabListFallback = () => (
 	<div className="flex w-1/2 justify-center">
-		<div className="max-w-[920px] flex-grow animate-pulse py-5 pr-[16px] pl-[32px]">
+		<div className="max-w-[920px] grow animate-pulse py-5 pr-[16px] pl-[32px]">
 			<div className="h-[400px] rounded-md bg-gray-100" />
 		</div>
 	</div>
@@ -46,9 +46,9 @@ const DashboardContent = memo(() => {
 			<div className="flex h-full w-full flex-col">
 				<div className="grid grid-cols-[260px_1fr] bg-slate-50 min-[1921px]:grid-cols-[320px_1fr]">
 					<Sidebar />
-					<main className="flex flex-grow flex-col items-center bg-slate-100">
+					<main className="flex grow flex-col items-center bg-slate-100">
 						<Header />
-						<div className="flex h-[calc(100vh-70px)] w-full flex-grow">
+						<div className="flex h-[calc(100vh-70px)] w-full grow">
 							<Suspense fallback={<TabListFallback />}>
 								<TabList />
 							</Suspense>

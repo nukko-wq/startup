@@ -87,7 +87,7 @@ const TabSaveButton = ({ tab, sectionId }: TabSaveButtonProps) => {
 		>
 			<Button
 				onPress={handleSave}
-				className="outline-none p-2 hover:bg-gray-200 transition-colors duration-200 rounded-full group/bookmark"
+				className="outline-hidden p-2 hover:bg-gray-200 transition-colors duration-200 rounded-full group/bookmark"
 				aria-label="タブを保存"
 				isDisabled={isSaving}
 			>

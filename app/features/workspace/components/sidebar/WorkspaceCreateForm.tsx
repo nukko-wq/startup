@@ -1,14 +1,14 @@
-import { Button, Form, Input, Label, TextField } from 'react-aria-components'
-import { Controller, useForm } from 'react-hook-form'
-import { v4 as uuidv4 } from 'uuid'
+import type { Workspace } from '@/app/lib/redux/features/workspace/types/workspace'
 import { createWorkspace } from '@/app/lib/redux/features/workspace/workSpaceAPI'
-import { useAppDispatch } from '@/app/lib/redux/hooks'
 import {
 	addWorkspace,
 	removeWorkspace,
 	replaceWorkspace,
 } from '@/app/lib/redux/features/workspace/workspaceSlice'
-import type { Workspace } from '@/app/lib/redux/features/workspace/types/workspace'
+import { useAppDispatch } from '@/app/lib/redux/hooks'
+import { Button, Form, Input, Label, TextField } from 'react-aria-components'
+import { Controller, useForm } from 'react-hook-form'
+import { v4 as uuidv4 } from 'uuid'
 
 interface WorkspaceFormData {
 	name: string
@@ -67,7 +67,7 @@ const WorkspaceCreateForm = ({ onClose }: WorkspaceCreateFormProps) => {
 						<Label className="text-sm">ワークスペース名</Label>
 						<Input
 							{...field}
-							className="w-full px-3 py-2 border rounded focus:outline-blue-500"
+							className="w-full px-3 py-2 border rounded-sm focus:outline-blue-500"
 						/>
 						{fieldState.error && (
 							<span className="text-red-500 text-sm">
@@ -82,14 +82,14 @@ const WorkspaceCreateForm = ({ onClose }: WorkspaceCreateFormProps) => {
 				<Button
 					onPress={onClose}
 					type="button"
-					className="px-4 py-2 bg-gray-200 rounded hover:bg-gray-300 outline-none text-gray-700"
+					className="px-4 py-2 bg-gray-200 rounded-sm hover:bg-gray-300 outline-hidden text-gray-700 cursor-pointer"
 				>
 					キャンセル
 				</Button>
 				<Button
 					type="submit"
 					isDisabled={!isValid || isSubmitting}
-					className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 outline-none flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+					className="px-4 py-2 bg-blue-500 text-white rounded-sm hover:bg-blue-600 outline-hidden flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
 				>
 					作成
 				</Button>

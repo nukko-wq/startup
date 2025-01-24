@@ -9,7 +9,7 @@ const SignInButton = () => {
 
 	return (
 		<Button
-			className="flex flex-grow items-center w-[350px] p-4 justify-center hover:bg-gray-100 outline-none disabled:opacity-50"
+			className="flex grow items-center w-[350px] p-4 justify-center hover:bg-gray-100 outline-hidden disabled:opacity-50"
 			type="submit"
 			isDisabled={pending}
 		>

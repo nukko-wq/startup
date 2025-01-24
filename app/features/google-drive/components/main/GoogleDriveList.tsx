@@ -142,7 +142,7 @@ const GoogleDriveList = ({
 			<div className="flex items-center justify-center py-2">
 				<Search className="w-[20px] h-[20px] text-slate-700 ml-4 mr-2" />
 				<Input
-					className="w-[400px] text-slate-700 outline-none"
+					className="w-[400px] text-slate-700 outline-hidden"
 					placeholder="Search Drive for resources to add..."
 					aria-label="Search Drive"
 					value={searchQuery}
@@ -150,18 +150,18 @@ const GoogleDriveList = ({
 				/>
 			</div>
 			<div
-				className="flex flex-col flex-grow w-[400px] h-[428px] border-l"
+				className="flex flex-col grow w-[400px] h-[428px] border-l"
 				aria-label="Recent Google Drive Files"
 			>
 				<div className="flex items-center justify-center h-[17px]">
-					<div className="border-t border-slate-200 flex-grow" />
+					<div className="border-t border-slate-200 grow" />
 					{!searchQuery && (
 						<h2 className="text-sm text-slate-500 px-4">Recent</h2>
 					)}
-					<div className="border-t border-slate-200 flex-grow" />
+					<div className="border-t border-slate-200 grow" />
 				</div>
 				{loading ? (
-					<div className="flex flex-grow items-center justify-center">
+					<div className="flex grow items-center justify-center">
 						<div className="text-slate-700">読み込み中...</div>
 					</div>
 				) : error ? (
@@ -176,7 +176,7 @@ const GoogleDriveList = ({
 								>
 									<Button
 										onPress={() => handleFileSelect(file)}
-										className="w-full p-2 outline-none"
+										className="w-full p-2 outline-hidden"
 									>
 										<div className="flex items-center gap-2">
 											<GoogleDriveListIcon mimeType={file.mimeType} />

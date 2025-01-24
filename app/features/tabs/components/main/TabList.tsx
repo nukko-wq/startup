@@ -73,7 +73,7 @@ const TabList = () => {
 
 	return (
 		<div className="flex w-1/2 justify-center">
-			<div className="max-w-[920px] flex-grow overflow-y-auto py-5 pr-[16px] pl-[32px]">
+			<div className="max-w-[920px] grow overflow-y-auto py-5 pr-[16px] pl-[32px]">
 				<div className="mb-2 ml-4 flex items-center justify-between gap-2">
 					<div className="flex items-center gap-2">
 						<Diamond className="h-6 w-6" />
@@ -82,11 +82,11 @@ const TabList = () => {
 					<TabsMenu />
 				</div>
 				{tabs.length > 0 && (
-					<div className="flex flex-col rounded-md border-slate-400 bg-white shadow-sm">
+					<div className="flex flex-col rounded-md border-slate-400 bg-white shadow-xs">
 						{tabs.map((tab) => (
 							<div
 								key={tab.id}
-								className="group block cursor-grab items-center gap-2 truncate rounded py-1 pr-2 outline-none hover:bg-gray-100"
+								className="group block cursor-grab items-center gap-2 truncate rounded-sm py-1 pr-2 outline-hidden hover:bg-gray-100"
 								onClick={() => handleTabAction(tab)}
 								onKeyDown={(e) => {
 									if (e.key === 'Enter') {
@@ -112,7 +112,7 @@ const TabList = () => {
 												<img
 													src={tab.faviconUrl}
 													alt=""
-													className="h-4 w-4 flex-grow"
+													className="h-4 w-4 grow"
 												/>
 											) : (
 												<div className="h-4 w-4 rounded-full bg-gray-200" />
@@ -134,7 +134,7 @@ const TabList = () => {
 					</div>
 				)}
 				{tabs.length === 0 && (
-					<div className="flex h-[56px] flex-col items-center justify-center rounded-md border-slate-400 bg-white shadow-sm">
+					<div className="flex h-[56px] flex-col items-center justify-center rounded-md border-slate-400 bg-white shadow-xs">
 						<p className="text-slate-400 text-sm">Start browsing</p>
 					</div>
 				)}

@@ -182,9 +182,9 @@ const WorkspaceList = () => {
 											`}
 										>
 											<div className="flex items-center">
-												<div className="flex flex-col flex-grow justify-between">
+												<div className="flex flex-col grow justify-between">
 													<div className="flex items-center justify-between group min-h-[40px] mt-1">
-														<div className="flex items-center flex-grow pl-3">
+														<div className="flex items-center grow pl-3">
 															<div
 																{...(workspace.isDefault
 																	? {}
@@ -209,7 +209,7 @@ const WorkspaceList = () => {
 																	/>
 																)}
 															</div>
-															<div className="flex items-center flex-grow justify-between hover:border-b-2 hover:border-blue-500 pt-[2px] ml-2 border-b-2 border-transparent">
+															<div className="flex items-center grow justify-between hover:border-b-2 hover:border-blue-500 pt-[2px] ml-2 border-b-2 border-transparent">
 																<span className="font-medium text-gray-500">
 																	{workspace.id === defaultWorkspace?.id ? (
 																		<span className="text-gray-500">
