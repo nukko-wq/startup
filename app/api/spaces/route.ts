@@ -45,7 +45,7 @@ export async function POST(request: Request) {
 			// デフォルトのセクションを作成
 			const newSection = await tx.section.create({
 				data: {
-					name: 'General',
+					name: 'Resources',
 					order: 0,
 					space: {
 						connect: {
