@@ -95,7 +95,7 @@ const Header = () => {
 								}
 							}}
 							onBlur={handleEditCancel}
-							className="text-xl font-bold py-1 pl-6 text-slate-800 bg-transparent border-b-2 border-blue-500 outline-none"
+							className="text-xl font-bold py-1 pl-6 text-slate-800 bg-transparent border-b-2 border-blue-500 outline-hidden"
 							onFocus={(e) => {
 								const input = e.target as HTMLInputElement
 								const length = input.value.length
@@ -105,7 +105,7 @@ const Header = () => {
 					</Form>
 				) : (
 					<Button
-						className="group flex items-center gap-2 hover:bg-slate-100 rounded-lg px-2 py-1 outline-none border-b-2 border-transparent"
+						className="group flex items-center gap-2 hover:bg-slate-100 rounded-lg px-2 py-1 outline-hidden border-b-2 border-transparent"
 						onPress={handleEditStart}
 						aria-label="Space Name"
 					>

@@ -58,7 +58,7 @@ const TabCloseButton = ({ tabId }: TabCloseButtonProps) => {
 		>
 			<Button
 				onPress={handleClose}
-				className="outline-none p-2 hover:bg-gray-200 rounded-full transition-colors duration-200 group/close"
+				className="outline-hidden p-2 hover:bg-gray-200 rounded-full transition-colors duration-200 group/close"
 				aria-label="タブを閉じる"
 				isDisabled={isClosing}
 			>

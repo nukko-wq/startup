@@ -9,7 +9,7 @@ const sidebar = () => {
 			<div className="flex items-center justify-between pl-4 pr-3 pt-4 pb-4">
 				<Link
 					href="/"
-					className="text-slate-50 text-2xl font-semibold outline-none"
+					className="text-slate-50 text-2xl font-semibold outline-hidden"
 				>
 					Startup
 				</Link>

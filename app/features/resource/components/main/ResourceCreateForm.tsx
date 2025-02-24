@@ -124,7 +124,7 @@ const ResourceCreateForm = ({
 			>
 				<div className="text-xl font-bold p-4 text-slate-700">Add Resource</div>
 				<Button
-					className={`w-full text-muted-foreground p-2 flex items-center gap-2 outline-none ${
+					className={`w-full text-muted-foreground p-2 flex items-center gap-2 outline-hidden ${
 						activeTab === 'url' ? 'bg-slate-200' : ''
 					}`}
 					onPress={() => setActiveTab('url')}
@@ -134,7 +134,7 @@ const ResourceCreateForm = ({
 					<div>URL</div>
 				</Button>
 				<Button
-					className={`w-full text-muted-foreground p-2 flex items-center gap-1 outline-none ${
+					className={`w-full text-muted-foreground p-2 flex items-center gap-1 outline-hidden ${
 						activeTab === 'drive' ? 'bg-slate-200' : ''
 					}`}
 					onPress={() => setActiveTab('drive')}
@@ -210,7 +210,7 @@ const ResourceCreateForm = ({
 							<Button
 								type="button"
 								onPress={() => onClose(false)}
-								className="px-4 py-2 text-sm border rounded hover:bg-gray-50 outline-none"
+								className="px-4 py-2 text-sm border rounded-sm hover:bg-gray-50 outline-hidden"
 							>
 								キャンセル
 							</Button>

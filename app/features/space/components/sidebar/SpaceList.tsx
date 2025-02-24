@@ -72,7 +72,7 @@ const SpaceList = memo(({ workspaceId, type }: SpaceListProps) => {
 											...provided.draggableProps.style,
 										}}
 										className={`
-											flex flex-grow justify-between text-gray-400 cursor-pointer 
+											flex grow justify-between text-gray-400 cursor-pointer 
 											hover:bg-gray-700 hover:bg-opacity-75 group transition duration-200 pl-3
 											${space.id === activeSpaceId ? 'bg-gray-700 bg-opacity-75 border-l-4 border-blue-500' : 'border-l-4 border-transparent'}
 										`}
@@ -87,8 +87,8 @@ const SpaceList = memo(({ workspaceId, type }: SpaceListProps) => {
 										role="button"
 										tabIndex={0}
 									>
-										<div className="flex flex-grow items-center justify-between py-1 group">
-											<div className="flex items-center flex-grow">
+										<div className="flex grow items-center justify-between py-1 group">
+											<div className="flex items-center grow">
 												<div
 													className="cursor-grab flex items-center pr-3"
 													aria-label="drag handle"

@@ -59,7 +59,7 @@ const ResourceDeleteButton = ({ resourceId }: ResourceDeleteButtonProps) => {
 			closeDelay={0}
 		>
 			<Button
-				className={`p-2 mr-1 transition-colors duration-200 rounded-full outline-none group/delete
+				className={`p-2 mr-1 transition-colors duration-200 rounded-full outline-hidden group/delete
 					${isDeleting ? 'opacity-50 cursor-not-allowed' : 'hover:bg-gray-200'}`}
 				onPress={handleDelete}
 				isDisabled={isDeleting}

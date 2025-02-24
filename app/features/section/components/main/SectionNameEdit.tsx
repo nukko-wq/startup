@@ -63,7 +63,7 @@ const SectionNameEdit = ({ section }: SectionNameEditProps) => {
 						render={({ field }) => (
 							<Input
 								{...field}
-								className="text-[17px] px-3 py-1 bg-transparent border-b-2 outline-none border-blue-500 text-slate-800"
+								className="text-[17px] px-3 py-1 bg-transparent border-b-2 outline-hidden border-blue-500 text-slate-800"
 								autoFocus
 								onBlur={() => {
 									field.onBlur()
@@ -80,7 +80,7 @@ const SectionNameEdit = ({ section }: SectionNameEditProps) => {
 				</Form>
 			) : (
 				<Button
-					className="group/section-name flex items-center gap-2 hover:bg-slate-100 rounded px-3 py-2 outline-none"
+					className="group/section-name flex items-center gap-2 hover:bg-slate-100 rounded-sm px-3 py-2 outline-hidden"
 					onPress={handleEditStart}
 					aria-label="Section Name"
 				>

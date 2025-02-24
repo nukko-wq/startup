@@ -69,7 +69,7 @@ const WorkspaceRenameForm = ({
 						<Label className="text-sm">ワークスペース名</Label>
 						<Input
 							{...field}
-							className="w-full px-3 py-2 border rounded focus:outline-blue-500"
+							className="w-full px-3 py-2 border rounded-sm focus:outline-blue-500"
 							onFocus={(e) => {
 								const input = e.target as HTMLInputElement
 								const length = input.value.length
@@ -88,14 +88,14 @@ const WorkspaceRenameForm = ({
 				<Button
 					type="button"
 					onPress={onClose}
-					className="px-4 py-2 bg-gray-200 rounded hover:bg-gray-300 outline-none"
+					className="px-4 py-2 bg-gray-200 rounded-sm hover:bg-gray-300 outline-hidden"
 					isDisabled={isSubmitting}
 				>
 					キャンセル
 				</Button>
 				<Button
 					type="submit"
-					className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 outline-none flex items-center gap-2"
+					className="px-4 py-2 bg-blue-500 text-white rounded-sm hover:bg-blue-600 outline-hidden flex items-center gap-2"
 					isDisabled={isSubmitting}
 				>
 					{isSubmitting ? '更新中...' : '保存'}

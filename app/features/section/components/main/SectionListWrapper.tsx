@@ -43,7 +43,7 @@ const SectionListWrapper = () => {
 	}
 
 	return (
-		<div className="flex w-full max-w-[920px] flex-grow flex-col overflow-y-auto py-5 pr-[32px] pl-[16px]">
+		<div className="flex w-full max-w-[920px] grow flex-col overflow-y-auto py-5 pr-[32px] pl-[16px]">
 			<div className="flex w-full flex-col">
 				<SectionList />
 			</div>
@@ -51,7 +51,7 @@ const SectionListWrapper = () => {
 				<div className="mt-4 flex justify-center">
 					<Button
 						onPress={handleCreateSection}
-						className="flex items-center gap-1 px-4 py-2 text-gray-500 outline-none transition-colors hover:text-gray-700"
+						className="flex items-center gap-1 px-4 py-2 text-gray-500 outline-hidden transition-colors hover:text-gray-700"
 					>
 						<Plus className="h-3 w-3" />
 						<span>RESOURCE SECTION</span>

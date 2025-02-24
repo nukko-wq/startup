@@ -67,7 +67,7 @@ const WorkspaceCreateForm = ({ onClose }: WorkspaceCreateFormProps) => {
 						<Label className="text-sm">ワークスペース名</Label>
 						<Input
 							{...field}
-							className="w-full px-3 py-2 border rounded focus:outline-blue-500"
+							className="w-full px-3 py-2 border rounded-sm focus:outline-blue-500"
 						/>
 						{fieldState.error && (
 							<span className="text-red-500 text-sm">
@@ -82,14 +82,14 @@ const WorkspaceCreateForm = ({ onClose }: WorkspaceCreateFormProps) => {
 				<Button
 					onPress={onClose}
 					type="button"
-					className="px-4 py-2 bg-gray-200 rounded hover:bg-gray-300 outline-none text-gray-700"
+					className="px-4 py-2 bg-gray-200 rounded-sm hover:bg-gray-300 outline-hidden text-gray-700"
 				>
 					キャンセル
 				</Button>
 				<Button
 					type="submit"
 					isDisabled={!isValid || isSubmitting}
-					className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 outline-none flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+					className="px-4 py-2 bg-blue-500 text-white rounded-sm hover:bg-blue-600 outline-hidden flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
 				>
 					作成
 				</Button>

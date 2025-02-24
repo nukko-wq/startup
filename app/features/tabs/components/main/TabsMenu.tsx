@@ -57,15 +57,15 @@ const TabsMenu = () => {
 		<MenuTrigger>
 			<Button
 				aria-label="Menu"
-				className="outline-none p-2 hover:bg-zinc-200 transition-colors duration-200 rounded-full"
+				className="outline-hidden p-2 hover:bg-zinc-200 transition-colors duration-200 rounded-full"
 			>
 				<EllipsisVertical className="w-6 h-6 text-zinc-700" />
 			</Button>
 			<Popover>
-				<Menu className="bg-zinc-50 outline-none border rounded-lg shadow-md min-w-[200px]">
+				<Menu className="bg-zinc-50 outline-hidden border rounded-lg shadow-md min-w-[200px]">
 					<MenuItem
 						onAction={handleSortByDomain}
-						className="p-2 outline-none cursor-pointer hover:bg-slate-100"
+						className="p-2 outline-hidden cursor-pointer hover:bg-slate-100"
 					>
 						<div className="flex items-center gap-2 text-sm">
 							<FilePlus className="w-4 h-4" />
@@ -73,7 +73,7 @@ const TabsMenu = () => {
 						</div>
 					</MenuItem>
 					<MenuItem
-						className="p-2 outline-none text-red-600 cursor-pointer hover:bg-slate-100"
+						className="p-2 outline-hidden text-red-600 cursor-pointer hover:bg-slate-100"
 						onAction={handleCloseAllTabs}
 					>
 						<div className="flex items-center gap-2 text-sm">

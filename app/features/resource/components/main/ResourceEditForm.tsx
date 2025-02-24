@@ -70,21 +70,21 @@ const ResourceEditForm = ({ resource, onClose }: ResourceEditFormProps) => {
 	return (
 		<Form
 			onSubmit={handleSubmit(onSubmit)}
-			className="flex flex-col flex-grow resource-edit-form"
+			className="flex flex-col grow resource-edit-form"
 		>
 			<div className="flex items-center gap-2 border-b border-gray-200">
-				<div className="border border-slate-200 rounded-sm ml-4 w-8 h-8 flex items-center justify-center">
+				<div className="border border-slate-200 rounded-xs ml-4 w-8 h-8 flex items-center justify-center">
 					<Earth className="w-4 h-4 text-slate-700" />
 				</div>
 				<Controller
 					name="title"
 					control={control}
 					render={({ field }) => (
-						<div className="flex-grow">
+						<div className="grow">
 							<Input
 								{...field}
 								type="text"
-								className="w-full py-4 px-2 rounded-t-lg outline-none text-lg"
+								className="w-full py-4 px-2 rounded-t-lg outline-hidden text-lg"
 								aria-label="Name"
 							/>
 							{errors.title && (
@@ -133,7 +133,7 @@ const ResourceEditForm = ({ resource, onClose }: ResourceEditFormProps) => {
 									onChange={onChange}
 									onBlur={onBlur}
 									type="text"
-									className="w-full p-2 border rounded mt-1 focus:outline-blue-500"
+									className="w-full p-2 border rounded-sm mt-1 focus:outline-blue-500"
 									aria-label="Description"
 								/>
 							)}
@@ -144,14 +144,14 @@ const ResourceEditForm = ({ resource, onClose }: ResourceEditFormProps) => {
 					<Button
 						type="button"
 						onPress={() => onClose(false)}
-						className="px-4 py-2 text-sm border rounded hover:bg-gray-50 outline-none"
+						className="px-4 py-2 text-sm border rounded-sm hover:bg-gray-50 outline-hidden"
 					>
 						キャンセル
 					</Button>
 					<Button
 						type="submit"
 						isDisabled={!isValid || isSubmitting}
-						className="px-4 py-2 text-sm border rounded bg-blue-500 text-white hover:bg-blue-600 disabled:opacity-50 outline-none"
+						className="px-4 py-2 text-sm border rounded-sm bg-blue-500 text-white hover:bg-blue-600 disabled:opacity-50 outline-hidden"
 					>
 						{isSubmitting ? '保存中...' : '保存'}
 					</Button>
