@@ -1,6 +1,6 @@
-import { NextResponse } from 'next/server'
-import { getCurrentUser } from '@/lib/session'
 import { prisma } from '@/lib/prisma'
+import { getCurrentUser } from '@/lib/session'
+import { NextResponse } from 'next/server'
 
 export async function POST(request: Request) {
 	try {
@@ -9,10 +9,9 @@ export async function POST(request: Request) {
 			return NextResponse.json({ error: '認証が必要です' }, { status: 401 })
 		}
 
-		const { sourceWorkspaceId, destinationWorkspaceId, spaceId, newOrder } =
-			await request.json()
+		const { destinationWorkspaceId, spaceId, newOrder } = await request.json()
 
-		const updatedSpaces = await prisma.$transaction(async (tx) => {
+		await prisma.$transaction(async (tx) => {
 			const space = await tx.space.findUnique({
 				where: { id: spaceId },
 			})
@@ -22,7 +21,7 @@ export async function POST(request: Request) {
 			}
 
 			// 同じワークスペース内での移動の場合
-			if (sourceWorkspaceId === destinationWorkspaceId) {
+			if (space.workspaceId === destinationWorkspaceId) {
 				if (space.order < newOrder) {
 					// 上から下への移動
 					await tx.space.updateMany({
@@ -78,19 +77,16 @@ export async function POST(request: Request) {
 					order: newOrder,
 				},
 			})
+		})
 
-			// 更新後のスペースを取得して返す
-			const allSpaces = await tx.space.findMany({
-				where: { userId: user.id },
-				orderBy: { order: 'asc' },
-			})
-
-			return allSpaces
+		// 更新後のスペースを取得して返す
+		const updatedSpaces = await prisma.space.findMany({
+			where: { userId: user.id },
+			orderBy: { order: 'asc' },
 		})
 
 		return NextResponse.json(updatedSpaces)
 	} catch (error) {
-		console.error('Error in reorder spaces:', error)
 		return NextResponse.json(
 			{ error: 'スペースの順序更新に失敗しました' },
 			{ status: 500 },
