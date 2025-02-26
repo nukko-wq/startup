@@ -53,7 +53,7 @@ const SectionList = () => {
 			return
 		}
 
-		// リソースのドラッグ&ドロップ処理
+		// リソースの並び替え
 		const sourceResources = allResources
 			.filter((resource) => resource.sectionId === source.droppableId)
 			.sort((a, b) => a.order - b.order)
