@@ -44,7 +44,7 @@ const DashboardContent = memo(() => {
 	return (
 		<div className="flex h-full w-full">
 			<div className="flex h-full w-full flex-col">
-				<div className="grid grid-cols-[260px_1fr] bg-slate-50 min-[1921px]:grid-cols-[320px_1fr]">
+				<div className="flex bg-slate-50 md:grid md:grid-cols-[260px_1fr] min-[1921px]:grid-cols-[320px_1fr]">
 					<Sidebar />
 					<main className="flex grow flex-col items-center bg-slate-100">
 						<Header />
@@ -52,7 +52,7 @@ const DashboardContent = memo(() => {
 							<Suspense fallback={<TabListFallback />}>
 								<TabList />
 							</Suspense>
-							<div className="flex w-1/2 justify-center">
+							<div className="flex w-full justify-center md:w-1/2">
 								<SectionListWrapper />
 							</div>
 						</div>
