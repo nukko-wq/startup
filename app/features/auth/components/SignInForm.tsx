@@ -1,10 +1,10 @@
 'use client'
 
-import { signIn } from 'next-auth/react'
 import SignInButton from '@/app/features/auth/components/SignInButton'
+import { signIn } from 'next-auth/react'
 import { useState } from 'react'
-import { Form } from 'react-aria-components'
 import type { FormEvent } from 'react'
+import { Form } from 'react-aria-components'
 
 export default function SignInForm() {
 	const [error, setError] = useState<string | null>(null)
@@ -16,9 +16,9 @@ export default function SignInForm() {
 				callbackUrl: '/',
 				redirect: true,
 			})
-			if (result?.error) {
-				setError('ログインに失敗しました')
-			}
+			// next-auth v5.0.0-beta.28では、signIn関数の戻り値の型が変更され
+			// result.errorプロパティが存在しない可能性があります
+			// リダイレクトが成功すれば、このコードは実行されません
 		} catch (err) {
 			setError('ログイン処理中にエラーが発生しました')
 			console.error(err)
