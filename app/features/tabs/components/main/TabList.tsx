@@ -72,7 +72,7 @@ const TabList = () => {
 	}
 
 	return (
-		<div className="flex w-1/2 justify-center">
+		<div className="hidden md:flex md:w-1/2 justify-center">
 			<div className="max-w-[920px] grow overflow-y-auto py-5 pr-[16px] pl-[32px]">
 				<div className="mb-2 ml-4 flex items-center justify-between gap-2">
 					<div className="flex items-center gap-2">
