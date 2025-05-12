@@ -1,7 +1,7 @@
 'use client'
 
-import { Button } from 'react-aria-components'
 import IconGoogle from '@/app/components/elements/IconGoogle'
+import { Button } from 'react-aria-components'
 import { useFormStatus } from 'react-dom'
 
 const SignInButton = () => {
@@ -9,7 +9,7 @@ const SignInButton = () => {
 
 	return (
 		<Button
-			className="flex grow items-center w-[350px] p-4 justify-center hover:bg-gray-100 outline-hidden disabled:opacity-50"
+			className="flex grow  cursor-pointer items-center w-[350px] p-4 justify-center hover:bg-gray-100 outline-hidden disabled:opacity-50"
 			type="submit"
 			isDisabled={pending}
 		>
