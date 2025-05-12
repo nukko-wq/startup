@@ -51,7 +51,7 @@ const SectionListWrapper = () => {
 				<div className="mt-4 flex justify-center">
 					<Button
 						onPress={handleCreateSection}
-						className="flex items-center gap-1 px-4 py-2 text-gray-500 outline-hidden transition-colors hover:text-gray-700 cursor-pointer"
+						className="flex cursor-pointer items-center gap-1 px-4 py-2 text-gray-500 outline-hidden transition-colors hover:text-gray-700"
 					>
 						<Plus className="h-3 w-3" />
 						<span>RESOURCE SECTION</span>

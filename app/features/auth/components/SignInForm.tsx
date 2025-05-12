@@ -12,7 +12,7 @@ export default function SignInForm() {
 	const handleSubmit = async (e: FormEvent) => {
 		e.preventDefault()
 		try {
-			const result = await signIn('google', {
+			const _result = await signIn('google', {
 				callbackUrl: '/',
 				redirect: true,
 			})
@@ -26,10 +26,10 @@ export default function SignInForm() {
 	}
 
 	return (
-		<div className="w-[350px] border border-border rounded-lg">
+		<div className="w-[350px] rounded-lg border border-border">
 			<Form className="flex flex-col items-center" onSubmit={handleSubmit}>
 				<SignInButton />
-				{error && <p className="text-red-500 mt-2">{error}</p>}
+				{error && <p className="mt-2 text-red-500">{error}</p>}
 			</Form>
 		</div>
 	)
