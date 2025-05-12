@@ -33,7 +33,7 @@
 	"devDependencies": {
 		"@biomejs/biome": "1.9.4",
 		"@tailwindcss/postcss": "^4.0.0",
-		"@types/chrome": "^0.0.287",
+		"@types/chrome": "^0.0.321",
 		"@types/lodash": "^4.17.13",
 		"@types/node": "^22",
 		"@types/react": "^19",
