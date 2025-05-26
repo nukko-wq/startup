@@ -1,19 +1,19 @@
 'use client'
 
-import { useEffect, useRef, useState } from 'react'
-import { useRouter } from 'next/navigation'
-import { useAppSelector, useAppDispatch } from '@/app/lib/redux/hooks'
 import { hideSpaceOverlay } from '@/app/lib/redux/features/overlay/overlaySlice'
 import {
-	selectSpaces,
 	selectActiveSpaceId,
+	selectSpaces,
 } from '@/app/lib/redux/features/space/selector'
+import { updateSpaceLastActive } from '@/app/lib/redux/features/space/spaceAPI'
+import { setActiveSpace } from '@/app/lib/redux/features/space/spaceSlice'
 import {
 	selectActiveWorkspaceId,
 	selectDefaultWorkspace,
 } from '@/app/lib/redux/features/workspace/selector'
-import { updateSpaceLastActive } from '@/app/lib/redux/features/space/spaceAPI'
-import { setActiveSpace } from '@/app/lib/redux/features/space/spaceSlice'
+import { useAppDispatch, useAppSelector } from '@/app/lib/redux/hooks'
+import { useRouter } from 'next/navigation'
+import { useEffect, useRef, useState } from 'react'
 
 const SpaceOverlay = () => {
 	const router = useRouter()
@@ -111,18 +111,18 @@ const SpaceOverlay = () => {
 
 	return (
 		<div
-			className="fixed inset-0 bg-slate-900 bg-opacity-50 z-50"
+			className="fixed inset-0 z-50 bg-slate-900/50"
 			onClick={() => dispatch(hideSpaceOverlay())}
 			onKeyDown={handleRootKeyDown}
 		>
-			<div className="flex flex-col justify-center items-center h-full">
+			<div className="flex h-full flex-col items-center justify-center">
 				{/* biome-ignore lint/a11y/useKeyWithClickEvents: <explanation> */}
 				<div
-					className="flex flex-col bg-gray-100 p-4 rounded-lg w-[800px] h-[800px] overflow-y-auto"
+					className="flex h-[800px] w-[800px] flex-col overflow-y-auto rounded-lg bg-gray-100 p-4"
 					onClick={(e) => e.stopPropagation()}
 				>
 					<h2
-						className="text-xl font-bold mb-4 text-center"
+						className="mb-4 text-center font-bold text-xl"
 						id="space-list-title"
 					>
 						Space一覧
