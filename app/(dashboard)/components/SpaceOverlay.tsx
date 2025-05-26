@@ -144,11 +144,7 @@ const SpaceOverlay = () => {
 								role="option"
 								aria-selected={index === selectedIndex}
 								tabIndex={index === selectedIndex ? 0 : -1}
-								className={`
-									bg-white p-4 rounded-lg shadow cursor-pointer
-									${index === selectedIndex ? 'ring-2 ring-blue-500 bg-gray-200' : 'hover:bg-gray-50'}
-									focus:outline-hidden focus:ring-2 focus:ring-blue-500
-								`}
+								className={`rounded-lg bg-white p-4 shadow cursor-pointer${index === selectedIndex ? 'bg-gray-200 ring-2 ring-blue-500' : 'hover:bg-gray-50'}focus:outline-hidden focus:ring-2 focus:ring-blue-500`}
 								onClick={() => handleSpaceClick(space.id)}
 							>
 								<div className="font-medium text-gray-800">{space.name}</div>
