@@ -73,4 +73,56 @@ export const tabsAPI = {
 			)
 		})
 	},
+
+	async openTabAtEnd(url: string): Promise<void> {
+		const extensionId = await this.getExtensionId()
+
+		if (!chrome?.runtime) {
+			throw new Error('拡張機能が見つかりません')
+		}
+
+		return new Promise((resolve, reject) => {
+			chrome.runtime.sendMessage(
+				extensionId,
+				{ type: 'OPEN_TAB_AT_END', url },
+				(response) => {
+					if (chrome.runtime.lastError) {
+						reject(new Error(chrome.runtime.lastError.message))
+						return
+					}
+					if (response?.success) {
+						resolve()
+					} else {
+						reject(new Error(response?.error || 'タブの作成に失敗しました'))
+					}
+				},
+			)
+		})
+	},
+
+	async switchToTab(tabId: number): Promise<void> {
+		const extensionId = await this.getExtensionId()
+
+		if (!chrome?.runtime) {
+			throw new Error('拡張機能が見つかりません')
+		}
+
+		return new Promise((resolve, reject) => {
+			chrome.runtime.sendMessage(
+				extensionId,
+				{ type: 'SWITCH_TO_TAB', tabId },
+				(response) => {
+					if (chrome.runtime.lastError) {
+						reject(new Error(chrome.runtime.lastError.message))
+						return
+					}
+					if (response?.success) {
+						resolve()
+					} else {
+						reject(new Error(response?.error || 'タブの切り替えに失敗しました'))
+					}
+				},
+			)
+		})
+	},
 }
