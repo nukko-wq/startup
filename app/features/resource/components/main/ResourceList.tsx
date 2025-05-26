@@ -25,7 +25,7 @@ const ResourceList = ({ sectionId }: ResourceListProps) => {
 					}`}
 				>
 					{resources.length === 0 && !snapshot.isDraggingOver ? (
-						<div className="flex flex-col justify-center items-center h-[52px]">
+						<div className="flex h-[52px] flex-col items-center justify-center">
 							<div className="text-gray-500">Add resources here</div>
 						</div>
 					) : (
