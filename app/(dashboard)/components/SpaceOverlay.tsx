@@ -111,7 +111,7 @@ const SpaceOverlay = () => {
 
 	return (
 		<div
-			className="fixed inset-0 z-50 bg-slate-900/50"
+			className="fixed inset-0 z-50 bg-black/80"
 			onClick={() => dispatch(hideSpaceOverlay())}
 			onKeyDown={handleRootKeyDown}
 		>
