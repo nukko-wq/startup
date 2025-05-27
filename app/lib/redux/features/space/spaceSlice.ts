@@ -1,15 +1,15 @@
-import { createSlice, type PayloadAction } from '@reduxjs/toolkit'
-import type {
-	SpaceState,
-	Space,
-} from '@/app/lib/redux/features/space/types/space'
 import {
 	createSpace,
 	deleteSpace,
-	updateSpaceLastActive,
-	updateSpace,
 	reorderSpaces,
+	updateSpace,
+	updateSpaceLastActive,
 } from '@/app/lib/redux/features/space/spaceAPI'
+import type {
+	Space,
+	SpaceState,
+} from '@/app/lib/redux/features/space/types/space'
+import { type PayloadAction, createSlice } from '@reduxjs/toolkit'
 
 const initialState: SpaceState = {
 	spaces: [],
@@ -83,6 +83,18 @@ export const spaceSlice = createSlice({
 				isLastActive: space.id === action.payload,
 			}))
 		},
+		savePreviousSpaces: (state) => {
+			state.previousSpaces = [...state.spaces]
+		},
+		restorePreviousSpaces: (state) => {
+			if (state.previousSpaces) {
+				state.spaces = state.previousSpaces
+				state.previousSpaces = null
+			}
+		},
+		clearError: (state) => {
+			state.error = null
+		},
 	},
 	extraReducers: (builder) => {
 		builder
@@ -98,10 +110,11 @@ export const spaceSlice = createSlice({
 				}))
 				state.activeSpaceId = action.payload.id
 				state.optimisticSpaces = []
+				state.error = null
 			})
 			.addCase(createSpace.rejected, (state, action) => {
 				state.loading = false
-				state.error = action.error.message || 'エラーが発生しました'
+				state.error = action.error.message || 'スペースの作成に失敗しました'
 				if (state.optimisticSpaces.length > 0) {
 					state.spaces = state.spaces.filter(
 						(space) => space.id !== state.optimisticSpaces[0]?.id,
@@ -115,11 +128,18 @@ export const spaceSlice = createSlice({
 			})
 			.addCase(deleteSpace.fulfilled, (state, action) => {
 				state.loading = false
+				state.error = null
 			})
 			.addCase(deleteSpace.rejected, (state, action) => {
 				state.loading = false
-				state.error = action.error.message || 'エラーが発生しました'
-				// 削除が失敗した場合、スペースを元に戻す処理を加する必要があります
+				state.error = action.error.message || 'スペースの削除に失敗しました'
+				if (state.previousSpaces) {
+					state.spaces = state.previousSpaces
+					state.previousSpaces = null
+				}
+			})
+			.addCase(updateSpaceLastActive.pending, (state) => {
+				state.error = null
 			})
 			.addCase(updateSpaceLastActive.fulfilled, (state, action) => {
 				state.spaces = state.spaces.map((space) => ({
@@ -127,6 +147,11 @@ export const spaceSlice = createSlice({
 					isLastActive: space.id === action.payload.id,
 				}))
 				state.activeSpaceId = action.payload.id
+				state.error = null
+			})
+			.addCase(updateSpaceLastActive.rejected, (state, action) => {
+				state.error =
+					action.error.message || 'アクティブスペースの更新に失敗しました'
 			})
 			.addCase(updateSpace.pending, (state) => {
 				state.loading = true
@@ -140,23 +165,27 @@ export const spaceSlice = createSlice({
 				if (index !== -1) {
 					state.spaces[index] = action.payload
 				}
+				state.error = null
 			})
 			.addCase(updateSpace.rejected, (state, action) => {
 				state.loading = false
-				state.error = action.error.message || 'エラーが発生しました'
+				state.error = action.error.message || 'スペースの更新に失敗しました'
 			})
 			.addCase(reorderSpaces.pending, (state) => {
-				state.previousSpaces = state.spaces
+				state.previousSpaces = [...state.spaces]
+				state.error = null
 			})
 			.addCase(reorderSpaces.fulfilled, (state, action) => {
 				state.spaces = action.payload
 				state.previousSpaces = null
+				state.error = null
 			})
-			.addCase(reorderSpaces.rejected, (state) => {
+			.addCase(reorderSpaces.rejected, (state, action) => {
 				if (state.previousSpaces) {
 					state.spaces = state.previousSpaces
+					state.previousSpaces = null
 				}
-				state.previousSpaces = null
+				state.error = action.error.message || 'スペースの並び替えに失敗しました'
 			})
 	},
 })
@@ -171,6 +200,9 @@ export const {
 	removeOptimisticSpace,
 	addOptimisticDelete,
 	updateLastActiveSpace,
+	savePreviousSpaces,
+	restorePreviousSpaces,
+	clearError,
 } = spaceSlice.actions
 
 export default spaceSlice.reducer

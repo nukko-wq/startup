@@ -6,7 +6,7 @@ import { useAppDispatch, useAppSelector } from '@/app/lib/redux/hooks'
 import { Draggable, Droppable } from '@hello-pangea/dnd'
 import { GripVertical } from 'lucide-react'
 import { useRouter } from 'next/navigation'
-import { memo } from 'react'
+import { memo, useCallback } from 'react'
 
 interface SpaceListProps {
 	workspaceId: string
@@ -21,22 +21,35 @@ const SpaceList = memo(({ workspaceId, type }: SpaceListProps) => {
 	)
 	const activeSpaceId = useAppSelector((state) => state.space.activeSpaceId)
 
-	const handleSpaceClick = async (spaceId: string) => {
-		try {
-			dispatch(setActiveSpace(spaceId))
-			dispatch(
-				updateSpaceLastActive({
-					spaceId,
-					workspaceId,
-				}),
-			)
-			router.push(`/space/${spaceId}`, {
-				scroll: false,
-			})
-		} catch (error) {
-			console.error('スペースの切り替えに失敗しました:', error)
-		}
-	}
+	const handleSpaceClick = useCallback(
+		async (spaceId: string) => {
+			try {
+				dispatch(setActiveSpace(spaceId))
+				dispatch(
+					updateSpaceLastActive({
+						spaceId,
+						workspaceId,
+					}),
+				)
+				router.push(`/space/${spaceId}`, {
+					scroll: false,
+				})
+			} catch (error) {
+				console.error('スペースの切り替えに失敗しました:', error)
+			}
+		},
+		[dispatch, workspaceId, router],
+	)
+
+	const handleKeyDown = useCallback(
+		(e: React.KeyboardEvent, spaceId: string) => {
+			if (e.key === 'Enter' || e.key === ' ') {
+				e.preventDefault()
+				handleSpaceClick(spaceId)
+			}
+		},
+		[handleSpaceClick],
+	)
 
 	return (
 		<Droppable droppableId={`space-list-${workspaceId}`} type={type}>
@@ -68,32 +81,39 @@ const SpaceList = memo(({ workspaceId, type }: SpaceListProps) => {
 											...provided.draggableProps.style,
 										}}
 										className={`
-											flex grow justify-between text-gray-400 cursor-pointer 
-											hover:bg-gray-700 hover:bg-opacity-75 group transition duration-200 pl-3
+											flex grow justify-between text-gray-400 cursor-grab 
+											hover:bg-gray-700 hover:bg-opacity-75 group transition-none pl-3
 											${space.id === activeSpaceId ? 'bg-gray-700 bg-opacity-75 border-l-4 border-blue-500' : 'border-l-4 border-transparent'}
+											${snapshot.isDragging ? 'opacity-50' : ''}
 										`}
-										onClick={() => handleSpaceClick(space.id)}
-										onKeyDown={(e) => {
-											if (e.key === 'Enter' || e.key === ' ') {
-												e.preventDefault()
-												handleSpaceClick(space.id)
-											}
-										}}
-										// biome-ignore lint/a11y/useSemanticElements: <explanation>
-										role="button"
-										tabIndex={0}
 									>
 										<div className="flex grow items-center justify-between py-1 group">
 											<div className="flex items-center grow">
 												<div
-													className="cursor-grab flex items-center pr-3"
+													className="flex items-center pr-3"
 													aria-label="drag handle"
 												>
 													<GripVertical className="w-4 h-4 text-slate-500" />
 												</div>
-												<div className="text-left text-sm">{space.name}</div>
+												<div
+													className="text-left text-sm flex-grow cursor-pointer"
+													onClick={(e) => {
+														e.stopPropagation()
+														handleSpaceClick(space.id)
+													}}
+													onKeyDown={(e) => handleKeyDown(e, space.id)}
+													// biome-ignore lint/a11y/useSemanticElements: <explanation>
+													role="button"
+													tabIndex={0}
+												>
+													{space.name}
+												</div>
 											</div>
-											<div className="opacity-0 group-hover:opacity-100">
+											<div
+												className="opacity-0 group-hover:opacity-100"
+												onClick={(e) => e.stopPropagation()}
+												onKeyDown={(e) => e.stopPropagation()}
+											>
 												<SpaceMenu spaceId={space.id} />
 											</div>
 										</div>
