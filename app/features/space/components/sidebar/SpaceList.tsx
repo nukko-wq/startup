@@ -6,7 +6,7 @@ import { useAppDispatch, useAppSelector } from '@/app/lib/redux/hooks'
 import { Draggable, Droppable } from '@hello-pangea/dnd'
 import { GripVertical } from 'lucide-react'
 import { useRouter } from 'next/navigation'
-import { memo } from 'react'
+import { memo, useCallback } from 'react'
 
 interface SpaceListProps {
 	workspaceId: string
@@ -21,22 +21,35 @@ const SpaceList = memo(({ workspaceId, type }: SpaceListProps) => {
 	)
 	const activeSpaceId = useAppSelector((state) => state.space.activeSpaceId)
 
-	const handleSpaceClick = async (spaceId: string) => {
-		try {
-			dispatch(setActiveSpace(spaceId))
-			dispatch(
-				updateSpaceLastActive({
-					spaceId,
-					workspaceId,
-				}),
-			)
-			router.push(`/space/${spaceId}`, {
-				scroll: false,
-			})
-		} catch (error) {
-			console.error('スペースの切り替えに失敗しました:', error)
-		}
-	}
+	const handleSpaceClick = useCallback(
+		async (spaceId: string) => {
+			try {
+				dispatch(setActiveSpace(spaceId))
+				dispatch(
+					updateSpaceLastActive({
+						spaceId,
+						workspaceId,
+					}),
+				)
+				router.push(`/space/${spaceId}`, {
+					scroll: false,
+				})
+			} catch (error) {
+				console.error('スペースの切り替えに失敗しました:', error)
+			}
+		},
+		[dispatch, workspaceId, router],
+	)
+
+	const handleKeyDown = useCallback(
+		(e: React.KeyboardEvent, spaceId: string) => {
+			if (e.key === 'Enter' || e.key === ' ') {
+				e.preventDefault()
+				handleSpaceClick(spaceId)
+			}
+		},
+		[handleSpaceClick],
+	)
 
 	return (
 		<Droppable droppableId={`space-list-${workspaceId}`} type={type}>
@@ -73,12 +86,7 @@ const SpaceList = memo(({ workspaceId, type }: SpaceListProps) => {
 											${space.id === activeSpaceId ? 'bg-gray-700 bg-opacity-75 border-l-4 border-blue-500' : 'border-l-4 border-transparent'}
 										`}
 										onClick={() => handleSpaceClick(space.id)}
-										onKeyDown={(e) => {
-											if (e.key === 'Enter' || e.key === ' ') {
-												e.preventDefault()
-												handleSpaceClick(space.id)
-											}
-										}}
+										onKeyDown={(e) => handleKeyDown(e, space.id)}
 										// biome-ignore lint/a11y/useSemanticElements: <explanation>
 										role="button"
 										tabIndex={0}
