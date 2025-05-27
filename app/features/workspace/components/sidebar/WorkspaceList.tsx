@@ -97,59 +97,119 @@ const WorkspaceList = () => {
 
 			if (!targetSpace) return
 
-			// 楽観的更新のための新しい配列を作成
-			const updatedSpaces = spaces.map((space) => {
-				// 移動するスペース自体の更新
-				if (space.id === draggableId) {
-					return {
-						...space,
-						workspaceId: destinationId,
-						order: destination.index,
-					}
-				}
+			// 移動先ワークスペースのスペースを取得してソート（移動するスペースを除く）
+			const destinationSpaces = spaces
+				.filter(
+					(space) =>
+						space.workspaceId === destinationId && space.id !== draggableId,
+				)
+				.sort((a, b) => a.order - b.order)
 
-				// 同じワークスペース内での移動の場合
-				if (sourceId === destinationId) {
+			// destination.indexは最終的な位置を示すため、そのまま使用
+			const finalOrder = destination.index
+
+			// 楽観的更新: より正確なロジックで状態を更新
+			let updatedSpaces: typeof spaces
+
+			if (sourceId === destinationId) {
+				// 同じワークスペース内での移動
+				const workspaceSpaces = spaces
+					.filter((space) => space.workspaceId === sourceId)
+					.sort((a, b) => a.order - b.order)
+
+				// @hello-pangea/dndの動作をシミュレート
+				// destination.indexは最終的な配列での位置を示す
+				const sourceIndex = workspaceSpaces.findIndex(
+					(space) => space.id === draggableId,
+				)
+
+				// 配列を複製して並び替えを実行
+				const reorderedSpaces = [...workspaceSpaces]
+
+				// 元の位置から削除
+				const [movedSpace] = reorderedSpaces.splice(sourceIndex, 1)
+
+				// 新しい位置に挿入
+				reorderedSpaces.splice(finalOrder, 0, movedSpace)
+
+				// 順序を再設定
+				const reorderedWorkspaceSpaces = reorderedSpaces.map(
+					(space, index) => ({
+						...space,
+						order: index,
+					}),
+				)
+
+				// 他のワークスペースのスペースと結合
+				updatedSpaces = spaces.map((space) => {
 					if (space.workspaceId === sourceId) {
-						if (targetSpace.order < destination.index) {
-							// 上から下への移動
-							if (
-								space.order > targetSpace.order &&
-								space.order <= destination.index
-							) {
-								return { ...space, order: space.order - 1 }
-							}
-						} else {
-							// 下から上への移動
-							if (
-								space.order >= destination.index &&
-								space.order < targetSpace.order
-							) {
-								return { ...space, order: space.order + 1 }
-							}
-						}
+						const reorderedSpace = reorderedWorkspaceSpaces.find(
+							(s) => s.id === space.id,
+						)
+						return reorderedSpace || space
 					}
-				}
-				// 異なるワークスペース間での移動の場合
-				else {
-					// 元のワークスペースの順序を更新
+					return space
+				})
+			} else {
+				// 異なるワークスペース間での移動
+				// 1. 移動するスペースを除いた配列を作成
+				updatedSpaces = spaces.filter((space) => space.id !== draggableId)
+
+				// 2. 元のワークスペースのスペースの順序を調整
+				updatedSpaces = updatedSpaces.map((space) => {
 					if (
 						space.workspaceId === sourceId &&
 						space.order > targetSpace.order
 					) {
 						return { ...space, order: space.order - 1 }
 					}
-					// 移動先ワークスペースの順序を更新
+					return space
+				})
+
+				// 3. 移動先ワークスペースのスペースの順序を調整
+				updatedSpaces = updatedSpaces.map((space) => {
 					if (
 						space.workspaceId === destinationId &&
-						space.order >= destination.index
+						space.order >= finalOrder
 					) {
 						return { ...space, order: space.order + 1 }
 					}
-				}
+					return space
+				})
 
-				return space
-			})
+				// 4. 移動するスペースを新しい位置に追加
+				const movedSpace = {
+					...targetSpace,
+					workspaceId: destinationId,
+					order: finalOrder,
+				}
+				updatedSpaces.push(movedSpace)
+			}
+
+			// デバッグ用ログ（開発環境のみ）
+			if (process.env.NODE_ENV === 'development') {
+				const workspaceSpacesBefore = spaces
+					.filter((space) => space.workspaceId === sourceId)
+					.sort((a, b) => a.order - b.order)
+					.map((s) => ({ id: s.id, order: s.order, name: s.name }))
+
+				const workspaceSpacesAfter = updatedSpaces
+					.filter((space) => space.workspaceId === sourceId)
+					.sort((a, b) => a.order - b.order)
+					.map((s) => ({ id: s.id, order: s.order, name: s.name }))
+
+				console.log('Space reorder debug:', {
+					sourceId,
+					destinationId,
+					draggableId,
+					finalOrder,
+					targetSpaceOrder: targetSpace.order,
+					destinationIndex: destination.index,
+					isSameWorkspace: sourceId === destinationId,
+					workspaceSpacesBefore,
+					workspaceSpacesAfter,
+				})
+			}
 
 			// 楽観的更新
 			dispatch(setSpaces(updatedSpaces))
@@ -160,13 +220,14 @@ const WorkspaceList = () => {
 						sourceWorkspaceId: sourceId,
 						destinationWorkspaceId: destinationId,
 						spaceId: draggableId,
-						newOrder: destination.index,
+						newOrder: finalOrder,
 					}),
 				).unwrap()
 			} catch (error) {
-				console.error('スペースの並び替えに失敗しました:', error)
-				// エラー時は元の状態に戻す
-				dispatch(setSpaces(allSpaces))
+				const errorMessage = getDragDropErrorMessage('space', 'reorder')
+				handleOptimisticUpdateError(error, errorMessage, () =>
+					dispatch(setSpaces(allSpaces)),
+				)
 				throw error
 			}
 		},

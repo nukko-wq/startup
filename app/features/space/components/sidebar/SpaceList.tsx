@@ -76,30 +76,36 @@ const SpaceList = memo(({ workspaceId, type }: SpaceListProps) => {
 									<div
 										ref={provided.innerRef}
 										{...provided.draggableProps}
-										{...provided.dragHandleProps}
 										style={{
 											...provided.draggableProps.style,
 										}}
 										className={`
 											flex grow justify-between text-gray-400 cursor-pointer 
-											hover:bg-gray-700 hover:bg-opacity-75 group transition duration-200 pl-3
+											hover:bg-gray-700 hover:bg-opacity-75 group transition-none pl-3
 											${space.id === activeSpaceId ? 'bg-gray-700 bg-opacity-75 border-l-4 border-blue-500' : 'border-l-4 border-transparent'}
+											${snapshot.isDragging ? 'opacity-50' : ''}
 										`}
-										onClick={() => handleSpaceClick(space.id)}
-										onKeyDown={(e) => handleKeyDown(e, space.id)}
-										// biome-ignore lint/a11y/useSemanticElements: <explanation>
-										role="button"
-										tabIndex={0}
 									>
 										<div className="flex grow items-center justify-between py-1 group">
 											<div className="flex items-center grow">
 												<div
-													className="cursor-grab flex items-center pr-3"
+													{...provided.dragHandleProps}
+													className="cursor-grab flex items-center pr-3 hover:bg-gray-600 rounded p-1"
 													aria-label="drag handle"
+													onClick={(e) => e.stopPropagation()}
 												>
 													<GripVertical className="w-4 h-4 text-slate-500" />
 												</div>
-												<div className="text-left text-sm">{space.name}</div>
+												<div
+													className="text-left text-sm flex-grow cursor-pointer"
+													onClick={() => handleSpaceClick(space.id)}
+													onKeyDown={(e) => handleKeyDown(e, space.id)}
+													// biome-ignore lint/a11y/useSemanticElements: <explanation>
+													role="button"
+													tabIndex={0}
+												>
+													{space.name}
+												</div>
 											</div>
 											<div className="opacity-0 group-hover:opacity-100">
 												<SpaceMenu spaceId={space.id} />
