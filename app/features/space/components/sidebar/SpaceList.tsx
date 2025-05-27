@@ -76,11 +76,12 @@ const SpaceList = memo(({ workspaceId, type }: SpaceListProps) => {
 									<div
 										ref={provided.innerRef}
 										{...provided.draggableProps}
+										{...provided.dragHandleProps}
 										style={{
 											...provided.draggableProps.style,
 										}}
 										className={`
-											flex grow justify-between text-gray-400 cursor-pointer 
+											flex grow justify-between text-gray-400 cursor-grab 
 											hover:bg-gray-700 hover:bg-opacity-75 group transition-none pl-3
 											${space.id === activeSpaceId ? 'bg-gray-700 bg-opacity-75 border-l-4 border-blue-500' : 'border-l-4 border-transparent'}
 											${snapshot.isDragging ? 'opacity-50' : ''}
@@ -89,16 +90,17 @@ const SpaceList = memo(({ workspaceId, type }: SpaceListProps) => {
 										<div className="flex grow items-center justify-between py-1 group">
 											<div className="flex items-center grow">
 												<div
-													{...provided.dragHandleProps}
-													className="cursor-grab flex items-center pr-3 hover:bg-gray-600 rounded p-1"
+													className="flex items-center pr-3"
 													aria-label="drag handle"
-													onClick={(e) => e.stopPropagation()}
 												>
 													<GripVertical className="w-4 h-4 text-slate-500" />
 												</div>
 												<div
 													className="text-left text-sm flex-grow cursor-pointer"
-													onClick={() => handleSpaceClick(space.id)}
+													onClick={(e) => {
+														e.stopPropagation()
+														handleSpaceClick(space.id)
+													}}
 													onKeyDown={(e) => handleKeyDown(e, space.id)}
 													// biome-ignore lint/a11y/useSemanticElements: <explanation>
 													role="button"
@@ -107,7 +109,11 @@ const SpaceList = memo(({ workspaceId, type }: SpaceListProps) => {
 													{space.name}
 												</div>
 											</div>
-											<div className="opacity-0 group-hover:opacity-100">
+											<div
+												className="opacity-0 group-hover:opacity-100"
+												onClick={(e) => e.stopPropagation()}
+												onKeyDown={(e) => e.stopPropagation()}
+											>
 												<SpaceMenu spaceId={space.id} />
 											</div>
 										</div>
