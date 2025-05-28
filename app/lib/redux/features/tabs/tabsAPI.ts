@@ -4,6 +4,19 @@ import type { Tab } from '@/app/lib/redux/features/tabs/types/tabs'
 // キャッシュ用の変数
 let cachedExtensionId: string | null = null
 
+// メッセージ送信のタイムアウト時間（ミリ秒）
+const MESSAGE_TIMEOUT = 5000
+
+// Promise with timeout utility
+function withTimeout<T>(promise: Promise<T>, timeoutMs: number): Promise<T> {
+	return Promise.race([
+		promise,
+		new Promise<T>((_, reject) =>
+			setTimeout(() => reject(new Error('Operation timed out')), timeoutMs),
+		),
+	])
+}
+
 export const tabsAPI = {
 	async getExtensionId(): Promise<string> {
 		if (cachedExtensionId) {
@@ -18,17 +31,25 @@ export const tabsAPI = {
 			const errors: Error[] = []
 			for (const id of extensionIds) {
 				try {
-					await new Promise((resolve, reject) => {
-						chrome.runtime.sendMessage(id, { type: 'PING' }, (response) => {
-							if (chrome.runtime.lastError) {
-								reject(chrome.runtime.lastError)
-							} else if (response?.success) {
-								resolve(response)
-							} else {
-								reject(new Error('Invalid response'))
+					await withTimeout(
+						new Promise((resolve, reject) => {
+							if (!chrome?.runtime) {
+								reject(new Error('Chrome runtime not available'))
+								return
 							}
-						})
-					})
+
+							chrome.runtime.sendMessage(id, { type: 'PING' }, (response) => {
+								if (chrome.runtime.lastError) {
+									reject(new Error(chrome.runtime.lastError.message))
+								} else if (response?.success) {
+									resolve(response)
+								} else {
+									reject(new Error('Invalid response from extension'))
+								}
+							})
+						}),
+						MESSAGE_TIMEOUT,
+					)
 					// 有効なIDが見つかった場合はキャッシュして返す
 					cachedExtensionId = id
 					return id
@@ -55,23 +76,26 @@ export const tabsAPI = {
 			throw new Error('拡張機能が見つかりません')
 		}
 
-		return new Promise((resolve, reject) => {
-			chrome.runtime.sendMessage(
-				extensionId,
-				{ type: 'REQUEST_TABS_UPDATE' },
-				(response) => {
-					if (chrome.runtime.lastError) {
-						reject(new Error(chrome.runtime.lastError.message))
-						return
-					}
-					if (response?.success) {
-						resolve(response.tabs)
-					} else {
-						reject(new Error(response?.error || 'タブの取得に失敗しました'))
-					}
-				},
-			)
-		})
+		return withTimeout(
+			new Promise((resolve, reject) => {
+				chrome.runtime.sendMessage(
+					extensionId,
+					{ type: 'REQUEST_TABS_UPDATE' },
+					(response) => {
+						if (chrome.runtime.lastError) {
+							reject(new Error(chrome.runtime.lastError.message))
+							return
+						}
+						if (response?.success) {
+							resolve(response.tabs)
+						} else {
+							reject(new Error(response?.error || 'タブの取得に失敗しました'))
+						}
+					},
+				)
+			}),
+			MESSAGE_TIMEOUT,
+		)
 	},
 
 	async openTabAtEnd(url: string): Promise<void> {
@@ -81,23 +105,26 @@ export const tabsAPI = {
 			throw new Error('拡張機能が見つかりません')
 		}
 
-		return new Promise((resolve, reject) => {
-			chrome.runtime.sendMessage(
-				extensionId,
-				{ type: 'OPEN_TAB_AT_END', url },
-				(response) => {
-					if (chrome.runtime.lastError) {
-						reject(new Error(chrome.runtime.lastError.message))
-						return
-					}
-					if (response?.success) {
-						resolve()
-					} else {
-						reject(new Error(response?.error || 'タブの作成に失敗しました'))
-					}
-				},
-			)
-		})
+		return withTimeout(
+			new Promise((resolve, reject) => {
+				chrome.runtime.sendMessage(
+					extensionId,
+					{ type: 'OPEN_TAB_AT_END', url },
+					(response) => {
+						if (chrome.runtime.lastError) {
+							reject(new Error(chrome.runtime.lastError.message))
+							return
+						}
+						if (response?.success) {
+							resolve()
+						} else {
+							reject(new Error(response?.error || 'タブの作成に失敗しました'))
+						}
+					},
+				)
+			}),
+			MESSAGE_TIMEOUT,
+		)
 	},
 
 	async switchToTab(tabId: number): Promise<void> {
@@ -107,22 +134,27 @@ export const tabsAPI = {
 			throw new Error('拡張機能が見つかりません')
 		}
 
-		return new Promise((resolve, reject) => {
-			chrome.runtime.sendMessage(
-				extensionId,
-				{ type: 'SWITCH_TO_TAB', tabId },
-				(response) => {
-					if (chrome.runtime.lastError) {
-						reject(new Error(chrome.runtime.lastError.message))
-						return
-					}
-					if (response?.success) {
-						resolve()
-					} else {
-						reject(new Error(response?.error || 'タブの切り替えに失敗しました'))
-					}
-				},
-			)
-		})
+		return withTimeout(
+			new Promise((resolve, reject) => {
+				chrome.runtime.sendMessage(
+					extensionId,
+					{ type: 'SWITCH_TO_TAB', tabId },
+					(response) => {
+						if (chrome.runtime.lastError) {
+							reject(new Error(chrome.runtime.lastError.message))
+							return
+						}
+						if (response?.success) {
+							resolve()
+						} else {
+							reject(
+								new Error(response?.error || 'タブの切り替えに失敗しました'),
+							)
+						}
+					},
+				)
+			}),
+			MESSAGE_TIMEOUT,
+		)
 	},
 }

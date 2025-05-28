@@ -1,6 +1,6 @@
-// app/hooks/useExtensionId.ts
-import { useState, useEffect } from 'react'
 import { tabsAPI } from '@/app/lib/redux/features/tabs/tabsAPI'
+// app/hooks/useExtensionId.ts
+import { useEffect, useState } from 'react'
 
 export const useExtensionId = () => {
 	const [extensionId, setExtensionId] = useState<string | null>(null)
