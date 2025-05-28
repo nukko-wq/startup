@@ -69,7 +69,10 @@ const ResourceEditForm = ({ resource, onClose }: ResourceEditFormProps) => {
 
 	return (
 		<Form
-			onSubmit={handleSubmit(onSubmit)}
+			onSubmit={(e) => {
+				e.stopPropagation()
+				handleSubmit(onSubmit)(e)
+			}}
 			className="flex flex-col grow resource-edit-form"
 		>
 			<div className="flex items-center gap-2 border-b border-gray-200">
@@ -86,6 +89,12 @@ const ResourceEditForm = ({ resource, onClose }: ResourceEditFormProps) => {
 								type="text"
 								className="w-full py-4 px-2 rounded-t-lg outline-hidden text-lg"
 								aria-label="Name"
+								onKeyDown={(e) => {
+									if (e.key === 'Enter') {
+										e.stopPropagation()
+										handleSubmit(onSubmit)()
+									}
+								}}
 							/>
 							{errors.title && (
 								<span className="text-red-500 text-sm">
@@ -111,6 +120,12 @@ const ResourceEditForm = ({ resource, onClose }: ResourceEditFormProps) => {
 										errors.url ? 'border-red-500' : ''
 									}`}
 									aria-label="URL"
+									onKeyDown={(e) => {
+										if (e.key === 'Enter') {
+											e.stopPropagation()
+											handleSubmit(onSubmit)()
+										}
+									}}
 								/>
 								{errors.url && (
 									<span className="text-red-500 text-sm">
@@ -135,6 +150,12 @@ const ResourceEditForm = ({ resource, onClose }: ResourceEditFormProps) => {
 									type="text"
 									className="w-full p-2 border rounded-sm mt-1 focus:outline-blue-500"
 									aria-label="Description"
+									onKeyDown={(e) => {
+										if (e.key === 'Enter') {
+											e.stopPropagation()
+											handleSubmit(onSubmit)()
+										}
+									}}
 								/>
 							)}
 						/>
