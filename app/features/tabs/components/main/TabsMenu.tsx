@@ -1,5 +1,5 @@
 import { tabsAPI } from '@/app/lib/redux/features/tabs/tabsAPI'
-import { EllipsisVertical, FilePlus, Trash2 } from 'lucide-react'
+import { ArrowDownAZ, Earth, EllipsisVertical, Trash2 } from 'lucide-react'
 import {
 	Button,
 	Menu,
@@ -9,6 +9,28 @@ import {
 } from 'react-aria-components'
 
 const TabsMenu = () => {
+	const handleSortByAlphabetical = async () => {
+		try {
+			const extensionId = await tabsAPI.getExtensionId()
+
+			if (!chrome?.runtime) {
+				throw new Error('拡張機能が見つかりません')
+			}
+
+			chrome.runtime.sendMessage(
+				extensionId,
+				{ type: 'SORT_TABS_BY_ALPHABETICAL' },
+				(response) => {
+					if (!response?.success) {
+						console.error('タブのアルファベット順並び替えに失敗しました')
+					}
+				},
+			)
+		} catch (error) {
+			console.error('タブのアルファベット順並び替えエラー:', error)
+		}
+	}
+
 	const handleSortByDomain = async () => {
 		try {
 			const extensionId = await tabsAPI.getExtensionId()
@@ -64,11 +86,20 @@ const TabsMenu = () => {
 			<Popover>
 				<Menu className="bg-zinc-50 outline-hidden border rounded-lg shadow-md min-w-[200px]">
 					<MenuItem
+						onAction={handleSortByAlphabetical}
+						className="p-2 outline-hidden cursor-pointer hover:bg-slate-100"
+					>
+						<div className="flex items-center gap-2 text-sm">
+							<ArrowDownAZ className="w-4 h-4" />
+							Sort by Alphabetical
+						</div>
+					</MenuItem>
+					<MenuItem
 						onAction={handleSortByDomain}
 						className="p-2 outline-hidden cursor-pointer hover:bg-slate-100"
 					>
 						<div className="flex items-center gap-2 text-sm">
-							<FilePlus className="w-4 h-4" />
+							<Earth className="w-4 h-4" />
 							Sort by domain
 						</div>
 					</MenuItem>
