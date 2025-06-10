@@ -1,23 +1,22 @@
-import { useState, useEffect, useMemo } from 'react'
-import { Search } from 'lucide-react'
-import { Button, Input } from 'react-aria-components'
-import { useAppDispatch, useAppSelector } from '@/app/lib/redux/hooks'
-import {
-	setLoading,
-	setFiles,
-	setError,
-} from '@/app/lib/redux/features/google-drive/googleDriveSlice'
-import { fetchGoogleDriveFiles } from '@/app/lib/redux/features/google-drive/googleDriveAPI'
 import GoogleDriveListIcon from '@/app/features/google-drive/components/GoogleDriveListIcon'
+import { fetchGoogleDriveFiles } from '@/app/lib/redux/features/google-drive/googleDriveAPI'
+import {
+	setError,
+	setFiles,
+	setLoading,
+} from '@/app/lib/redux/features/google-drive/googleDriveSlice'
 import type { GoogleDriveFile } from '@/app/lib/redux/features/google-drive/types/googleDrive'
+import { createResource } from '@/app/lib/redux/features/resource/resourceAPI'
 import {
 	addResource,
 	removeResource,
 } from '@/app/lib/redux/features/resource/resourceSlice'
-import { createResource } from '@/app/lib/redux/features/resource/resourceAPI'
 import type { Resource } from '@/app/lib/redux/features/resource/types/resource'
+import { useAppDispatch, useAppSelector } from '@/app/lib/redux/hooks'
 import debounce from 'lodash/debounce'
-import { signOut } from 'next-auth/react'
+import { Search } from 'lucide-react'
+import { useEffect, useMemo, useState } from 'react'
+import { Button, Input } from 'react-aria-components'
 
 interface GoogleDriveListProps {
 	sectionId: string
@@ -31,6 +30,7 @@ const GoogleDriveList = ({
 	lastOrder,
 }: GoogleDriveListProps) => {
 	const [searchQuery, setSearchQuery] = useState('')
+	const [isReauthenticating, setIsReauthenticating] = useState(false)
 	const dispatch = useAppDispatch()
 	const { files, loading, error } = useAppSelector((state) => state.googleDrive)
 	const [fileCache, setFileCache] = useState<Record<string, GoogleDriveFile[]>>(
@@ -57,6 +57,8 @@ const GoogleDriveList = ({
 		}
 
 		dispatch(setLoading(true))
+		dispatch(setError('')) // エラーをクリア
+
 		try {
 			const response = await fetchGoogleDriveFiles(query, limit)
 			setFileCache((prev) => ({
@@ -66,17 +68,23 @@ const GoogleDriveList = ({
 			dispatch(setFiles(response.files))
 		} catch (error) {
 			if (error instanceof Error) {
-				if (
+				// 自動再認証が試行された場合の特別なメッセージ
+				if (error.message.includes('認証の有効期限が切れました')) {
+					setIsReauthenticating(true)
+					// 少し待機して再試行
+					setTimeout(() => {
+						setIsReauthenticating(false)
+						fetchFiles(query)
+					}, 2000)
+				} else if (
 					error.message === '再認証が必要です' ||
 					error.message === 'トークンの更新に失敗しました'
 				) {
-					// ユーザーに再ログインを促す
 					dispatch(
 						setError(
-							'セッションの有効期限が切れました。再度ログインしてください。',
+							'認証に問題が発生しました。しばらく待ってから再度お試しください。',
 						),
 					)
-					signOut() // NextAuthのsignOut関数を呼び出し
 				} else {
 					dispatch(setError(error.message))
 				}
@@ -160,12 +168,22 @@ const GoogleDriveList = ({
 					)}
 					<div className="border-t border-slate-200 grow" />
 				</div>
-				{loading ? (
+				{loading || isReauthenticating ? (
 					<div className="flex grow items-center justify-center">
-						<div className="text-slate-700">読み込み中...</div>
+						<div className="text-slate-700">
+							{isReauthenticating ? '認証を更新中...' : '読み込み中...'}
+						</div>
 					</div>
 				) : error ? (
-					<div className="p-4 text-center text-red-500">{error}</div>
+					<div className="p-4 text-center">
+						<div className="text-red-500 mb-2">{error}</div>
+						<Button
+							onPress={() => fetchFiles(searchQuery || undefined)}
+							className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 outline-hidden"
+						>
+							再試行
+						</Button>
+					</div>
 				) : (
 					<div className="overflow-y-auto overflow-x-hidden">
 						<ul className="flex flex-col">

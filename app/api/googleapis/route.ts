@@ -1,8 +1,8 @@
-import { google } from 'googleapis'
-import { NextResponse } from 'next/server'
+import type { GoogleDriveApiError } from '@/app/lib/redux/features/google-drive/types/googleDrive'
 import { auth } from '@/lib/auth'
 import { getGoogleAuth } from '@/lib/google'
-import type { GoogleDriveApiError } from '@/app/lib/redux/features/google-drive/types/googleDrive'
+import { google } from 'googleapis'
+import { NextResponse } from 'next/server'
 
 export async function GET(request: Request) {
 	try {
@@ -12,7 +12,13 @@ export async function GET(request: Request) {
 
 		const session = await auth()
 		if (!session?.user?.id) {
-			return NextResponse.json({ error: 'ログインが必要です' }, { status: 401 })
+			return NextResponse.json(
+				{
+					error: 'ログインが必要です',
+					code: 'UNAUTHORIZED',
+				},
+				{ status: 401 },
+			)
 		}
 
 		try {
@@ -36,22 +42,52 @@ export async function GET(request: Request) {
 			console.error('Google Drive API error:', error)
 			const apiError = error as GoogleDriveApiError
 
+			// 認証エラーの詳細な分類
 			if (apiError.message === 'トークンの更新に失敗しました') {
 				return NextResponse.json(
-					{ error: '認証の有効期限が切れました。再度ログインしてください。' },
+					{
+						error: '認証の有効期限が切れました。再度ログインしてください。',
+						code: 'TOKEN_REFRESH_FAILED',
+					},
+					{ status: 401 },
+				)
+			}
+
+			if (apiError.message === '再認証が必要です') {
+				return NextResponse.json(
+					{
+						error: '再認証が必要です',
+						code: 'REAUTH_REQUIRED',
+					},
+					{ status: 401 },
+				)
+			}
+
+			if (apiError.message === 'Googleアカウントが見つかりません') {
+				return NextResponse.json(
+					{
+						error: 'Googleアカウントの連携が必要です',
+						code: 'ACCOUNT_NOT_FOUND',
+					},
 					{ status: 401 },
 				)
 			}
 
 			return NextResponse.json(
-				{ error: 'Google Driveへのアクセスに失敗しました' },
+				{
+					error: 'Google Driveへのアクセスに失敗しました',
+					code: 'DRIVE_ACCESS_ERROR',
+				},
 				{ status: 500 },
 			)
 		}
 	} catch (error) {
 		console.error('Server error:', error)
 		return NextResponse.json(
-			{ error: 'サーバーエラーが発生しました' },
+			{
+				error: 'サーバーエラーが発生しました',
+				code: 'SERVER_ERROR',
+			},
 			{ status: 500 },
 		)
 	}
