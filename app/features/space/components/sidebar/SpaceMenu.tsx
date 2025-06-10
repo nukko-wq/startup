@@ -18,6 +18,7 @@ const SpaceMenu = ({ spaceId }: { spaceId: string }) => {
 		<div
 			onClick={(e) => e.stopPropagation()}
 			onKeyDown={(e) => e.stopPropagation()}
+			className="flex items-center"
 		>
 			<MenuTrigger>
 				<Button
