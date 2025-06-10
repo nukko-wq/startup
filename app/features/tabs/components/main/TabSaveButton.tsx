@@ -85,14 +85,20 @@ const TabSaveButton = ({ tab, sectionId }: TabSaveButtonProps) => {
 			delay={700}
 			closeDelay={0}
 		>
-			<Button
-				onPress={handleSave}
-				className="outline-hidden p-2 hover:bg-gray-200 transition-colors duration-200 rounded-full group/bookmark cursor-pointer"
-				aria-label="タブを保存"
-				isDisabled={isSaving}
+			<div
+				onMouseDown={(e) => e.stopPropagation()}
+				onPointerDown={(e) => e.stopPropagation()}
+				className="inline-block"
 			>
-				<Bookmark className="w-5 h-5 text-gray-500 group-hover/bookmark:text-gray-700" />
-			</Button>
+				<Button
+					onPress={handleSave}
+					className="outline-hidden p-2 hover:bg-gray-200 transition-colors duration-200 rounded-full group/bookmark cursor-pointer"
+					aria-label="タブを保存"
+					isDisabled={isSaving}
+				>
+					<Bookmark className="w-5 h-5 text-gray-500 group-hover/bookmark:text-gray-700" />
+				</Button>
+			</div>
 			<Tooltip className="bg-slate-800 text-slate-300 text-xs shadow-md rounded-lg px-2 py-1">
 				<OverlayArrow>
 					{/* biome-ignore lint/a11y/noSvgWithoutTitle: <explanation> */}

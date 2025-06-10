@@ -56,14 +56,20 @@ const TabCloseButton = ({ tabId }: TabCloseButtonProps) => {
 			delay={700}
 			closeDelay={0}
 		>
-			<Button
-				onPress={handleClose}
-				className="group/close cursor-pointer rounded-full p-2 outline-hidden transition-colors duration-200 hover:bg-gray-200"
-				aria-label="タブを閉じる"
-				isDisabled={isClosing}
+			<div
+				onMouseDown={(e) => e.stopPropagation()}
+				onPointerDown={(e) => e.stopPropagation()}
+				className="inline-block"
 			>
-				<X className="h-5 w-5 text-gray-500 group-hover/close:text-gray-700" />
-			</Button>
+				<Button
+					onPress={handleClose}
+					className="group/close cursor-pointer rounded-full p-2 outline-hidden transition-colors duration-200 hover:bg-gray-200"
+					aria-label="タブを閉じる"
+					isDisabled={isClosing}
+				>
+					<X className="h-5 w-5 text-gray-500 group-hover/close:text-gray-700" />
+				</Button>
+			</div>
 			<Tooltip className="rounded-lg bg-slate-800 px-2 py-1 text-slate-300 text-sm shadow-md">
 				<OverlayArrow>
 					{/* biome-ignore lint/a11y/noSvgWithoutTitle: <explanation> */}
