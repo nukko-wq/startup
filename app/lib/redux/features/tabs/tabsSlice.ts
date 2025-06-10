@@ -33,6 +33,13 @@ const tabsSlice = createSlice({
 			state.status = 'succeeded'
 			state.error = null
 		},
+		reorderTabs: (state, action) => {
+			const { sourceIndex, destinationIndex } = action.payload
+			const newTabs = Array.from(state.tabs)
+			const [movedTab] = newTabs.splice(sourceIndex, 1)
+			newTabs.splice(destinationIndex, 0, movedTab)
+			state.tabs = newTabs
+		},
 		clearError: (state) => {
 			state.error = null
 		},
@@ -58,5 +65,6 @@ const tabsSlice = createSlice({
 	},
 })
 
-export const { updateTabs, clearError, setLoading } = tabsSlice.actions
+export const { updateTabs, reorderTabs, clearError, setLoading } =
+	tabsSlice.actions
 export default tabsSlice.reducer

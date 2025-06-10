@@ -157,4 +157,33 @@ export const tabsAPI = {
 			MESSAGE_TIMEOUT,
 		)
 	},
+
+	async moveTab(tabId: number, newIndex: number): Promise<void> {
+		const extensionId = await this.getExtensionId()
+
+		if (!chrome?.runtime) {
+			throw new Error('拡張機能が見つかりません')
+		}
+
+		return withTimeout(
+			new Promise((resolve, reject) => {
+				chrome.runtime.sendMessage(
+					extensionId,
+					{ type: 'MOVE_TAB', tabId, newIndex },
+					(response) => {
+						if (chrome.runtime.lastError) {
+							reject(new Error(chrome.runtime.lastError.message))
+							return
+						}
+						if (response?.success) {
+							resolve()
+						} else {
+							reject(new Error(response?.error || 'タブの移動に失敗しました'))
+						}
+					},
+				)
+			}),
+			MESSAGE_TIMEOUT,
+		)
+	},
 }
