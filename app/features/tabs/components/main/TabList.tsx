@@ -8,6 +8,7 @@ import { fetchTabs, updateTabs } from '@/app/lib/redux/features/tabs/tabsSlice'
 import type { Tab } from '@/app/lib/redux/features/tabs/types/tabs'
 import { useAppDispatch, useAppSelector } from '@/app/lib/redux/hooks'
 import type { RootState } from '@/app/lib/redux/store'
+import { Draggable, Droppable } from '@hello-pangea/dnd'
 import { Diamond, GripVertical } from 'lucide-react'
 import { useEffect } from 'react'
 import { Button } from 'react-aria-components'
@@ -81,63 +82,92 @@ const TabList = () => {
 					</div>
 					<TabsMenu />
 				</div>
-				{tabs.length > 0 && (
-					<div className="flex flex-col rounded-md border-slate-400 bg-white shadow-xs">
-						{tabs.map((tab) => (
-							<div
-								key={tab.id}
-								className="group block cursor-grab items-center gap-2 truncate rounded-sm py-1 pr-2 outline-hidden hover:bg-gray-100"
-								onClick={() => handleTabAction(tab)}
-								onKeyDown={(e) => {
-									if (e.key === 'Enter') {
-										handleTabAction(tab)
-									}
-								}}
-							>
-								<div className="grid grid-cols-[1fr_72px] items-center gap-2">
-									<div className="flex items-center gap-2 truncate">
-										<div
-											className="flex cursor-grab items-center pl-3 opacity-0 group-hover:opacity-100"
-											aria-label="Drag Wrapper"
-										>
-											<Button
-												className="cursor-grab"
-												aria-label="ドラッグハンドル"
+				<Droppable droppableId="tabs" type="DEFAULT">
+					{(provided, snapshot) => (
+						<div
+							ref={provided.innerRef}
+							{...provided.droppableProps}
+							className={`flex flex-col rounded-md border-slate-400 bg-white shadow-xs ${
+								snapshot.isDraggingOver ? 'bg-blue-50' : ''
+							}`}
+						>
+							{tabs.length > 0 ? (
+								tabs.map((tab, index) => (
+									<Draggable
+										key={tab.id}
+										draggableId={`tab-${tab.id}`}
+										index={index}
+									>
+										{(provided, snapshot) => (
+											<div
+												ref={provided.innerRef}
+												{...provided.draggableProps}
+												className={`group block items-center gap-2 truncate rounded-sm py-1 pr-2 outline-hidden hover:bg-gray-100 ${
+													snapshot.isDragging ? 'bg-blue-50 shadow-lg' : ''
+												}`}
 											>
-												<GripVertical className="h-4 w-4 text-slate-500" />
-											</Button>
-										</div>
-										<div className="flex items-center gap-2 truncate">
-											{tab.faviconUrl ? (
-												<img
-													src={tab.faviconUrl}
-													alt=""
-													className="h-4 w-4 grow"
-												/>
-											) : (
-												<div className="h-4 w-4 rounded-full bg-gray-200" />
-											)}
-											<span className="truncate text-sm">{tab.title}</span>
-										</div>
-									</div>
-									<div className="flex items-center">
-										<div className="opacity-0 group-hover:opacity-100">
-											<TabSaveButton tab={tab} sectionId={defaultSectionId} />
-										</div>
-										<div className="opacity-0 group-hover:opacity-100">
-											<TabCloseButton tabId={tab.id} />
-										</div>
-									</div>
+												<div className="grid grid-cols-[1fr_72px] items-center gap-2">
+													<div className="flex items-center gap-2 truncate">
+														<div
+															{...provided.dragHandleProps}
+															className="flex cursor-grab items-center pl-3 opacity-0 group-hover:opacity-100"
+															aria-label="Drag Wrapper"
+														>
+															<Button
+																className="cursor-grab"
+																aria-label="ドラッグハンドル"
+															>
+																<GripVertical className="h-4 w-4 text-slate-500" />
+															</Button>
+														</div>
+														<div
+															className="flex items-center gap-2 truncate cursor-pointer"
+															onClick={() => handleTabAction(tab)}
+															onKeyDown={(e) => {
+																if (e.key === 'Enter') {
+																	handleTabAction(tab)
+																}
+															}}
+														>
+															{tab.faviconUrl ? (
+																<img
+																	src={tab.faviconUrl}
+																	alt=""
+																	className="h-4 w-4 grow"
+																/>
+															) : (
+																<div className="h-4 w-4 rounded-full bg-gray-200" />
+															)}
+															<span className="truncate text-sm">
+																{tab.title}
+															</span>
+														</div>
+													</div>
+													<div className="flex items-center">
+														<div className="opacity-0 group-hover:opacity-100">
+															<TabSaveButton
+																tab={tab}
+																sectionId={defaultSectionId}
+															/>
+														</div>
+														<div className="opacity-0 group-hover:opacity-100">
+															<TabCloseButton tabId={tab.id} />
+														</div>
+													</div>
+												</div>
+											</div>
+										)}
+									</Draggable>
+								))
+							) : (
+								<div className="flex h-[56px] flex-col items-center justify-center">
+									<p className="text-slate-400 text-sm">Start browsing</p>
 								</div>
-							</div>
-						))}
-					</div>
-				)}
-				{tabs.length === 0 && (
-					<div className="flex h-[56px] flex-col items-center justify-center rounded-md border-slate-400 bg-white shadow-xs">
-						<p className="text-slate-400 text-sm">Start browsing</p>
-					</div>
-				)}
+							)}
+							{provided.placeholder}
+						</div>
+					)}
+				</Droppable>
 			</div>
 		</div>
 	)

@@ -15,13 +15,13 @@ const ResourceList = ({ sectionId }: ResourceListProps) => {
 	)
 
 	return (
-		<Droppable droppableId={sectionId}>
+		<Droppable droppableId={sectionId} type="DEFAULT">
 			{(provided, snapshot) => (
 				<div
 					ref={provided.innerRef}
 					{...provided.droppableProps}
 					className={`flex flex-col justify-center border-slate-400 rounded-md outline-hidden bg-white shadow-xs ${
-						snapshot.isDraggingOver ? 'bg-gray-50' : ''
+						snapshot.isDraggingOver ? 'bg-blue-50' : ''
 					}`}
 				>
 					{resources.length === 0 && !snapshot.isDraggingOver ? (
