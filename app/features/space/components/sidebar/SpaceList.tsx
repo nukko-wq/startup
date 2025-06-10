@@ -55,14 +55,14 @@ const SpaceList = memo(({ workspaceId, type }: SpaceListProps) => {
 		<Droppable droppableId={`space-list-${workspaceId}`} type={type}>
 			{(provided, snapshot) => (
 				<div
-					className={`flex flex-col min-h-[40px] ${
+					className={`flex min-h-[40px] flex-col ${
 						snapshot.isDraggingOver ? 'bg-gray-700 bg-opacity-25' : ''
 					}`}
 					ref={provided.innerRef}
 					{...provided.droppableProps}
 				>
 					{spaces.length === 0 ? (
-						<div className="ml-11 mr-4 min-h-[40px] flex items-center">
+						<div className="mr-4 ml-11 flex min-h-[40px] items-center">
 							{snapshot.isDraggingOver ? (
 								<div className="text-gray-400">Drop space here</div>
 							) : (
@@ -81,22 +81,22 @@ const SpaceList = memo(({ workspaceId, type }: SpaceListProps) => {
 											...provided.draggableProps.style,
 										}}
 										className={`
-											flex grow justify-between text-gray-400 cursor-grab 
+											flex grow justify-between text-gray-400
 											hover:bg-gray-700 hover:bg-opacity-75 group transition-none pl-3
-											${space.id === activeSpaceId ? 'bg-gray-700 bg-opacity-75 border-l-4 border-blue-500' : 'border-l-4 border-transparent'}
+											${space.id === activeSpaceId ? 'border-blue-500 border-l-4 bg-gray-700 bg-opacity-75' : 'border-transparent border-l-4'}
 											${snapshot.isDragging ? 'opacity-50' : ''}
 										`}
 									>
-										<div className="flex grow items-center justify-between py-1 group">
-											<div className="flex items-center grow">
+										<div className="group flex grow cursor-pointer items-center justify-between py-1">
+											<div className="flex h-full grow items-center">
 												<div
-													className="flex items-center pr-3"
+													className="flex h-full cursor-grab items-center pr-3"
 													aria-label="drag handle"
 												>
-													<GripVertical className="w-4 h-4 text-slate-500" />
+													<GripVertical className="h-4 w-4 text-slate-500" />
 												</div>
 												<div
-													className="text-left text-sm flex-grow cursor-pointer"
+													className="flex h-full grow cursor-pointer text-sm"
 													onClick={(e) => {
 														e.stopPropagation()
 														handleSpaceClick(space.id)
@@ -106,7 +106,7 @@ const SpaceList = memo(({ workspaceId, type }: SpaceListProps) => {
 													role="button"
 													tabIndex={0}
 												>
-													{space.name}
+													<div className="flex items-center">{space.name}</div>
 												</div>
 											</div>
 											<div
