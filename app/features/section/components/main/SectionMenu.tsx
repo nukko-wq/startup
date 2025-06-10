@@ -36,7 +36,7 @@ const SectionMenu = ({ section, onAddResourceClick }: SectionMenuProps) => {
 						>
 							<div className="flex items-center gap-2">
 								<FilePlus className="w-4 h-4" />
-								Add a resource
+								リソースを追加
 							</div>
 						</MenuItem>
 						<MenuItem
@@ -46,7 +46,7 @@ const SectionMenu = ({ section, onAddResourceClick }: SectionMenuProps) => {
 						>
 							<div className="flex items-center gap-2">
 								<Trash2 className="w-4 h-4" />
-								Delete section
+								セクションの削除
 							</div>
 						</MenuItem>
 					</Menu>

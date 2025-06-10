@@ -32,7 +32,7 @@ const WorkspaceLeftMenu = ({ workspaceId }: { workspaceId: string }) => {
 						>
 							<div className="flex items-center gap-3 text-sm">
 								<SquarePlus className="w-4 h-4" />
-								<span>New Space</span>
+								<span className="text-sm">新規スペースを作成</span>
 							</div>
 						</MenuItem>
 					</Menu>

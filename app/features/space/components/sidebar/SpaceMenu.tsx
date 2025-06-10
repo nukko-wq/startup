@@ -44,7 +44,7 @@ const SpaceMenu = ({ spaceId }: { spaceId: string }) => {
 						>
 							<div className="flex items-center gap-2">
 								<Pencil className="w-4 h-4" />
-								Rename
+								名前を変更
 							</div>
 						</MenuItem>
 						<MenuItem
@@ -53,7 +53,7 @@ const SpaceMenu = ({ spaceId }: { spaceId: string }) => {
 						>
 							<div className="flex items-center gap-2">
 								<Trash2 className="w-4 h-4" />
-								Delete
+								削除
 							</div>
 						</MenuItem>
 					</Menu>

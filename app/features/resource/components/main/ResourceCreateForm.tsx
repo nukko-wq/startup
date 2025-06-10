@@ -10,15 +10,9 @@ import {
 import type { Resource } from '@/app/lib/redux/features/resource/types/resource'
 import { useAppDispatch, useAppSelector } from '@/app/lib/redux/hooks'
 import { zodResolver } from '@hookform/resolvers/zod'
+import { Link } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
-import {
-	Button,
-	Form,
-	Input,
-	Label,
-	Link,
-	TextField,
-} from 'react-aria-components'
+import { Button, Form, Input, Label, TextField } from 'react-aria-components'
 import { Controller, useForm } from 'react-hook-form'
 import {
 	type ResourceFormData,
@@ -117,31 +111,31 @@ const ResourceCreateForm = ({
 	}
 
 	return (
-		<div className="flex w-full md:w-[600px] h-[468px]">
+		<div className="flex h-[468px] w-full md:w-[600px]">
 			<div
-				className="hidden md:block min-w-[200px] bg-slate-100"
+				className="hidden min-w-[200px] bg-slate-100 md:block"
 				aria-label="Side Menu"
 			>
-				<div className="text-xl font-bold p-4 text-slate-700">Add Resource</div>
+				<div className="p-4 font-bold text-slate-700 text-xl">Startup</div>
 				<Button
-					className={`w-full text-muted-foreground p-2 flex items-center gap-2 outline-hidden cursor-pointer ${
+					className={`flex w-full cursor-pointer items-center gap-2 p-2 text-muted-foreground outline-hidden ${
 						activeTab === 'url' ? 'bg-slate-200' : ''
 					}`}
 					onPress={() => setActiveTab('url')}
 					aria-label="URL"
 				>
-					<Link className="w-[20px] h-[20px]" />
+					<Link className="h-[20px] w-[20px]" />
 					<div>URL</div>
 				</Button>
 				<Button
-					className={`w-full text-muted-foreground p-2 flex items-center gap-1 outline-hidden cursor-pointer ${
+					className={`flex w-full cursor-pointer items-center gap-1 p-2 text-muted-foreground outline-hidden ${
 						activeTab === 'drive' ? 'bg-slate-200' : ''
 					}`}
 					onPress={() => setActiveTab('drive')}
 					aria-label="Google Drive"
 				>
 					<div className="flex items-center gap-2">
-						<IconGoogle variant="drive" className="w-[20px] h-[20px]" />
+						<IconGoogle variant="drive" className="h-[20px] w-[20px]" />
 						<div className="">Google Drive</div>
 					</div>
 				</Button>
@@ -152,7 +146,7 @@ const ResourceCreateForm = ({
 					className=""
 					aria-label="URL Form"
 				>
-					<div className="flex flex-col p-9 space-y-4 w-[400px]">
+					<div className="flex w-[400px] flex-col space-y-4 p-9">
 						<div className="">
 							<TextField>
 								<Label className="text-sm">URL</Label>
@@ -165,13 +159,12 @@ const ResourceCreateForm = ({
 												{...field}
 												ref={urlInputRef}
 												type="url"
-												className={`w-full p-2 border rounded mt-1 focus:outline-blue-500 
-													${errors.url ? 'border-red-500' : 'border-gray-200'}`}
+												className={`mt-1 w-full rounded border p-2 focus:outline-blue-500 ${errors.url ? 'border-red-500' : 'border-gray-200'}`}
 												placeholder="https://example.com"
 												aria-label="URL"
 											/>
 											{errors.url && (
-												<span className="text-red-500 text-sm mt-1">
+												<span className="mt-1 text-red-500 text-sm">
 													{errors.url.message}
 												</span>
 											)}
@@ -191,13 +184,12 @@ const ResourceCreateForm = ({
 											<Input
 												{...field}
 												type="text"
-												className={`w-full p-2 border rounded mt-1 focus:outline-blue-500
-													${errors.title ? 'border-red-500' : 'border-gray-200'}`}
+												className={`mt-1 w-full rounded border p-2 focus:outline-blue-500 ${errors.title ? 'border-red-500' : 'border-gray-200'}`}
 												placeholder="Name"
 												aria-label="Name"
 											/>
 											{errors.title && (
-												<span className="text-red-500 text-sm mt-1">
+												<span className="mt-1 text-red-500 text-sm">
 													{errors.title.message}
 												</span>
 											)}
@@ -210,17 +202,16 @@ const ResourceCreateForm = ({
 							<Button
 								type="button"
 								onPress={() => onClose(false)}
-								className="px-4 py-2 text-sm border rounded-sm hover:bg-gray-50 outline-hidden cursor-pointer"
+								className="cursor-pointer rounded-sm border px-4 py-2 text-sm outline-hidden hover:bg-gray-50"
 							>
 								キャンセル
 							</Button>
 							<Button
 								type="submit"
 								isDisabled={isSubmitting || !isValid}
-								className={`px-4 py-2 text-sm border rounded bg-blue-500 text-white hover:bg-blue-600 focus:outline-blue-500 cursor-pointer
-									${isSubmitting || !isValid ? 'opacity-50' : ''}`}
+								className={`cursor-pointer rounded border bg-blue-500 px-4 py-2 text-sm text-white hover:bg-blue-600 focus:outline-blue-500 ${isSubmitting || !isValid ? 'opacity-50' : ''}`}
 							>
-								{isSubmitting ? '作成中...' : 'ADD RESOURCE'}
+								{isSubmitting ? '作成中...' : 'リソースを追加'}
 							</Button>
 						</div>
 					</div>

@@ -28,7 +28,7 @@ const WorkspaceRightMenu = ({ workspace }: { workspace: Workspace }) => {
 						>
 							<div className="flex items-center gap-3 text-sm">
 								<Pencil className="w-4 h-4" />
-								<span>Rename</span>
+								<span>名前を変更</span>
 							</div>
 						</MenuItem>
 						<MenuItem
@@ -37,7 +37,7 @@ const WorkspaceRightMenu = ({ workspace }: { workspace: Workspace }) => {
 						>
 							<div className="flex items-center gap-3">
 								<Trash2 className="w-4 h-4" />
-								<span>Delete</span>
+								<span>削除</span>
 							</div>
 						</MenuItem>
 					</Menu>

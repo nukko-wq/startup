@@ -111,7 +111,7 @@ const TabSaveButton = ({ tab, sectionId }: TabSaveButtonProps) => {
 						<path d="M0 0 L4 4 L8 0" />
 					</svg>
 				</OverlayArrow>
-				<span>Save to space</span>
+				<span>スペースに保存</span>
 			</Tooltip>
 		</TooltipTrigger>
 	)

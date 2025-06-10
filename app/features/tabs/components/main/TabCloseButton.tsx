@@ -82,7 +82,7 @@ const TabCloseButton = ({ tabId }: TabCloseButtonProps) => {
 						<path d="M0 0 L4 4 L8 0" />
 					</svg>
 				</OverlayArrow>
-				Close tab
+				タブを閉じる
 			</Tooltip>
 		</TooltipTrigger>
 	)
