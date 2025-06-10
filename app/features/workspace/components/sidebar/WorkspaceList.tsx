@@ -1,6 +1,7 @@
 'use client'
 
 import SpaceList from '@/app/features/space/components/sidebar/SpaceList'
+import { workspaceSchema } from '@/app/features/workspace/schemas/workSpaceSchema'
 import { reorderSpaces } from '@/app/lib/redux/features/space/spaceAPI'
 import { setSpaces } from '@/app/lib/redux/features/space/spaceSlice'
 import { selectDefaultWorkspace } from '@/app/lib/redux/features/workspace/selector'
@@ -24,6 +25,7 @@ import {
 } from '@hello-pangea/dnd'
 import { ChevronRight, Layers } from 'lucide-react'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { ZodError } from 'zod'
 import DefaultWorkspaceRightMenu from './DefaultWorkspaceRightMenu'
 import WorkspaceLeftMenu from './WorkspaceLeftMenu'
 import WorkspaceRightMenu from './WorkspaceRightMenu'
@@ -42,6 +44,7 @@ const WorkspaceList = () => {
 		null,
 	)
 	const [editingName, setEditingName] = useState<string>('')
+	const [validationError, setValidationError] = useState<string | null>(null)
 	const inputRef = useRef<HTMLInputElement>(null)
 
 	// インライン編集開始
@@ -49,32 +52,49 @@ const WorkspaceList = () => {
 		(workspaceId: string, currentName: string) => {
 			setEditingWorkspaceId(workspaceId)
 			setEditingName(currentName)
+			setValidationError(null)
 		},
 		[],
 	)
 
 	// インライン編集保存
 	const saveEdit = useCallback(async () => {
-		if (!editingWorkspaceId || !editingName.trim()) {
+		if (!editingWorkspaceId) {
 			setEditingWorkspaceId(null)
 			setEditingName('')
+			setValidationError(null)
 			return
 		}
 
+		// zodでバリデーション
 		try {
+			const validatedData = workspaceSchema.parse({ name: editingName.trim() })
+
 			await dispatch(
 				updateWorkspace({
 					id: editingWorkspaceId,
-					name: editingName.trim(),
+					name: validatedData.name,
 				}),
 			).unwrap()
+
 			setEditingWorkspaceId(null)
 			setEditingName('')
+			setValidationError(null)
 		} catch (error) {
+			if (error instanceof ZodError) {
+				// Zodバリデーションエラー
+				const firstIssue = error.issues?.[0]
+				if (firstIssue) {
+					setValidationError(firstIssue.message)
+					return // 編集モードを継続
+				}
+			}
+
 			console.error('ワークスペース名の更新でエラーが発生しました:', error)
-			// エラーが発生した場合も編集モードを終了
+			// API エラーの場合は編集モードを終了
 			setEditingWorkspaceId(null)
 			setEditingName('')
+			setValidationError(null)
 		}
 	}, [dispatch, editingWorkspaceId, editingName])
 
@@ -82,6 +102,7 @@ const WorkspaceList = () => {
 	const cancelEdit = useCallback(() => {
 		setEditingWorkspaceId(null)
 		setEditingName('')
+		setValidationError(null)
 	}, [])
 
 	// Enter/Escキーハンドリング
@@ -395,15 +416,22 @@ const WorkspaceList = () => {
 														Spaces
 													</span>
 												) : editingWorkspaceId === workspace.id ? (
-													<input
-														ref={inputRef}
-														type="text"
-														value={editingName}
-														onChange={(e) => setEditingName(e.target.value)}
-														onKeyDown={handleKeyDown}
-														onBlur={handleBlur}
-														className="font-medium text-gray-500 bg-transparent border-none outline-none p-0 w-full"
-													/>
+													<div className="w-full">
+														<input
+															ref={inputRef}
+															type="text"
+															value={editingName}
+															onChange={(e) => setEditingName(e.target.value)}
+															onKeyDown={handleKeyDown}
+															onBlur={handleBlur}
+															className="font-medium bg-transparent border-none outline-none p-0 w-full text-gray-500"
+														/>
+														{validationError && (
+															<div className="text-red-400 text-[11px] mt-1">
+																{validationError}
+															</div>
+														)}
+													</div>
 												) : (
 													<button
 														type="button"
@@ -456,6 +484,7 @@ const WorkspaceList = () => {
 			startEditing,
 			handleKeyDown,
 			handleBlur,
+			validationError,
 		],
 	)
 
