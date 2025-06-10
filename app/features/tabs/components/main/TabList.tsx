@@ -11,7 +11,6 @@ import type { RootState } from '@/app/lib/redux/store'
 import { Draggable, Droppable } from '@hello-pangea/dnd'
 import { Diamond, GripVertical } from 'lucide-react'
 import { useEffect } from 'react'
-import { Button } from 'react-aria-components'
 
 const TabList = () => {
 	const dispatch = useAppDispatch()
@@ -73,7 +72,7 @@ const TabList = () => {
 	}
 
 	return (
-		<div className="hidden md:flex md:w-1/2 justify-center">
+		<div className="hidden justify-center md:flex md:w-1/2">
 			<div className="max-w-[920px] grow overflow-y-auto py-5 pr-[16px] pl-[32px]">
 				<div className="mb-2 ml-4 flex items-center justify-between gap-2">
 					<div className="flex items-center gap-2">
@@ -88,7 +87,7 @@ const TabList = () => {
 							ref={provided.innerRef}
 							{...provided.droppableProps}
 							className={`flex flex-col rounded-md border-slate-400 bg-white shadow-xs ${
-								snapshot.isDraggingOver ? 'bg-blue-50' : ''
+								snapshot.isDraggingOver ? 'bg-white/50' : ''
 							}`}
 						>
 							{tabs.length > 0 ? (
@@ -102,26 +101,19 @@ const TabList = () => {
 											<div
 												ref={provided.innerRef}
 												{...provided.draggableProps}
+												{...provided.dragHandleProps}
 												className={`group block items-center gap-2 truncate rounded-sm py-1 pr-2 outline-hidden hover:bg-gray-100 ${
-													snapshot.isDragging ? 'bg-blue-50 shadow-lg' : ''
+													snapshot.isDragging ? 'bg-white/50 shadow-lg' : ''
 												}`}
+												aria-label="TabItem"
 											>
 												<div className="grid grid-cols-[1fr_72px] items-center gap-2">
-													<div className="flex items-center gap-2 truncate">
-														<div
-															{...provided.dragHandleProps}
-															className="flex cursor-grab items-center pl-3 opacity-0 group-hover:opacity-100"
-															aria-label="Drag Wrapper"
-														>
-															<Button
-																className="cursor-grab"
-																aria-label="ドラッグハンドル"
-															>
-																<GripVertical className="h-4 w-4 text-slate-500" />
-															</Button>
+													<div className="flex h-full items-center gap-2 truncate">
+														<div className="flex cursor-grab items-center pl-3 opacity-0 group-hover:opacity-100">
+															<GripVertical className="h-4 w-4 text-slate-500" />
 														</div>
 														<div
-															className="flex items-center gap-2 truncate cursor-pointer"
+															className="flex h-full grow cursor-grab items-center gap-2 truncate"
 															onClick={() => handleTabAction(tab)}
 															onKeyDown={(e) => {
 																if (e.key === 'Enter') {
@@ -133,12 +125,12 @@ const TabList = () => {
 																<img
 																	src={tab.faviconUrl}
 																	alt=""
-																	className="h-4 w-4 grow"
+																	className="h-4 w-4"
 																/>
 															) : (
 																<div className="h-4 w-4 rounded-full bg-gray-200" />
 															)}
-															<span className="truncate text-sm">
+															<span className="grow truncate text-sm">
 																{tab.title}
 															</span>
 														</div>
