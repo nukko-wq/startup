@@ -4,7 +4,10 @@ import SpaceList from '@/app/features/space/components/sidebar/SpaceList'
 import { reorderSpaces } from '@/app/lib/redux/features/space/spaceAPI'
 import { setSpaces } from '@/app/lib/redux/features/space/spaceSlice'
 import { selectDefaultWorkspace } from '@/app/lib/redux/features/workspace/selector'
-import { reorderWorkspaces } from '@/app/lib/redux/features/workspace/workSpaceAPI'
+import {
+	reorderWorkspaces,
+	updateWorkspace,
+} from '@/app/lib/redux/features/workspace/workSpaceAPI'
 import { setWorkspaces } from '@/app/lib/redux/features/workspace/workspaceSlice'
 import { useAppDispatch, useAppSelector } from '@/app/lib/redux/hooks'
 import {
@@ -20,7 +23,7 @@ import {
 	Droppable,
 } from '@hello-pangea/dnd'
 import { ChevronRight, Layers } from 'lucide-react'
-import { useCallback, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import DefaultWorkspaceRightMenu from './DefaultWorkspaceRightMenu'
 import WorkspaceLeftMenu from './WorkspaceLeftMenu'
 import WorkspaceRightMenu from './WorkspaceRightMenu'
@@ -34,6 +37,79 @@ const WorkspaceList = () => {
 	const [collapsedWorkspaces, setCollapsedWorkspaces] = useState<Set<string>>(
 		new Set(),
 	)
+	// インライン編集状態を管理するstate
+	const [editingWorkspaceId, setEditingWorkspaceId] = useState<string | null>(
+		null,
+	)
+	const [editingName, setEditingName] = useState<string>('')
+	const inputRef = useRef<HTMLInputElement>(null)
+
+	// インライン編集開始
+	const startEditing = useCallback(
+		(workspaceId: string, currentName: string) => {
+			setEditingWorkspaceId(workspaceId)
+			setEditingName(currentName)
+		},
+		[],
+	)
+
+	// インライン編集保存
+	const saveEdit = useCallback(async () => {
+		if (!editingWorkspaceId || !editingName.trim()) {
+			setEditingWorkspaceId(null)
+			setEditingName('')
+			return
+		}
+
+		try {
+			await dispatch(
+				updateWorkspace({
+					id: editingWorkspaceId,
+					name: editingName.trim(),
+				}),
+			).unwrap()
+			setEditingWorkspaceId(null)
+			setEditingName('')
+		} catch (error) {
+			console.error('ワークスペース名の更新でエラーが発生しました:', error)
+			// エラーが発生した場合も編集モードを終了
+			setEditingWorkspaceId(null)
+			setEditingName('')
+		}
+	}, [dispatch, editingWorkspaceId, editingName])
+
+	// インライン編集キャンセル
+	const cancelEdit = useCallback(() => {
+		setEditingWorkspaceId(null)
+		setEditingName('')
+	}, [])
+
+	// Enter/Escキーハンドリング
+	const handleKeyDown = useCallback(
+		(e: React.KeyboardEvent) => {
+			if (e.key === 'Enter') {
+				e.preventDefault()
+				saveEdit()
+			} else if (e.key === 'Escape') {
+				e.preventDefault()
+				cancelEdit()
+			}
+		},
+		[saveEdit, cancelEdit],
+	)
+
+	// 外部クリックでの保存
+	const handleBlur = useCallback(() => {
+		saveEdit()
+	}, [saveEdit])
+
+	// 編集モードになったらinputにフォーカス
+	useEffect(() => {
+		if (editingWorkspaceId && inputRef.current) {
+			inputRef.current.focus()
+			inputRef.current.select()
+		}
+	}, [editingWorkspaceId])
 
 	// 折りたたみトグル関数をメモ化
 	const toggleCollapse = useCallback((workspaceId: string) => {
@@ -314,13 +390,37 @@ const WorkspaceList = () => {
 												)}
 											</div>
 											<div className="flex items-center grow justify-between hover:border-b-2 hover:border-blue-500 pt-[2px] ml-2 border-b-2 border-transparent">
-												<span className="font-medium text-gray-500">
-													{workspace.id === defaultWorkspace?.id ? (
-														<span className="text-gray-500">Spaces</span>
-													) : (
-														workspace.name
-													)}
-												</span>
+												{workspace.id === defaultWorkspace?.id ? (
+													<span className="font-medium text-gray-500">
+														Spaces
+													</span>
+												) : editingWorkspaceId === workspace.id ? (
+													<input
+														ref={inputRef}
+														type="text"
+														value={editingName}
+														onChange={(e) => setEditingName(e.target.value)}
+														onKeyDown={handleKeyDown}
+														onBlur={handleBlur}
+														className="font-medium text-gray-500 bg-transparent border-none outline-none p-0 w-full"
+													/>
+												) : (
+													<button
+														type="button"
+														className="font-medium text-gray-500 cursor-pointer hover:text-gray-700 bg-transparent border-none outline-none p-0 text-left w-full"
+														onClick={() =>
+															startEditing(workspace.id, workspace.name)
+														}
+														onKeyDown={(e) => {
+															if (e.key === 'Enter' || e.key === ' ') {
+																e.preventDefault()
+																startEditing(workspace.id, workspace.name)
+															}
+														}}
+													>
+														{workspace.name}
+													</button>
+												)}
 												<div className="flex items-center">
 													{workspace.id === defaultWorkspace?.id ? (
 														<DefaultWorkspaceRightMenu
@@ -346,7 +446,17 @@ const WorkspaceList = () => {
 					)}
 				</Draggable>
 			)),
-		[allWorkspaces, defaultWorkspace, collapsedWorkspaces, toggleCollapse],
+		[
+			allWorkspaces,
+			defaultWorkspace,
+			collapsedWorkspaces,
+			toggleCollapse,
+			editingWorkspaceId,
+			editingName,
+			startEditing,
+			handleKeyDown,
+			handleBlur,
+		],
 	)
 
 	return (
