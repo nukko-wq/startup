@@ -78,7 +78,7 @@ const TabsMenu = () => {
 						>
 							<div className="flex items-center gap-2 text-sm">
 								<ArrowDownAZ className="w-4 h-4" />
-								Sort by Alphabetical
+								タイトル順で並び替え
 							</div>
 						</MenuItem>
 						<MenuItem
@@ -87,7 +87,7 @@ const TabsMenu = () => {
 						>
 							<div className="flex items-center gap-2 text-sm">
 								<Earth className="w-4 h-4" />
-								Sort by domain
+								ドメイン順で並び替え
 							</div>
 						</MenuItem>
 						<MenuItem
@@ -96,7 +96,7 @@ const TabsMenu = () => {
 						>
 							<div className="flex items-center gap-2 text-sm">
 								<Trash2 className="w-4 h-4" />
-								Close all tabs
+								タブをすべて閉じる
 							</div>
 						</MenuItem>
 					</Menu>

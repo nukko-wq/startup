@@ -59,7 +59,7 @@ const ResourceCreateButton = forwardRef<
 								<path d="M0 0 L4 4 L8 0" />
 							</svg>
 						</OverlayArrow>
-						Add Resource
+						リソースを追加
 					</Tooltip>
 				</TooltipTrigger>
 				<Popover placement="start">

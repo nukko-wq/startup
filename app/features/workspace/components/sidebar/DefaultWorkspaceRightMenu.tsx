@@ -45,7 +45,7 @@ const DefaultWorkspaceRightMenu = ({
 						>
 							<div className="flex items-center gap-2 text-slate-800">
 								<SquarePlus className="w-4 h-4" />
-								<span>New Space</span>
+								<span className="text-sm">新規スペースを作成</span>
 							</div>
 						</MenuItem>
 						<MenuItem
@@ -54,7 +54,7 @@ const DefaultWorkspaceRightMenu = ({
 						>
 							<div className="flex items-center gap-2 text-slate-800">
 								<SquarePlus className="w-4 h-4" />
-								<span>New Workspace</span>
+								<span className="text-sm">新規ワークスペースを作成</span>
 							</div>
 						</MenuItem>
 					</Menu>

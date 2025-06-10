@@ -80,7 +80,7 @@ const ResourceDeleteButton = ({ resourceId }: ResourceDeleteButtonProps) => {
 							<path d="M0 0 L4 4 L8 0" />
 						</svg>
 					</OverlayArrow>
-					Remove Item
+					削除
 				</Tooltip>
 			)}
 		</TooltipTrigger>

@@ -77,7 +77,7 @@ const ResourceMenu = ({ resource }: { resource: Resource }) => {
 								<path d="M0 0 L4 4 L8 0" />
 							</svg>
 						</OverlayArrow>
-						Edit
+						編集
 					</Tooltip>
 				)}
 			</TooltipTrigger>
