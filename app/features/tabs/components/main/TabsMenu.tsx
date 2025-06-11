@@ -8,6 +8,7 @@ import {
 	MenuItem,
 	MenuTrigger,
 	Popover,
+	Separator,
 } from 'react-aria-components'
 
 const TabsMenu = () => {
@@ -90,6 +91,7 @@ const TabsMenu = () => {
 								ドメイン順で並び替え
 							</div>
 						</MenuItem>
+						<Separator className="mx-3 my-1 h-[1px] bg-zinc-200" />
 						<MenuItem
 							className="p-2 outline-hidden text-red-600 cursor-pointer hover:bg-slate-100"
 							onAction={handleCloseAllTabs}
