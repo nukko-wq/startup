@@ -105,19 +105,35 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
 		},
 		async session({ session, token }) {
 			if (session.user) {
-				session.user.id = token.id as string
-				session.accessToken = token.accessToken as string
-				session.refreshToken = token.refreshToken as string
-				session.expiresAt = token.expiresAt as number
+				// 型安全性の向上：適切なnullチェックを追加
+				if (token.id && typeof token.id === 'string') {
+					session.user.id = token.id
+				}
+				if (token.accessToken && typeof token.accessToken === 'string') {
+					session.accessToken = token.accessToken
+				}
+				if (token.refreshToken && typeof token.refreshToken === 'string') {
+					session.refreshToken = token.refreshToken
+				}
+				if (token.expiresAt && typeof token.expiresAt === 'number') {
+					session.expiresAt = token.expiresAt
+				}
 			}
 			return session
 		},
 		async jwt({ token, account, user }) {
 			if (account && user && user.id) {
 				token.id = user.id
-				token.accessToken = account.access_token
-				token.refreshToken = account.refresh_token
-				token.expires_at = account.expires_at
+				// 型安全性の向上：accountのプロパティの存在確認
+				if (account.access_token) {
+					token.accessToken = account.access_token
+				}
+				if (account.refresh_token) {
+					token.refreshToken = account.refresh_token
+				}
+				if (account.expires_at) {
+					token.expires_at = account.expires_at
+				}
 			}
 			return token
 		},
