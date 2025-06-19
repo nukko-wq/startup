@@ -4,6 +4,8 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { getCurrentUser } from '@/lib/session'
+import { createWorkspaceSchema } from '@/lib/validation-schemas'
+import { validateRequestBody, handleValidationError } from '@/lib/validation-utils'
 
 export async function GET() {
 	try {
@@ -32,7 +34,7 @@ export async function POST(request: Request) {
 		}
 
 		const body = await request.json()
-		const { name } = body
+		const { name } = validateRequestBody(body, createWorkspaceSchema)
 
 		// 最大のorderを取得
 		const maxOrderWorkspace = await prisma.workspace.findFirst({
@@ -52,9 +54,13 @@ export async function POST(request: Request) {
 
 		return NextResponse.json(workspace)
 	} catch (error) {
-		return NextResponse.json(
-			{ error: 'Internal Server Error' },
-			{ status: 500 },
-		)
+		try {
+			return handleValidationError(error)
+		} catch {
+			return NextResponse.json(
+				{ error: 'Internal Server Error' },
+				{ status: 500 },
+			)
+		}
 	}
 }

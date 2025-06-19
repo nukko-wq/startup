@@ -1,6 +1,9 @@
 import { serializeSpace } from '@/app/lib/utils/space'
 import { prisma } from '@/lib/prisma'
 import { getCurrentUser } from '@/lib/session'
+import { validateWorkspaceOwnership, OwnershipError } from '@/lib/ownership-utils'
+import { createSpaceSchema } from '@/lib/validation-schemas'
+import { validateRequestBody, handleValidationError } from '@/lib/validation-utils'
 import { NextResponse } from 'next/server'
 
 export async function POST(request: Request) {
@@ -10,7 +13,11 @@ export async function POST(request: Request) {
 			return NextResponse.json({ error: '認証が必要です' }, { status: 401 })
 		}
 
-		const { name, workspaceId } = await request.json()
+		const body = await request.json()
+		const { name, workspaceId } = validateRequestBody(body, createSpaceSchema)
+
+		// ワークスペースの所有権確認
+		await validateWorkspaceOwnership(workspaceId, user.id)
 
 		// トランザクションで処理
 		const result = await prisma.$transaction(async (tx) => {
@@ -31,7 +38,7 @@ export async function POST(request: Request) {
 					},
 					user: {
 						connect: {
-							email: user.email,
+							id: user.id,
 						},
 					},
 					order: await tx.space.count({
@@ -54,7 +61,7 @@ export async function POST(request: Request) {
 					},
 					user: {
 						connect: {
-							email: user.email,
+							id: user.id,
 						},
 					},
 				},
@@ -71,9 +78,19 @@ export async function POST(request: Request) {
 			section: result.section,
 		})
 	} catch (error) {
-		return NextResponse.json(
-			{ error: 'スペースの作成に失敗しました' },
-			{ status: 500 },
-		)
+		if (error instanceof OwnershipError) {
+			return NextResponse.json(
+				{ error: error.message },
+				{ status: 403 }
+			)
+		}
+		try {
+			return handleValidationError(error)
+		} catch {
+			return NextResponse.json(
+				{ error: 'スペースの作成に失敗しました' },
+				{ status: 500 },
+			)
+		}
 	}
 }

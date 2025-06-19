@@ -2,6 +2,9 @@ import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { getCurrentUser } from '@/lib/session'
 import { serializeResource } from '@/app/lib/utils/resource'
+import { validateResourceOwnership, OwnershipError } from '@/lib/ownership-utils'
+import { updateResourceSchema } from '@/lib/validation-schemas'
+import { validateRequestBody, handleValidationError } from '@/lib/validation-utils'
 
 export async function DELETE(
 	request: Request,
@@ -19,18 +22,8 @@ export async function DELETE(
 		const resolvedParams = await params
 		const { resourceId } = resolvedParams
 
-		// 削除対象のリソースを取得して、sectionIdとorderを取得
-		const targetResource = await prisma.resource.findUnique({
-			where: { id: resourceId },
-			select: { sectionId: true, order: true },
-		})
-
-		if (!targetResource) {
-			return NextResponse.json(
-				{ error: 'リソースが見つかりません' },
-				{ status: 404 },
-			)
-		}
+		// リソース所有権確認（削除対象のsectionIdとorderも同時に取得）
+		const targetResource = await validateResourceOwnership(resourceId, user.id)
 
 		// トランザクションで削除と順序更新を実行
 		await prisma.$transaction(async (tx) => {
@@ -53,6 +46,12 @@ export async function DELETE(
 
 		return NextResponse.json({ message: '削除成功' })
 	} catch (error) {
+		if (error instanceof OwnershipError) {
+			return NextResponse.json(
+				{ error: error.message },
+				{ status: 403 }
+			)
+		}
 		return NextResponse.json(
 			{ error: 'リソースの削除に失敗しました' },
 			{ status: 500 },
@@ -76,18 +75,10 @@ export async function PATCH(
 		const resolvedParams = await params
 		const { resourceId } = resolvedParams
 		const body = await request.json()
-		const { url, title, description } = body
+		const { url, title, description } = validateRequestBody(body, updateResourceSchema)
 
-		const existingResource = await prisma.resource.findUnique({
-			where: { id: resourceId },
-		})
-
-		if (!existingResource) {
-			return NextResponse.json(
-				{ error: 'リソースが見つかりません' },
-				{ status: 404 },
-			)
-		}
+		// リソース所有権確認
+		await validateResourceOwnership(resourceId, user.id)
 
 		// 部分的な更新
 		const updatedResource = await prisma.resource.update({
@@ -102,10 +93,19 @@ export async function PATCH(
 		const serializedResource = serializeResource(updatedResource)
 		return NextResponse.json(serializedResource)
 	} catch (error) {
-		console.error('リソース更新エラー:', error)
-		return NextResponse.json(
-			{ error: 'リソースの更新に失敗しました' },
-			{ status: 500 },
-		)
+		if (error instanceof OwnershipError) {
+			return NextResponse.json(
+				{ error: error.message },
+				{ status: 403 }
+			)
+		}
+		try {
+			return handleValidationError(error)
+		} catch {
+			return NextResponse.json(
+				{ error: 'リソースの更新に失敗しました' },
+				{ status: 500 },
+			)
+		}
 	}
 }
