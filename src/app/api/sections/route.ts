@@ -3,6 +3,7 @@ import { NextResponse } from 'next/server'
 import { getCurrentUser } from '@/lib/session'
 import { prisma } from '@/lib/prisma'
 import { serializeSection } from '@/app/lib/utils/section'
+import { validateSpaceOwnership, OwnershipError } from '@/lib/ownership-utils'
 
 export async function POST(request: Request) {
 	try {
@@ -12,6 +13,9 @@ export async function POST(request: Request) {
 		}
 
 		const { name, spaceId } = await request.json()
+
+		// スペースの所有権確認
+		await validateSpaceOwnership(spaceId, user.id)
 
 		const lastSection = await prisma.section.findFirst({
 			where: { spaceId },
@@ -31,6 +35,12 @@ export async function POST(request: Request) {
 
 		return NextResponse.json(serializeSection(section))
 	} catch (error) {
+		if (error instanceof OwnershipError) {
+			return NextResponse.json(
+				{ error: error.message },
+				{ status: 403 }
+			)
+		}
 		return NextResponse.json(
 			{ error: 'セクションの作成に失敗しました' },
 			{ status: 500 },
