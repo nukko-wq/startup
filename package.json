@@ -9,7 +9,7 @@
 		"lint": "next lint",
 		"postinstall": "prisma generate",
 		"vercel-build": "prisma generate && prisma migrate deploy && next build",
-		"format": "biome check --write --unsafe"
+		"format": "biome check --write"
 	},
 	"dependencies": {
 		"@auth/prisma-adapter": "^2.7.4",
