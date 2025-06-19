@@ -1,5 +1,7 @@
 import type { Metadata } from 'next'
 import '@/app/globals.css'
+// Validate environment variables at application startup
+import '@/lib/env'
 
 export const metadata: Metadata = {
 	title: 'Startup',
