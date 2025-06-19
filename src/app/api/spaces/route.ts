@@ -2,6 +2,8 @@ import { serializeSpace } from '@/app/lib/utils/space'
 import { prisma } from '@/lib/prisma'
 import { getCurrentUser } from '@/lib/session'
 import { validateWorkspaceOwnership, OwnershipError } from '@/lib/ownership-utils'
+import { createSpaceSchema } from '@/lib/validation-schemas'
+import { validateRequestBody, handleValidationError } from '@/lib/validation-utils'
 import { NextResponse } from 'next/server'
 
 export async function POST(request: Request) {
@@ -11,7 +13,8 @@ export async function POST(request: Request) {
 			return NextResponse.json({ error: '認証が必要です' }, { status: 401 })
 		}
 
-		const { name, workspaceId } = await request.json()
+		const body = await request.json()
+		const { name, workspaceId } = validateRequestBody(body, createSpaceSchema)
 
 		// ワークスペースの所有権確認
 		await validateWorkspaceOwnership(workspaceId, user.id)
@@ -81,9 +84,13 @@ export async function POST(request: Request) {
 				{ status: 403 }
 			)
 		}
-		return NextResponse.json(
-			{ error: 'スペースの作成に失敗しました' },
-			{ status: 500 },
-		)
+		try {
+			return handleValidationError(error)
+		} catch {
+			return NextResponse.json(
+				{ error: 'スペースの作成に失敗しました' },
+				{ status: 500 },
+			)
+		}
 	}
 }

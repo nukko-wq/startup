@@ -3,6 +3,8 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { getCurrentUser } from '@/lib/session'
+import { createResourceSchema } from '@/lib/validation-schemas'
+import { validateRequestBody, handleValidationError } from '@/lib/validation-utils'
 
 export async function POST(request: Request) {
 	try {
@@ -11,8 +13,8 @@ export async function POST(request: Request) {
 			return new NextResponse('Unauthorized', { status: 401 })
 		}
 
-		const json = await request.json()
-		const { title, url, sectionId, faviconUrl } = json
+		const body = await request.json()
+		const { title, url, sectionId, faviconUrl } = validateRequestBody(body, createResourceSchema)
 
 		// セクションの存在確認とユーザー所有権の確認
 		const section = await prisma.section.findFirst({
@@ -46,7 +48,11 @@ export async function POST(request: Request) {
 
 		return NextResponse.json(newResource)
 	} catch (error) {
-		console.error('Error in POST /api/resources:', error)
-		return new NextResponse('Internal Server Error', { status: 500 })
+		try {
+			return handleValidationError(error)
+		} catch {
+			console.error('Error in POST /api/resources:', error)
+			return new NextResponse('Internal Server Error', { status: 500 })
+		}
 	}
 }
