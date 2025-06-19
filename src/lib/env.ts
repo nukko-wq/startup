@@ -8,8 +8,8 @@ interface EnvVars {
 	AUTH_GOOGLE_SECRET: string
 	DATABASE_URL: string
 	DIRECT_URL: string
-	NEXTAUTH_SECRET: string
-	NEXTAUTH_URL: string
+	AUTH_SECRET: string
+	AUTH_URL: string
 	ALLOWED_EMAILS: string
 }
 
@@ -18,8 +18,8 @@ const requiredEnvVars: (keyof EnvVars)[] = [
 	'AUTH_GOOGLE_SECRET',
 	'DATABASE_URL',
 	'DIRECT_URL',
-	'NEXTAUTH_SECRET',
-	'NEXTAUTH_URL',
+	'AUTH_SECRET',
+	'AUTH_URL',
 	'ALLOWED_EMAILS',
 ]
 
@@ -32,8 +32,8 @@ function validateEnvironmentVariables(): EnvVars {
 	const AUTH_GOOGLE_SECRET = process.env.AUTH_GOOGLE_SECRET || 'dev-google-secret'
 	const DATABASE_URL = process.env.DATABASE_URL || 'postgresql://localhost:5432/dev'
 	const DIRECT_URL = process.env.DIRECT_URL || 'postgresql://localhost:5432/dev'
-	const NEXTAUTH_SECRET = process.env.NEXTAUTH_SECRET || 'dev-secret-key-minimum-32-characters'
-	const NEXTAUTH_URL = process.env.NEXTAUTH_URL || 'http://localhost:3000'
+	const AUTH_SECRET = process.env.AUTH_SECRET || 'dev-secret-key-minimum-32-characters'
+	const AUTH_URL = process.env.AUTH_URL || 'http://localhost:3000'
 	const ALLOWED_EMAILS = process.env.ALLOWED_EMAILS || 'dev@example.com'
 
 	return {
@@ -41,8 +41,8 @@ function validateEnvironmentVariables(): EnvVars {
 		AUTH_GOOGLE_SECRET,
 		DATABASE_URL,
 		DIRECT_URL,
-		NEXTAUTH_SECRET,
-		NEXTAUTH_URL,
+		AUTH_SECRET,
+		AUTH_URL,
 		ALLOWED_EMAILS,
 	}
 }

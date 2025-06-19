@@ -8,6 +8,7 @@ const allowedEmails = env.ALLOWED_EMAILS.split(',').map(email => email.trim())
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
 	adapter: PrismaAdapter(prisma),
+	debug: process.env.NODE_ENV === 'development',
 	providers: [
 		Google({
 			clientId: env.AUTH_GOOGLE_ID,
