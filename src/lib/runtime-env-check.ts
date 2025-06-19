@@ -28,8 +28,8 @@ export function validateRuntimeEnvironment() {
 		'AUTH_GOOGLE_SECRET', 
 		'DATABASE_URL',
 		'DIRECT_URL',
-		'NEXTAUTH_SECRET',
-		'NEXTAUTH_URL',
+		'AUTH_SECRET',
+		'AUTH_URL',
 		'ALLOWED_EMAILS',
 	]
 

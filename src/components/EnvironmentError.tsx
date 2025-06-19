@@ -24,8 +24,8 @@ export default function EnvironmentError() {
 							<li>2. Navigate to project settings</li>
 							<li>3. Add environment variables:</li>
 							<ul className="ml-4 mt-1 space-y-1">
-								<li>• NEXTAUTH_SECRET</li>
-								<li>• NEXTAUTH_URL</li>
+								<li>• AUTH_SECRET</li>
+								<li>• AUTH_URL</li>
 								<li>• AUTH_GOOGLE_ID</li>
 								<li>• AUTH_GOOGLE_SECRET</li>
 								<li>• DATABASE_URL</li>
