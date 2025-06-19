@@ -3,6 +3,7 @@ import Google from 'next-auth/providers/google'
 import { PrismaAdapter } from '@auth/prisma-adapter'
 import { prisma } from '@/lib/prisma'
 import { env } from '@/lib/env'
+import { secureLogger } from '@/lib/secure-logger'
 
 const allowedEmails = env.ALLOWED_EMAILS.split(',').map(email => email.trim())
 
@@ -37,16 +38,19 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
 	},
 	callbacks: {
 		async signIn({ user, account, profile }) {
-			// console.log('Sign in callback: ', user)
-			// console.log('User email:', user.email)
+			secureLogger.auth.info('Sign in attempt started', user)
 
 			if (!allowedEmails.includes(user.email ?? '')) {
-				console.log('Email not allowed')
+				secureLogger.auth.warn('Access denied: Email not in allowed list', { email: user.email })
 				return false
 			}
+
 			try {
 				if (!account || !user.email) {
-					console.error('Invalid account or user email')
+					secureLogger.auth.error('Authentication failed: Invalid account data', { 
+						hasAccount: !!account, 
+						hasEmail: !!user.email 
+					})
 					return false
 				}
 
@@ -95,7 +99,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
 				}
 				return true
 			} catch (error) {
-				console.error('Error in signIn callback:', error)
+				secureLogger.auth.error('Authentication failed: Database error occurred', error)
 				return false
 			}
 		},
