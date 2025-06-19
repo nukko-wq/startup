@@ -75,6 +75,18 @@ export async function validateResourceOwnership(resourceId: string, userId: stri
 			id: resourceId,
 			userId: userId,
 		},
+		select: {
+			id: true,
+			title: true,
+			url: true,
+			description: true,
+			faviconUrl: true,
+			sectionId: true,
+			order: true,
+			userId: true,
+			createdAt: true,
+			updatedAt: true,
+		},
 	})
 
 	if (!resource) {
