@@ -25,23 +25,28 @@ const requiredEnvVars: (keyof EnvVars)[] = [
 
 function validateEnvironmentVariables(): EnvVars {
 	const missingVars: string[] = []
-	// Only enforce strict validation in deployed production environments
-	// Allow missing values during build and development
-	const isDeployedProduction = process.env.NODE_ENV === 'production' && process.env.VERCEL
+	
+	// Only enforce strict validation at runtime in production
+	// Skip validation during build process (including Vercel builds)
+	const isBuildTime = process.env.NEXT_PHASE === 'phase-production-build' || 
+	                    process.env.npm_lifecycle_event === 'build' ||
+	                    process.env.npm_lifecycle_event === 'vercel-build'
+	
+	const isRuntimeProduction = process.env.NODE_ENV === 'production' && !isBuildTime
 
-	for (const envVar of requiredEnvVars) {
-		if (!process.env[envVar] || process.env[envVar]?.trim() === '') {
-			// Only require all variables in deployed production
-			if (isDeployedProduction) {
+	// Only validate at runtime in production
+	if (isRuntimeProduction) {
+		for (const envVar of requiredEnvVars) {
+			if (!process.env[envVar] || process.env[envVar]?.trim() === '') {
 				missingVars.push(envVar)
 			}
 		}
-	}
 
-	if (missingVars.length > 0) {
-		const errorMessage = `Missing required environment variables in production: ${missingVars.join(', ')}`
-		console.error(errorMessage)
-		throw new Error(errorMessage)
+		if (missingVars.length > 0) {
+			const errorMessage = `Missing required environment variables: ${missingVars.join(', ')}`
+			console.error(errorMessage)
+			throw new Error(errorMessage)
+		}
 	}
 
 	// Get values with defaults for development and build
@@ -53,8 +58,8 @@ function validateEnvironmentVariables(): EnvVars {
 	const NEXTAUTH_URL = process.env.NEXTAUTH_URL || 'http://localhost:3000'
 	const ALLOWED_EMAILS = process.env.ALLOWED_EMAILS || 'dev@example.com'
 
-	// Additional validation for specific variables in deployed production
-	if (isDeployedProduction) {
+	// Additional validation for runtime production only
+	if (isRuntimeProduction) {
 		if (!ALLOWED_EMAILS.includes('@')) {
 			throw new Error('ALLOWED_EMAILS must contain at least one valid email address')
 		}
