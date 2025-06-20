@@ -5,6 +5,7 @@ import { prisma } from '@/lib/prisma'
 import { getCurrentUser } from '@/lib/session'
 import { type NextRequest, NextResponse } from 'next/server'
 import { serializeWorkspace } from '@/app/lib/utils/workspace'
+import { APIErrors, createErrorResponse } from '@/lib/validation-utils'
 export async function DELETE(
 	request: NextRequest,
 	{ params }: { params: Promise<{ workspaceId: string }> },
@@ -12,7 +13,7 @@ export async function DELETE(
 	try {
 		const user = await getCurrentUser()
 		if (!user) {
-			return new NextResponse('Unauthorized', { status: 401 })
+			return APIErrors.UNAUTHORIZED()
 		}
 
 		const resolvedParams = await params
@@ -25,19 +26,17 @@ export async function DELETE(
 		})
 
 		if (!workspace) {
-			return new NextResponse('Workspace not found', { status: 404 })
+			return APIErrors.NOT_FOUND('Workspace not found')
 		}
 
 		// ユーザーが所有者であることを確認
 		if (workspace.userId !== user.id) {
-			return new NextResponse('Forbidden', { status: 403 })
+			return APIErrors.FORBIDDEN()
 		}
 
 		// デフォルトワークスペースは削除できない
 		if (workspace.isDefault) {
-			return new NextResponse('Cannot delete default workspace', {
-				status: 400,
-			})
+			return createErrorResponse('Cannot delete default workspace', 400)
 		}
 
 		// トランザクションで削除と再整列を実行
@@ -69,9 +68,8 @@ export async function DELETE(
 		})
 
 		return new NextResponse(null, { status: 204 })
-	} catch (error) {
-		console.error('Error in DELETE /api/workspaces/[workspaceId]:', error)
-		return new NextResponse('Internal Server Error', { status: 500 })
+	} catch {
+		return APIErrors.INTERNAL_SERVER_ERROR()
 	}
 }
 
@@ -82,7 +80,7 @@ export async function PATCH(
 	try {
 		const user = await getCurrentUser()
 		if (!user) {
-			return new NextResponse('Unauthorized', { status: 401 })
+			return APIErrors.UNAUTHORIZED()
 		}
 
 		const resolvedParams = await params
@@ -95,19 +93,19 @@ export async function PATCH(
 		})
 
 		if (!workspace) {
-			return new NextResponse('Workspace not found', { status: 404 })
+			return APIErrors.NOT_FOUND('Workspace not found')
 		}
 
 		// ユーザーが所有者であることを確認
 		if (workspace.userId !== user.id) {
-			return new NextResponse('Forbidden', { status: 403 })
+			return APIErrors.FORBIDDEN()
 		}
 
 		const body = await request.json()
 		const { name } = body
 
 		if (!name || typeof name !== 'string' || name.trim().length === 0) {
-			return new NextResponse('Invalid workspace name', { status: 400 })
+			return createErrorResponse('Invalid workspace name', 400)
 		}
 
 		// ワークスペース名を更新
@@ -129,8 +127,7 @@ export async function PATCH(
 				},
 			},
 		)
-	} catch (error) {
-		console.error('Error in PATCH /api/workspaces/[workspaceId]:', error)
-		return new NextResponse('Internal Server Error', { status: 500 })
+	} catch {
+		return APIErrors.INTERNAL_SERVER_ERROR()
 	}
 }

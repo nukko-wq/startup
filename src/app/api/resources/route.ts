@@ -4,13 +4,13 @@ import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { getCurrentUser } from '@/lib/session'
 import { createResourceSchema } from '@/lib/validation-schemas'
-import { validateRequestBody, handleValidationError } from '@/lib/validation-utils'
+import { validateRequestBody, handleValidationError, APIErrors } from '@/lib/validation-utils'
 
 export async function POST(request: Request) {
 	try {
 		const user = await getCurrentUser()
 		if (!user) {
-			return new NextResponse('Unauthorized', { status: 401 })
+			return APIErrors.UNAUTHORIZED()
 		}
 
 		const body = await request.json()
@@ -25,7 +25,7 @@ export async function POST(request: Request) {
 		})
 
 		if (!section) {
-			return new NextResponse('Section not found', { status: 404 })
+			return APIErrors.NOT_FOUND('Section not found')
 		}
 
 		// 最大順序を取得
@@ -51,8 +51,7 @@ export async function POST(request: Request) {
 		try {
 			return handleValidationError(error)
 		} catch {
-			console.error('Error in POST /api/resources:', error)
-			return new NextResponse('Internal Server Error', { status: 500 })
+			return APIErrors.INTERNAL_SERVER_ERROR()
 		}
 	}
 }
