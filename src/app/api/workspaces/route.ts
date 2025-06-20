@@ -5,13 +5,13 @@ import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { getCurrentUser } from '@/lib/session'
 import { createWorkspaceSchema } from '@/lib/validation-schemas'
-import { validateRequestBody, handleValidationError } from '@/lib/validation-utils'
+import { validateRequestBody, handleValidationError, APIErrors } from '@/lib/validation-utils'
 
 export async function GET() {
 	try {
 		const user = await getCurrentUser()
 		if (!user) {
-			return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+			return APIErrors.UNAUTHORIZED()
 		}
 		const workspaces = await prisma.workspace.findMany({
 			where: {
@@ -21,8 +21,8 @@ export async function GET() {
 		})
 
 		return NextResponse.json(workspaces)
-	} catch (error) {
-		return new NextResponse('Internal Server Error', { status: 500 })
+	} catch {
+		return APIErrors.INTERNAL_SERVER_ERROR()
 	}
 }
 
@@ -30,7 +30,7 @@ export async function POST(request: Request) {
 	try {
 		const user = await getCurrentUser()
 		if (!user) {
-			return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+			return APIErrors.UNAUTHORIZED()
 		}
 
 		const body = await request.json()
@@ -57,10 +57,7 @@ export async function POST(request: Request) {
 		try {
 			return handleValidationError(error)
 		} catch {
-			return NextResponse.json(
-				{ error: 'Internal Server Error' },
-				{ status: 500 },
-			)
+			return APIErrors.INTERNAL_SERVER_ERROR()
 		}
 	}
 }
