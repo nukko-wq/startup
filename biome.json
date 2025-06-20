@@ -2,9 +2,9 @@
 	"root": true,
 	"$schema": "https://biomejs.dev/schemas/2.0.0/schema.json",
 	"vcs": {
-		"enabled": false,
+		"enabled": true,
 		"clientKind": "git",
-		"useIgnoreFile": false
+		"useIgnoreFile": true
 	},
 	"files": {
 		"ignoreUnknown": false,
