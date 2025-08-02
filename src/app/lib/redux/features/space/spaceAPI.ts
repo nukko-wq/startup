@@ -82,7 +82,10 @@ export const updateSpaceLastActive = createAsyncThunk(
 	async ({
 		spaceId,
 		workspaceId,
-	}: { spaceId: string; workspaceId: string }) => {
+	}: {
+		spaceId: string
+		workspaceId: string
+	}) => {
 		const response = await fetch(`/api/spaces/${spaceId}/last-active`, {
 			method: 'PATCH',
 			headers: {

@@ -5,7 +5,7 @@ import { prisma } from '@/lib/prisma'
 import { env } from '@/lib/env'
 import { secureLogger } from '@/lib/secure-logger'
 
-const allowedEmails = env.ALLOWED_EMAILS.split(',').map(email => email.trim())
+const allowedEmails = env.ALLOWED_EMAILS.split(',').map((email) => email.trim())
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
 	adapter: PrismaAdapter(prisma),
@@ -41,16 +41,21 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
 			secureLogger.auth.info('Sign in attempt started', user)
 
 			if (!allowedEmails.includes(user.email ?? '')) {
-				secureLogger.auth.warn('Access denied: Email not in allowed list', { email: user.email })
+				secureLogger.auth.warn('Access denied: Email not in allowed list', {
+					email: user.email,
+				})
 				return false
 			}
 
 			try {
 				if (!account || !user.email) {
-					secureLogger.auth.error('Authentication failed: Invalid account data', { 
-						hasAccount: !!account, 
-						hasEmail: !!user.email 
-					})
+					secureLogger.auth.error(
+						'Authentication failed: Invalid account data',
+						{
+							hasAccount: !!account,
+							hasEmail: !!user.email,
+						},
+					)
 					return false
 				}
 
@@ -99,7 +104,10 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
 				}
 				return true
 			} catch (error) {
-				secureLogger.auth.error('Authentication failed: Database error occurred', error)
+				secureLogger.auth.error(
+					'Authentication failed: Database error occurred',
+					error,
+				)
 				return false
 			}
 		},

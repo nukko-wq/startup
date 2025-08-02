@@ -15,7 +15,10 @@ export class OwnershipError extends Error {
 /**
  * Validate that a user owns a workspace
  */
-export async function validateWorkspaceOwnership(workspaceId: string, userId: string) {
+export async function validateWorkspaceOwnership(
+	workspaceId: string,
+	userId: string,
+) {
 	const workspace = await prisma.workspace.findFirst({
 		where: {
 			id: workspaceId,
@@ -24,7 +27,9 @@ export async function validateWorkspaceOwnership(workspaceId: string, userId: st
 	})
 
 	if (!workspace) {
-		throw new OwnershipError('ワークスペースが見つからないか、アクセス権限がありません')
+		throw new OwnershipError(
+			'ワークスペースが見つからないか、アクセス権限がありません',
+		)
 	}
 
 	return workspace
@@ -42,7 +47,9 @@ export async function validateSpaceOwnership(spaceId: string, userId: string) {
 	})
 
 	if (!space) {
-		throw new OwnershipError('スペースが見つからないか、アクセス権限がありません')
+		throw new OwnershipError(
+			'スペースが見つからないか、アクセス権限がありません',
+		)
 	}
 
 	return space
@@ -51,7 +58,10 @@ export async function validateSpaceOwnership(spaceId: string, userId: string) {
 /**
  * Validate that a user owns a section
  */
-export async function validateSectionOwnership(sectionId: string, userId: string) {
+export async function validateSectionOwnership(
+	sectionId: string,
+	userId: string,
+) {
 	const section = await prisma.section.findFirst({
 		where: {
 			id: sectionId,
@@ -60,7 +70,9 @@ export async function validateSectionOwnership(sectionId: string, userId: string
 	})
 
 	if (!section) {
-		throw new OwnershipError('セクションが見つからないか、アクセス権限がありません')
+		throw new OwnershipError(
+			'セクションが見つからないか、アクセス権限がありません',
+		)
 	}
 
 	return section
@@ -69,7 +81,10 @@ export async function validateSectionOwnership(sectionId: string, userId: string
 /**
  * Validate that a user owns a resource
  */
-export async function validateResourceOwnership(resourceId: string, userId: string) {
+export async function validateResourceOwnership(
+	resourceId: string,
+	userId: string,
+) {
 	const resource = await prisma.resource.findFirst({
 		where: {
 			id: resourceId,
@@ -90,7 +105,9 @@ export async function validateResourceOwnership(resourceId: string, userId: stri
 	})
 
 	if (!resource) {
-		throw new OwnershipError('リソースが見つからないか、アクセス権限がありません')
+		throw new OwnershipError(
+			'リソースが見つからないか、アクセス権限がありません',
+		)
 	}
 
 	return resource

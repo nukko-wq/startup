@@ -5,7 +5,11 @@ import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { getCurrentUser } from '@/lib/session'
 import { createWorkspaceSchema } from '@/lib/validation-schemas'
-import { validateRequestBody, handleValidationError, APIErrors } from '@/lib/validation-utils'
+import {
+	validateRequestBody,
+	handleValidationError,
+	APIErrors,
+} from '@/lib/validation-utils'
 
 export async function GET() {
 	try {

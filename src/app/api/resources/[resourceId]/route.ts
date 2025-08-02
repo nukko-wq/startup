@@ -2,9 +2,15 @@ import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { getCurrentUser } from '@/lib/session'
 import { serializeResource } from '@/app/lib/utils/resource'
-import { validateResourceOwnership, OwnershipError } from '@/lib/ownership-utils'
+import {
+	validateResourceOwnership,
+	OwnershipError,
+} from '@/lib/ownership-utils'
 import { updateResourceSchema } from '@/lib/validation-schemas'
-import { validateRequestBody, handleValidationError } from '@/lib/validation-utils'
+import {
+	validateRequestBody,
+	handleValidationError,
+} from '@/lib/validation-utils'
 
 export async function DELETE(
 	request: Request,
@@ -47,10 +53,7 @@ export async function DELETE(
 		return NextResponse.json({ message: '削除成功' })
 	} catch (error) {
 		if (error instanceof OwnershipError) {
-			return NextResponse.json(
-				{ error: error.message },
-				{ status: 403 }
-			)
+			return NextResponse.json({ error: error.message }, { status: 403 })
 		}
 		return NextResponse.json(
 			{ error: 'リソースの削除に失敗しました' },
@@ -75,7 +78,10 @@ export async function PATCH(
 		const resolvedParams = await params
 		const { resourceId } = resolvedParams
 		const body = await request.json()
-		const { url, title, description } = validateRequestBody(body, updateResourceSchema)
+		const { url, title, description } = validateRequestBody(
+			body,
+			updateResourceSchema,
+		)
 
 		// リソース所有権確認
 		await validateResourceOwnership(resourceId, user.id)
@@ -94,10 +100,7 @@ export async function PATCH(
 		return NextResponse.json(serializedResource)
 	} catch (error) {
 		if (error instanceof OwnershipError) {
-			return NextResponse.json(
-				{ error: error.message },
-				{ status: 403 }
-			)
+			return NextResponse.json({ error: error.message }, { status: 403 })
 		}
 		try {
 			return handleValidationError(error)

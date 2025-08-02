@@ -8,7 +8,7 @@ import { z } from 'zod'
 export class ValidationError extends Error {
 	constructor(
 		message: string,
-		public issues: z.ZodIssue[]
+		public issues: z.ZodIssue[],
 	) {
 		super(message)
 		this.name = 'ValidationError'
@@ -21,17 +21,14 @@ export class ValidationError extends Error {
  */
 export function validateRequestBody<T>(
 	body: unknown,
-	schema: z.ZodSchema<T>
+	schema: z.ZodSchema<T>,
 ): T {
 	const result = schema.safeParse(body)
-	
+
 	if (!result.success) {
-		throw new ValidationError(
-			'Validation failed',
-			result.error.issues
-		)
+		throw new ValidationError('Validation failed', result.error.issues)
 	}
-	
+
 	return result.data
 }
 
@@ -39,7 +36,7 @@ export function validateRequestBody<T>(
  * Create a standardized validation error response
  */
 export function createValidationErrorResponse(error: ValidationError) {
-	const errorMessages = error.issues.map(issue => ({
+	const errorMessages = error.issues.map((issue) => ({
 		field: issue.path.join('.'),
 		message: issue.message,
 	}))
@@ -49,7 +46,7 @@ export function createValidationErrorResponse(error: ValidationError) {
 			error: 'Validation failed',
 			details: errorMessages,
 		},
-		{ status: 400 }
+		{ status: 400 },
 	)
 }
 
@@ -60,7 +57,7 @@ export function handleValidationError(error: unknown) {
 	if (error instanceof ValidationError) {
 		return createValidationErrorResponse(error)
 	}
-	
+
 	// Re-throw other errors to be handled by the calling code
 	throw error
 }
@@ -69,10 +66,7 @@ export function handleValidationError(error: unknown) {
  * Create standardized error responses for API routes
  */
 export function createErrorResponse(message: string, status: number = 500) {
-	return NextResponse.json(
-		{ error: message },
-		{ status }
-	)
+	return NextResponse.json({ error: message }, { status })
 }
 
 /**
@@ -81,6 +75,8 @@ export function createErrorResponse(message: string, status: number = 500) {
 export const APIErrors = {
 	UNAUTHORIZED: () => createErrorResponse('Unauthorized', 401),
 	FORBIDDEN: (message = 'Forbidden') => createErrorResponse(message, 403),
-	NOT_FOUND: (message = 'Resource not found') => createErrorResponse(message, 404),
-	INTERNAL_SERVER_ERROR: (message = 'Internal Server Error') => createErrorResponse(message, 500),
+	NOT_FOUND: (message = 'Resource not found') =>
+		createErrorResponse(message, 404),
+	INTERNAL_SERVER_ERROR: (message = 'Internal Server Error') =>
+		createErrorResponse(message, 500),
 }

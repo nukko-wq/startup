@@ -5,7 +5,10 @@ import { prisma } from '@/lib/prisma'
 import { serializeSection } from '@/app/lib/utils/section'
 import { validateSpaceOwnership, OwnershipError } from '@/lib/ownership-utils'
 import { createSectionSchema } from '@/lib/validation-schemas'
-import { validateRequestBody, handleValidationError } from '@/lib/validation-utils'
+import {
+	validateRequestBody,
+	handleValidationError,
+} from '@/lib/validation-utils'
 
 export async function POST(request: Request) {
 	try {
@@ -39,10 +42,7 @@ export async function POST(request: Request) {
 		return NextResponse.json(serializeSection(section))
 	} catch (error) {
 		if (error instanceof OwnershipError) {
-			return NextResponse.json(
-				{ error: error.message },
-				{ status: 403 }
-			)
+			return NextResponse.json({ error: error.message }, { status: 403 })
 		}
 		try {
 			return handleValidationError(error)

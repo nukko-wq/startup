@@ -4,7 +4,11 @@ import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { getCurrentUser } from '@/lib/session'
 import { createResourceSchema } from '@/lib/validation-schemas'
-import { validateRequestBody, handleValidationError, APIErrors } from '@/lib/validation-utils'
+import {
+	validateRequestBody,
+	handleValidationError,
+	APIErrors,
+} from '@/lib/validation-utils'
 
 export async function POST(request: Request) {
 	try {
@@ -14,7 +18,10 @@ export async function POST(request: Request) {
 		}
 
 		const body = await request.json()
-		const { title, url, sectionId, faviconUrl } = validateRequestBody(body, createResourceSchema)
+		const { title, url, sectionId, faviconUrl } = validateRequestBody(
+			body,
+			createResourceSchema,
+		)
 
 		// セクションの存在確認とユーザー所有権の確認
 		const section = await prisma.section.findFirst({

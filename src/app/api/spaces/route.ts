@@ -1,9 +1,15 @@
 import { serializeSpace } from '@/app/lib/utils/space'
 import { prisma } from '@/lib/prisma'
 import { getCurrentUser } from '@/lib/session'
-import { validateWorkspaceOwnership, OwnershipError } from '@/lib/ownership-utils'
+import {
+	validateWorkspaceOwnership,
+	OwnershipError,
+} from '@/lib/ownership-utils'
 import { createSpaceSchema } from '@/lib/validation-schemas'
-import { validateRequestBody, handleValidationError } from '@/lib/validation-utils'
+import {
+	validateRequestBody,
+	handleValidationError,
+} from '@/lib/validation-utils'
 import { NextResponse } from 'next/server'
 
 export async function POST(request: Request) {
@@ -79,10 +85,7 @@ export async function POST(request: Request) {
 		})
 	} catch (error) {
 		if (error instanceof OwnershipError) {
-			return NextResponse.json(
-				{ error: error.message },
-				{ status: 403 }
-			)
+			return NextResponse.json({ error: error.message }, { status: 403 })
 		}
 		try {
 			return handleValidationError(error)

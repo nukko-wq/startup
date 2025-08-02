@@ -29,10 +29,13 @@ function validateEnvironmentVariables(): EnvVars {
 
 	// Get values with defaults - validation happens at runtime only
 	const AUTH_GOOGLE_ID = process.env.AUTH_GOOGLE_ID || 'dev-google-id'
-	const AUTH_GOOGLE_SECRET = process.env.AUTH_GOOGLE_SECRET || 'dev-google-secret'
-	const DATABASE_URL = process.env.DATABASE_URL || 'postgresql://localhost:5432/dev'
+	const AUTH_GOOGLE_SECRET =
+		process.env.AUTH_GOOGLE_SECRET || 'dev-google-secret'
+	const DATABASE_URL =
+		process.env.DATABASE_URL || 'postgresql://localhost:5432/dev'
 	const DIRECT_URL = process.env.DIRECT_URL || 'postgresql://localhost:5432/dev'
-	const AUTH_SECRET = process.env.AUTH_SECRET || 'dev-secret-key-minimum-32-characters'
+	const AUTH_SECRET =
+		process.env.AUTH_SECRET || 'dev-secret-key-minimum-32-characters'
 	const AUTH_URL = process.env.AUTH_URL || 'http://localhost:3000'
 	const ALLOWED_EMAILS = process.env.ALLOWED_EMAILS || 'dev@example.com'
 

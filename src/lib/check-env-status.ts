@@ -6,11 +6,11 @@ export function isEnvironmentConfigured(): boolean {
 	// Check if we're using default values
 	const defaultValues = [
 		'dev-google-id',
-		'dev-google-secret', 
+		'dev-google-secret',
 		'dev-secret-key-minimum-32-characters',
 		'postgresql://localhost:5432/dev',
 		'http://localhost:3000',
-		'dev@example.com'
+		'dev@example.com',
 	]
 
 	if (typeof window !== 'undefined') {

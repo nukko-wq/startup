@@ -13,7 +13,7 @@ const nameSchema = z
 	.trim()
 	.refine(
 		(val) => val.length > 0,
-		'Name cannot be empty after trimming whitespace'
+		'Name cannot be empty after trimming whitespace',
 	)
 
 const urlSchema = z
@@ -36,7 +36,7 @@ export const reorderWorkspacesSchema = z.object({
 			z.object({
 				id: z.string().cuid('Invalid workspace ID format'),
 				order: z.number().int().min(0, 'Order must be a non-negative integer'),
-			})
+			}),
 		)
 		.min(1, 'At least one workspace is required')
 		.max(100, 'Too many workspaces in reorder request'),

@@ -2,7 +2,10 @@ import { NextResponse } from 'next/server'
 import { getCurrentUser } from '@/lib/session'
 import { prisma } from '@/lib/prisma'
 import { reorderWorkspacesSchema } from '@/lib/validation-schemas'
-import { validateRequestBody, handleValidationError } from '@/lib/validation-utils'
+import {
+	validateRequestBody,
+	handleValidationError,
+} from '@/lib/validation-utils'
 
 export async function POST(request: Request) {
 	try {
@@ -15,7 +18,7 @@ export async function POST(request: Request) {
 		const { workspaces } = validateRequestBody(body, reorderWorkspacesSchema)
 
 		// 全ワークスペースの所有権確認
-		const workspaceIds = workspaces.map(w => w.id)
+		const workspaceIds = workspaces.map((w) => w.id)
 		const ownedWorkspaces = await prisma.workspace.findMany({
 			where: {
 				id: { in: workspaceIds },
@@ -24,13 +27,15 @@ export async function POST(request: Request) {
 			select: { id: true },
 		})
 
-		const ownedWorkspaceIds = new Set(ownedWorkspaces.map(w => w.id))
-		const unauthorizedIds = workspaceIds.filter(id => !ownedWorkspaceIds.has(id))
+		const ownedWorkspaceIds = new Set(ownedWorkspaces.map((w) => w.id))
+		const unauthorizedIds = workspaceIds.filter(
+			(id) => !ownedWorkspaceIds.has(id),
+		)
 
 		if (unauthorizedIds.length > 0) {
 			return NextResponse.json(
 				{ error: 'アクセス権限のないワークスペースが含まれています' },
-				{ status: 403 }
+				{ status: 403 },
 			)
 		}
 
@@ -38,7 +43,7 @@ export async function POST(request: Request) {
 		await prisma.$transaction(
 			workspaces.map(({ id, order }) =>
 				prisma.workspace.update({
-					where: { 
+					where: {
 						id,
 						userId: user.id, // 追加の安全チェック
 					},

@@ -30,7 +30,7 @@ export const secureLogger = {
 			} else {
 				console.warn(`[AUTH WARN] ${message}`)
 			}
-		}
+		},
 	},
 
 	/**
@@ -50,6 +50,6 @@ export const secureLogger = {
 			} else {
 				console.error(`[APP ERROR] ${message}`)
 			}
-		}
-	}
+		},
+	},
 }
