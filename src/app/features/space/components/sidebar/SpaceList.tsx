@@ -38,7 +38,7 @@ const SpaceList = memo(({ workspaceId, type }: SpaceListProps) => {
 				console.error('スペースの切り替えに失敗しました:', error)
 			}
 		},
-		[dispatch, workspaceId, router],
+		[dispatch, workspaceId], // router を削除
 	)
 
 	const handleKeyDown = useCallback(
