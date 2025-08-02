@@ -10,6 +10,7 @@ import { useAppDispatch, useAppSelector } from '@/app/lib/redux/hooks'
 import type { RootState } from '@/app/lib/redux/store'
 import { Draggable, Droppable } from '@hello-pangea/dnd'
 import { Diamond, GripVertical } from 'lucide-react'
+import Image from 'next/image'
 import { useEffect } from 'react'
 
 const TabList = () => {
@@ -122,9 +123,11 @@ const TabList = () => {
 															}}
 														>
 															{tab.faviconUrl ? (
-																<img
+																<Image
 																	src={tab.faviconUrl}
-																	alt=""
+																	alt={`${tab.title}のファビコン`}
+																	width={16}
+																	height={16}
 																	className="h-4 w-4"
 																/>
 															) : (
