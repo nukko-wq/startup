@@ -1,11 +1,9 @@
 import SpaceMenu from '@/app/features/space/components/sidebar/SpaceMenu'
 import { selectSortedSpacesByWorkspaceId } from '@/app/lib/redux/features/space/selector'
-import { updateSpaceLastActive } from '@/app/lib/redux/features/space/spaceAPI'
-import { setActiveSpace } from '@/app/lib/redux/features/space/spaceSlice'
-import { useAppDispatch, useAppSelector } from '@/app/lib/redux/hooks'
+import { useAppSelector } from '@/app/lib/redux/hooks'
+import { useSpaceSwitch } from '@/app/lib/hooks/useSpaceSwitch'
 import { Draggable, Droppable } from '@hello-pangea/dnd'
 import { GripVertical } from 'lucide-react'
-import { useRouter } from 'next/navigation'
 import { memo, useCallback } from 'react'
 
 interface SpaceListProps {
@@ -14,8 +12,7 @@ interface SpaceListProps {
 }
 
 const SpaceList = memo(({ workspaceId, type }: SpaceListProps) => {
-	const router = useRouter()
-	const dispatch = useAppDispatch()
+	const { switchSpace } = useSpaceSwitch()
 	const spaces = useAppSelector((state) =>
 		selectSortedSpacesByWorkspaceId(state, workspaceId),
 	)
@@ -23,22 +20,12 @@ const SpaceList = memo(({ workspaceId, type }: SpaceListProps) => {
 
 	const handleSpaceClick = useCallback(
 		async (spaceId: string) => {
-			try {
-				dispatch(setActiveSpace(spaceId))
-				dispatch(
-					updateSpaceLastActive({
-						spaceId,
-						workspaceId,
-					}),
-				)
-				router.push(`/space/${spaceId}`, {
-					scroll: false,
-				})
-			} catch (error) {
-				console.error('スペースの切り替えに失敗しました:', error)
+			const result = await switchSpace(spaceId, workspaceId)
+			if (!result.success) {
+				console.error('スペースの切り替えに失敗しました:', result.error)
 			}
 		},
-		[dispatch, workspaceId], // router を削除
+		[switchSpace, workspaceId],
 	)
 
 	const handleKeyDown = useCallback(

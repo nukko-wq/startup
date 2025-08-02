@@ -5,18 +5,17 @@ import {
 	selectActiveSpaceId,
 	selectSpaces,
 } from '@/app/lib/redux/features/space/selector'
-import { updateSpaceLastActive } from '@/app/lib/redux/features/space/spaceAPI'
-import { setActiveSpace } from '@/app/lib/redux/features/space/spaceSlice'
+import { useSpaceSwitch } from '@/app/lib/hooks/useSpaceSwitch'
 import {
 	selectActiveWorkspaceId,
 	selectDefaultWorkspace,
 } from '@/app/lib/redux/features/workspace/selector'
 import { useAppDispatch, useAppSelector } from '@/app/lib/redux/hooks'
-import { useRouter } from 'next/navigation'
+
 import { useEffect, useRef, useState } from 'react'
 
 const SpaceOverlay = () => {
-	const router = useRouter()
+	const { switchSpace } = useSpaceSwitch()
 	const dispatch = useAppDispatch()
 	const isVisible = useAppSelector(
 		(state) => state.overlay.isSpaceOverlayVisible,
@@ -82,22 +81,11 @@ const SpaceOverlay = () => {
 			return
 		}
 
-		try {
-			dispatch(setActiveSpace(spaceId))
-			await dispatch(
-				updateSpaceLastActive({
-					spaceId,
-					workspaceId,
-				}),
-			).unwrap()
-
-			router.push(`/space/${spaceId}`, {
-				scroll: false,
-			})
-
+		const result = await switchSpace(spaceId, workspaceId)
+		if (result.success) {
 			dispatch(hideSpaceOverlay())
-		} catch (error) {
-			console.error('Failed to update active space:', error)
+		} else {
+			console.error('Failed to update active space:', result.error)
 		}
 	}
 
