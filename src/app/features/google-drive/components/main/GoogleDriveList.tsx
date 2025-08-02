@@ -15,7 +15,7 @@ import type { Resource } from '@/app/lib/redux/features/resource/types/resource'
 import { useAppDispatch, useAppSelector } from '@/app/lib/redux/hooks'
 import debounce from 'lodash/debounce'
 import { Search } from 'lucide-react'
-import { useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Button, Input } from 'react-aria-components'
 
 interface GoogleDriveListProps {
