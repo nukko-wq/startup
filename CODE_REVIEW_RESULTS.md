@@ -12,6 +12,14 @@
 - **所有権検証**: 各API endpointで適切な`validateResourceOwnership`等の実装
 - **トークン管理**: refresh_tokenの自動更新機能
 
+### 🔴 重大な問題
+- **コンソールログ**: 本番環境で大量のconsole.log/error出力 (50+箇所)
+```typescript
+// 問題: 本番環境でのパフォーマンス低下とセキュリティリスク
+console.log('Processing tab reordering:', {...})  // DashboardContent.tsx
+console.error('Failed to update resource:', error)  // 複数ファイル
+```
+
 ### 🟡 改善が必要な点
 - **環境変数**: 本番環境でのデフォルト値使用リスク (env.ts:31-37)
 ```typescript
@@ -22,9 +30,10 @@ const AUTH_GOOGLE_ID = process.env.AUTH_GOOGLE_ID || 'dev-google-id'
 - **SQL Injection防止**: Prismaを使用しているため基本的に安全だが、動的クエリ部分の注意が必要
 
 ### 推奨改善策
-1. 本番環境での環境変数検証を強化
-2. ログ出力の機密情報マスキング機能追加
-3. CSP (Content Security Policy) の実装
+1. **コンソールログ除去**: 本番ビルドでのconsole.*の自動除去設定
+2. 本番環境での環境変数検証を強化
+3. ログ出力の機密情報マスキング機能追加
+4. CSP (Content Security Policy) の実装
 
 ## 🧠 ロジック評価 (評価: A-)
 
@@ -156,25 +165,28 @@ const [fileCache, setFileCache] = useState<Record<string, GoogleDriveFile[]>>({}
 
 ## 📊 総合評価とアクション計画
 
-### 優先度 HIGH
-1. **Menu Component統合** - 開発効率向上
+### 優先度 CRITICAL 🚨
+1. **コンソールログ除去** - 本番パフォーマンス・セキュリティリスク
 2. **環境変数セキュリティ強化** - セキュリティリスク軽減
-3. **WorkspaceList リファクタリング** - 保守性向上
+
+### 優先度 HIGH
+3. **Menu Component統合** - 開発効率向上
+4. **WorkspaceList リファクタリング** - 保守性向上
 
 ### 優先度 MEDIUM  
-4. **Delete Dialog統合** - コード品質向上
-5. **パフォーマンス最適化** - UX向上
-6. **ファイルキャッシュ管理** - メモリリーク防止
+5. **Delete Dialog統合** - コード品質向上
+6. **パフォーマンス最適化** - UX向上
+7. **ファイルキャッシュ管理** - メモリリーク防止
 
 ### 優先度 LOW
-7. **クエリ最適化** - 長期的性能向上
-8. **テストカバレッジ追加** - 品質保証
+8. **クエリ最適化** - 長期的性能向上
+9. **テストカバレッジ追加** - 品質保証
 
-## 総合評価: B+ (73/100)
+## 総合評価: B (68/100)
 
 | 項目 | 評価 | 重要度 |
 |------|------|---------|
-| セキュリティ | B+ | HIGH |
+| セキュリティ | B | HIGH |
 | ロジック | A- | HIGH |  
 | 複雑性 | B+ | MEDIUM |
 | 命名 | A | LOW |
@@ -182,4 +194,8 @@ const [fileCache, setFileCache] = useState<Record<string, GoogleDriveFile[]>>({}
 | パフォーマンス | B- | MEDIUM |
 
 ### 結論
-堅実な設計と実装が行われており、基本的な品質は高い。主要な改善点は再利用性とパフォーマンス面で、計画的なリファクタリングにより大幅な改善が期待できる。セキュリティ面は概ね良好だが、本番運用に向けた最終調整が必要。
+堅実な設計と実装が行われており、基本的な品質は高い。
+
+**緊急対応が必要**: 50+箇所のconsole.log/errorが本番環境で出力されており、パフォーマンス低下とセキュリティリスクを引き起こしています。最優先で除去すべきです。
+
+主要な改善点は再利用性とパフォーマンス面で、計画的なリファクタリングにより大幅な改善が期待できる。コンソールログ問題を解決すれば、セキュリティ面も大幅に改善されます。
