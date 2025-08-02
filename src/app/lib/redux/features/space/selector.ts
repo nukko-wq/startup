@@ -20,5 +20,14 @@ export const selectActiveSpace = createSelector(
 
 export const selectSortedSpacesByWorkspaceId = createSelector(
 	[selectSpacesByWorkspaceId],
-	(spaces) => [...spaces].sort((a, b) => a.order - b.order),
+	(spaces) => {
+		// 既にソート済みかチェック
+		const needsSort = spaces.some((space, index) => 
+			index > 0 && space.order < spaces[index - 1].order
+		)
+		
+		return needsSort 
+			? [...spaces].sort((a, b) => a.order - b.order)
+			: spaces
+	},
 )
