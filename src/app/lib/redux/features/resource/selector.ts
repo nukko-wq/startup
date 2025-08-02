@@ -38,7 +38,14 @@ export const selectResourcesByActiveSpace = createSelector(
 export const selectSortedResources = createSelector(
 	[selectResources],
 	(resources) => {
-		return [...resources].sort((a, b) => a.order - b.order)
+		// 既にソート済みかチェック
+		const needsSort = resources.some((resource, index) => 
+			index > 0 && resource.order < resources[index - 1].order
+		)
+		
+		return needsSort 
+			? [...resources].sort((a, b) => a.order - b.order)
+			: resources
 	},
 )
 
@@ -46,6 +53,13 @@ export const selectSortedResources = createSelector(
 export const selectSortedResourcesBySectionId = createSelector(
 	[selectResourcesBySectionId],
 	(resources) => {
-		return [...resources].sort((a, b) => a.order - b.order)
+		// 既にソート済みかチェック
+		const needsSort = resources.some((resource, index) => 
+			index > 0 && resource.order < resources[index - 1].order
+		)
+		
+		return needsSort 
+			? [...resources].sort((a, b) => a.order - b.order)
+			: resources
 	},
 )
