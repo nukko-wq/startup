@@ -6,7 +6,7 @@
 		"dev": "next dev",
 		"build": "next build",
 		"start": "next start",
-		"lint": "next lint",
+		"lint": "npx @biomejs/biome lint --write",
 		"postinstall": "prisma generate",
 		"vercel-build": "prisma generate && prisma migrate deploy && next build",
 		"format": "npx @biomejs/biome format --write",

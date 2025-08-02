@@ -21,6 +21,7 @@ npm run vercel-build # Build with Prisma migrations for Vercel deployment
 ```bash
 npm run lint         # Run Next.js linting
 npm run format       # Format code with Biome (also fixes linting issues)
+npm run upgrade-interactive # Interactive package updates with npm-check-updates
 ```
 
 ### Database
