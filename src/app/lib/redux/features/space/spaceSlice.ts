@@ -78,10 +78,17 @@ export const spaceSlice = createSlice({
 			state.spaces = state.spaces.filter((space) => space.id !== action.payload)
 		},
 		updateLastActiveSpace: (state, action: PayloadAction<string>) => {
-			state.spaces = state.spaces.map((space) => ({
-				...space,
-				isLastActive: space.id === action.payload,
-			}))
+			// 前回のアクティブスペースを探して更新
+			const previousActive = state.spaces.find(space => space.isLastActive)
+			if (previousActive && previousActive.id !== action.payload) {
+				previousActive.isLastActive = false
+			}
+			
+			// 新しいアクティブスペースを探して更新
+			const newActive = state.spaces.find(space => space.id === action.payload)
+			if (newActive) {
+				newActive.isLastActive = true
+			}
 		},
 		savePreviousSpaces: (state) => {
 			state.previousSpaces = [...state.spaces]
@@ -104,10 +111,19 @@ export const spaceSlice = createSlice({
 			})
 			.addCase(createSpace.fulfilled, (state, action) => {
 				state.loading = false
-				state.spaces = state.spaces.map((space) => ({
-					...space,
-					isLastActive: space.id === action.payload.id,
-				}))
+				
+				// 前回のアクティブスペースを探して更新
+				const previousActive = state.spaces.find(space => space.isLastActive)
+				if (previousActive && previousActive.id !== action.payload.id) {
+					previousActive.isLastActive = false
+				}
+				
+				// 新しいアクティブスペースを探して更新
+				const newActive = state.spaces.find(space => space.id === action.payload.id)
+				if (newActive) {
+					newActive.isLastActive = true
+				}
+				
 				state.activeSpaceId = action.payload.id
 				state.optimisticSpaces = []
 				state.error = null
@@ -142,10 +158,18 @@ export const spaceSlice = createSlice({
 				state.error = null
 			})
 			.addCase(updateSpaceLastActive.fulfilled, (state, action) => {
-				state.spaces = state.spaces.map((space) => ({
-					...space,
-					isLastActive: space.id === action.payload.id,
-				}))
+				// 前回のアクティブスペースを探して更新
+				const previousActive = state.spaces.find(space => space.isLastActive)
+				if (previousActive && previousActive.id !== action.payload.id) {
+					previousActive.isLastActive = false
+				}
+				
+				// 新しいアクティブスペースを探して更新
+				const newActive = state.spaces.find(space => space.id === action.payload.id)
+				if (newActive) {
+					newActive.isLastActive = true
+				}
+				
 				state.activeSpaceId = action.payload.id
 				state.error = null
 			})
