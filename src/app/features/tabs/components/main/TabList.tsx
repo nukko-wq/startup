@@ -106,21 +106,16 @@ const TabList = () => {
 												className={`group block items-center gap-2 truncate rounded-sm py-1 pr-2 outline-hidden hover:bg-gray-100 ${
 													snapshot.isDragging ? 'bg-white/50 shadow-lg' : ''
 												}`}
-												aria-label="TabItem"
 											>
 												<div className="grid grid-cols-[1fr_72px] items-center gap-2">
 													<div className="flex h-full items-center gap-2 truncate">
 														<div className="flex cursor-grab items-center pl-3 opacity-0 group-hover:opacity-100">
 															<GripVertical className="h-4 w-4 text-slate-500" />
 														</div>
-														<div
-															className="flex h-full grow cursor-grab items-center gap-2 truncate"
+														<button
+															type="button"
+															className="flex h-full grow cursor-grab items-center gap-2 truncate bg-transparent border-none p-0"
 															onClick={() => handleTabAction(tab)}
-															onKeyDown={(e) => {
-																if (e.key === 'Enter') {
-																	handleTabAction(tab)
-																}
-															}}
 														>
 															{tab.faviconUrl ? (
 																<Image
@@ -136,7 +131,7 @@ const TabList = () => {
 															<span className="grow truncate text-sm">
 																{tab.title}
 															</span>
-														</div>
+														</button>
 													</div>
 													<div className="flex items-center">
 														<div className="opacity-0 group-hover:opacity-100">
