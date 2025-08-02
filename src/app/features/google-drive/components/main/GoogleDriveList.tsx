@@ -33,9 +33,17 @@ const GoogleDriveList = ({
 	const [isReauthenticating, setIsReauthenticating] = useState(false)
 	const dispatch = useAppDispatch()
 	const { files, loading, error } = useAppSelector((state) => state.googleDrive)
-	const [fileCache, setFileCache] = useState<Record<string, GoogleDriveFile[]>>(
-		{},
-	)
+	const fileCacheRef = useRef<Record<string, GoogleDriveFile[]>>({})
+	
+	const clearCache = useCallback(() => {
+		fileCacheRef.current = {}
+	}, [])
+	
+	useEffect(() => {
+		return () => {
+			clearCache()
+		}
+	}, [])
 
 	const DEBOUNCE_DELAY = 500
 	const debouncedFetchFiles = useMemo(
@@ -51,8 +59,8 @@ const GoogleDriveList = ({
 
 		const cacheKey = query || ''
 
-		if (fileCache[cacheKey]) {
-			dispatch(setFiles(fileCache[cacheKey]))
+		if (fileCacheRef.current[cacheKey]) {
+			dispatch(setFiles(fileCacheRef.current[cacheKey]))
 			return
 		}
 
@@ -61,10 +69,7 @@ const GoogleDriveList = ({
 
 		try {
 			const response = await fetchGoogleDriveFiles(query, limit)
-			setFileCache((prev) => ({
-				...prev,
-				[cacheKey]: response.files,
-			}))
+			fileCacheRef.current[cacheKey] = response.files
 			dispatch(setFiles(response.files))
 		} catch (error) {
 			if (error instanceof Error) {
