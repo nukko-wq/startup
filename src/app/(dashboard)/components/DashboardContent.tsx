@@ -6,6 +6,7 @@ import Sidebar from '@/app/components/sidebar/sidebar'
 import SectionListWrapper from '@/app/features/section/components/main/SectionListWrapper'
 import TabList from '@/app/features/tabs/components/main/TabList'
 import { showSpaceOverlay } from '@/app/lib/redux/features/overlay/overlaySlice'
+import { logger } from '@/lib/secure-logger'
 import {
 	createResource,
 	reorderResources,
@@ -47,7 +48,7 @@ const DashboardContent = memo(() => {
 				event.data.source === 'startup-extension' &&
 				event.data.type === 'SHOW_SPACE_LIST_OVERLAY'
 			) {
-				console.log('Showing space overlay')
+				logger.extension.info('スペースオーバーレイを表示')
 				dispatch(showSpaceOverlay())
 			}
 		}
@@ -59,8 +60,8 @@ const DashboardContent = memo(() => {
 	const onDragEnd = async (result: DropResult) => {
 		const { source, destination, draggableId, type } = result
 
-		// デバッグログ
-		console.log('Drag end:', {
+		// ドラッグ&ドロップのデバッグログ
+		logger.dnd.debug('ドラッグ終了:', {
 			source,
 			destination,
 			draggableId,
@@ -72,7 +73,7 @@ const DashboardContent = memo(() => {
 
 		// タブ間の並び替え処理
 		if (source.droppableId === 'tabs' && destination.droppableId === 'tabs') {
-			console.log('Processing tab reordering:', {
+			logger.extension.debug('タブの並び替え処理開始:', {
 				sourceIndex: source.index,
 				destinationIndex: destination.index,
 				draggableId,
@@ -95,9 +96,9 @@ const DashboardContent = memo(() => {
 
 				// 拡張機能経由でブラウザのタブを移動
 				await tabsAPI.moveTab(numericTabId, destination.index)
-				console.log('Tab moved successfully in browser')
+				logger.extension.info('ブラウザでのタブ移動が成功')
 			} catch (error) {
-				console.error('Failed to move tab in browser:', error)
+				logger.extension.error('ブラウザでのタブ移動に失敗:', error)
 				// 失敗した場合は元に戻す
 				dispatch(
 					reorderTabs({
@@ -111,7 +112,7 @@ const DashboardContent = memo(() => {
 
 		// TabからResourceへの変換処理
 		if (draggableId.startsWith('tab-')) {
-			console.log('Processing tab to resource conversion:', draggableId)
+			logger.dnd.debug('タブからリソースへの変換処理開始:', draggableId)
 			try {
 				// Tab IDから実際のタブ情報を取得
 				const numericTabId = Number.parseInt(
@@ -120,29 +121,26 @@ const DashboardContent = memo(() => {
 				)
 				const tab = tabs.find((t) => t.id === numericTabId)
 
-				console.log('Found tab:', tab)
+				logger.dnd.debug('タブを発見:', tab)
 
 				if (!tab) {
-					console.error('Tab not found:', draggableId)
+					logger.dnd.error('タブが見つかりません:', draggableId)
 					return
 				}
 
-				console.log(
-					'Creating resource with data:',
-					{
-						title: tab.title,
-						url: tab.url,
-						sectionId: destination.droppableId,
-						faviconUrl: tab.faviconUrl,
-					},
-					'at index:',
-					destination.index,
-				)
+				logger.dnd.debug('リソース作成データ:', {
+					title: tab.title,
+					url: tab.url,
+					sectionId: destination.droppableId,
+					faviconUrl: tab.faviconUrl,
+					index: destination.index,
+				})
 
-				// 目的のセクションの既存リソースを取得
-				const destinationResources = allResources
+				// 目的のセクションの既存リソース数をログ出力
+				const destinationResourceCount = allResources
 					.filter((resource) => resource.sectionId === destination.droppableId)
-					.sort((a, b) => a.order - b.order)
+					.length
+				logger.dnd.debug('宛先セクションのリソース数:', destinationResourceCount)
 
 				// 楽観的更新: 一時的なResourceを作成して指定位置に挿入
 				const tempResourceId = `temp-${Date.now()}`
@@ -187,7 +185,7 @@ const DashboardContent = memo(() => {
 					faviconUrl: tab.faviconUrl,
 				})
 
-				console.log('Created resource:', newResource)
+				logger.api.info('リソースを作成:', newResource)
 
 				// 一時的なリソースを削除して実際のリソースに置き換え
 				const finalResources = updatedResources.map((resource) => {
@@ -210,11 +208,11 @@ const DashboardContent = memo(() => {
 					})
 					dispatch(setResources(reorderedResources))
 				} catch (reorderError) {
-					console.error('Failed to reorder resource:', reorderError)
+					logger.api.error('リソースの並び替えに失敗:', reorderError)
 					// リオーダーに失敗した場合は楽観的更新の状態を保持
 				}
 			} catch (error) {
-				console.error('Failed to create resource from tab:', error)
+				logger.api.error('タブからリソース作成に失敗:', error)
 				// エラーが発生した場合は元の状態に戻す
 				dispatch(setResources(allResources))
 			}
@@ -242,7 +240,7 @@ const DashboardContent = memo(() => {
 				)
 				dispatch(setSections(updatedSections))
 			} catch (error) {
-				console.error('セクションの並び替えに失敗しました:', error)
+				logger.api.error('セクションの並び替えに失敗:', error)
 				dispatch(setSections(sections))
 			}
 			return
@@ -283,7 +281,7 @@ const DashboardContent = memo(() => {
 				})
 				dispatch(setResources(updatedFromApi))
 			} catch (error) {
-				console.error('リソースの並び替えに失敗しました:', error)
+				logger.api.error('リソースの並び替えに失敗:', error)
 				dispatch(setResources(allResources)) // 元の状態に戻す
 			}
 		}
@@ -341,7 +339,7 @@ const DashboardContent = memo(() => {
 				})
 				dispatch(setResources(updatedFromApi))
 			} catch (error) {
-				console.error('リソースの移動に失敗しました:', error)
+				logger.api.error('リソースの移動に失敗:', error)
 				dispatch(setResources(allResources)) // 元の状態に戻す
 			}
 		}
