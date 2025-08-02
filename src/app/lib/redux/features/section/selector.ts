@@ -16,8 +16,18 @@ export const selectSectionsByActiveSpace = createSelector(
 		const filteredSections = sections.filter(
 			(section) => section.spaceId === activeSpaceId,
 		)
+		
+		// 既にソート済みかチェック
+		const needsSort = filteredSections.some((section, index) => 
+			index > 0 && section.order < filteredSections[index - 1].order
+		)
+		
+		const sortedSections = needsSort 
+			? [...filteredSections].sort((a, b) => a.order - b.order)
+			: filteredSections
+		
 		return {
-			sections: filteredSections.sort((a, b) => a.order - b.order),
+			sections: sortedSections,
 			isLoaded: filteredSections.length > 0,
 		}
 	},
