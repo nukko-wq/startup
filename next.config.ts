@@ -1,25 +1,11 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  // Webpack設定でproduction環境のconsole.*を除去
-  webpack: (config, { dev }) => {
-    if (!dev) {
-      // 本番環境でconsole.logとconsole.infoを除去（console.errorは保持）
-      config.optimization.minimizer.forEach((minimizer: any) => {
-        if (minimizer.constructor.name === 'TerserPlugin') {
-          minimizer.options.terserOptions = {
-            ...minimizer.options.terserOptions,
-            compress: {
-              ...minimizer.options.terserOptions?.compress,
-              drop_console: ['log', 'info', 'warn', 'debug'],
-            },
-          }
-        }
-      })
-    }
-    return config
+  // Turbopack対応: 本番のみ console.log/info/warn/debug を除去（errorは残す）
+  compiler: {
+    removeConsole: { exclude: ["error"] },
   },
-  
+
   // 本番最適化
   // experimental: {
   //   optimizeCss: true,  // crittersエラーのため一時的に無効化
